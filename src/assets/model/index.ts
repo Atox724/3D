@@ -1,3 +1,4 @@
+/* eslint-disable simple-import-sort/exports */
 // participant 交通参与者
 export { default as SUV } from "./participant/SUV.gltf?url";
 export { default as Truck } from "./participant/中卡车.gltf?url";

@@ -8,8 +8,61 @@
   </section>
 </template>
 <script lang="ts" setup>
+import { type EChartsType, init } from "echarts";
 const fpsNumber = ref(0);
 const chart = ref<HTMLDivElement>();
+
+const myChart = shallowRef<EChartsType>();
+
+const chartData: number[] = [];
+
+setInterval(() => {
+  if (chartData.length >= 10) chartData.shift();
+  chartData.push(Math.floor(Math.random() * 60) + 1);
+
+  myChart.value?.setOption({
+    series: [
+      {
+        data: chartData
+      }
+    ]
+  });
+}, 1000);
+
+onMounted(() => {
+  myChart.value = init(chart.value);
+  myChart.value.setOption({
+    grid: {
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0
+    },
+    xAxis: {
+      show: false,
+      type: "category",
+      boundaryGap: false
+    },
+    yAxis: {
+      show: false,
+      type: "value",
+      splitLine: {
+        show: false
+      },
+      boundaryGap: false
+    },
+    series: [
+      {
+        data: chartData,
+        type: "line",
+        silent: true,
+        showSymbol: false,
+        animation: false,
+        areaStyle: {}
+      }
+    ]
+  });
+});
 </script>
 <style lang="less" scoped>
 .chart-wrapper {
