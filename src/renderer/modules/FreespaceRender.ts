@@ -10,7 +10,7 @@ import {
   type Vector2
 } from "three";
 
-import BasicTarget, { targetZIndex } from "../basic_target";
+import { Target, targetZIndex } from "../BasicTarget";
 
 interface FreespaceData {
   id: number;
@@ -25,7 +25,7 @@ interface FreespaceData {
   roll?: number;
 }
 
-export default class FreespaceRender extends BasicTarget {
+export default class FreespaceRender extends Target {
   topic = ["pilothmi_lane_line"];
 
   update(data: FreespaceData[]): void {

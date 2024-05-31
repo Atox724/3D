@@ -1,4 +1,4 @@
-import { VIEW_WS } from "../websocket";
+import { VIEW_WS } from "@/utils/websocket";
 
 class Monitor {
   fps: number;

@@ -1,4 +1,4 @@
-import { formatMsg } from "@/utils/ws";
+import { formatMsg } from "@/utils";
 
 class WebsocketServer {
   url: string;

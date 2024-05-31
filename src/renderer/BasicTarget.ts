@@ -11,7 +11,7 @@ export const targetZIndex = {
   crosswalk: 0.05
 };
 
-export default abstract class BasicTarget<T = object> {
+export abstract class Target<T = object> {
   scene: Scene;
 
   modelList: Record<string, Object3D>;

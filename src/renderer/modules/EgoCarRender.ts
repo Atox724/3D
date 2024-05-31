@@ -3,11 +3,11 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 import { EgoCar } from "@/assets/model";
 
-import BasicTarget from "../basic_target";
+import { Target } from "../BasicTarget";
 
 const gltfLoader = new GLTFLoader();
 
-export default class EgoCarRender extends BasicTarget {
+export default class EgoCarRender extends Target {
   topic = [];
 
   car?: Object3D;

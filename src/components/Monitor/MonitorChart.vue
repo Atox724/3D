@@ -10,7 +10,7 @@
 <script lang="ts" setup>
 import { type EChartsType, init } from "echarts";
 
-import monitor from "@/store/monitor";
+import monitor from "@/utils/monitor";
 
 const colorlist = ["#52c41a", "#fa8c16", "#f5222d"];
 

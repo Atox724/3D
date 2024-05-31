@@ -19,5 +19,9 @@ defineProps<{
   display: flex;
   background-color: rgba(52, 52, 52, 0.6);
   backdrop-filter: blur(4px);
+
+  .el-divider {
+    border-color: rgba(0, 0, 0, 0.2);
+  }
 }
 </style>

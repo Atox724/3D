@@ -22,7 +22,7 @@ import {
   Truck
 } from "@/assets/model";
 
-import BasicTarget from "../basic_target";
+import { Target } from "../BasicTarget";
 
 enum ParticipantTypeEnum {
   // 交通参与者
@@ -116,7 +116,7 @@ const animationsList: Record<string, AnimationClip[]> = {};
 
 const colorList = ["#a7a7a7", "#13c2c2", "#faad14", "#ff0000"];
 
-export default class ParticipantRender extends BasicTarget {
+export default class ParticipantRender extends Target {
   topic = ["pilothmi_perception_traffic_participant_fusion object"];
 
   static preloading() {

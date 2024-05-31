@@ -11,7 +11,7 @@ import {
   WaterBarrierYellow
 } from "@/assets/model";
 
-import BasicTarget from "../basic_target";
+import { Target } from "../BasicTarget";
 // 障碍物与交通提示物
 enum ObstacleTypeEnum {
   OBSTACLE_ISOLATION_BARREL = 294, // 障碍物隔离桶   2 隔离桶
@@ -46,7 +46,7 @@ const modelFiles: Record<ObstacleType, string> = {
 
 const gltfLoader = new GLTFLoader();
 
-export default class ObstacleRender extends BasicTarget {
+export default class ObstacleRender extends Target {
   topic = [
     "pilothmi_perception_obstacle_fusion object",
     "pilothmi_perception_obstacle_local"

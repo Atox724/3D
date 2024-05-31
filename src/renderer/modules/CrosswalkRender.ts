@@ -9,7 +9,7 @@ import {
   type Vector3
 } from "three";
 
-import BasicTarget, { targetZIndex } from "../basic_target";
+import { Target, targetZIndex } from "../BasicTarget";
 
 interface CrosswalkData {
   id: number;
@@ -20,7 +20,7 @@ interface CrosswalkData {
   color: { r: number; g: number; b: number };
 }
 
-export default class CrosswalkRender extends BasicTarget {
+export default class CrosswalkRender extends Target {
   topic = ["pilothmi_cross_walk_local"];
 
   update(data: CrosswalkData[]) {

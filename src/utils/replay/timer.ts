@@ -1,4 +1,5 @@
-import { binarySearch } from "..";
+import { PLAY_RATE } from "@/config/replay";
+import { binarySearch } from "@/utils";
 
 export interface Action {
   /** 距开始时间的延迟: 毫秒ms */
@@ -8,7 +9,7 @@ export interface Action {
 
 export class Timer {
   timeOffset = 0;
-  speed = 1;
+  speed = PLAY_RATE;
 
   private actions: Action[] = [];
   private raf: number | true | null = null;

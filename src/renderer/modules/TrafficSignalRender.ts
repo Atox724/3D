@@ -78,7 +78,7 @@ import {
   X_width
 } from "@/assets/model";
 
-import BasicTarget from "../basic_target";
+import { Target } from "../BasicTarget";
 
 enum TrafficSignalTypeEnum {
   Unknown = 0, //未知
@@ -325,7 +325,7 @@ const modelFiles: Record<TrafficSignalType, string> = {
 
 const gltfLoader = new GLTFLoader();
 
-export default class TrafficSignalRender extends BasicTarget {
+export default class TrafficSignalRender extends Target {
   topic = ["pilothmi_traffic_sign_local"];
 
   static preloading() {

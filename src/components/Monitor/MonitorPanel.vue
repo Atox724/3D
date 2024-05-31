@@ -22,8 +22,8 @@
 <script lang="ts" setup>
 import type { WebGLInfo } from "three";
 
-import monitor from "@/store/monitor";
 import { formatBytes } from "@/utils";
+import monitor from "@/utils/monitor";
 
 const props = defineProps<{
   memory: WebGLInfo["memory"];

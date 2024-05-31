@@ -5,13 +5,39 @@ export default createRouter({
   routes: [
     {
       path: "/",
-      name: "home",
-      component: () => import("@/pages/home/index.vue")
+      redirect: "/engg"
     },
     {
-      path: "/replay",
-      name: "replay",
-      component: () => import("@/pages/replay/index.vue")
+      path: "/engg",
+      redirect: "/engg/replay",
+      children: [
+        {
+          path: "real",
+          name: "EnggReal",
+          component: () => import("@/pages/engg/real.vue")
+        },
+        {
+          path: "replay",
+          name: "EnggReplay",
+          component: () => import("@/pages/engg/replay.vue")
+        }
+      ]
+    },
+    {
+      path: "/pro",
+      redirect: "/pro/replay",
+      children: [
+        {
+          path: "real",
+          name: "ProReal",
+          component: () => import("@/pages/pro/real.vue")
+        },
+        {
+          path: "replay",
+          name: "ProReplay",
+          component: () => import("@/pages/pro/replay.vue")
+        }
+      ]
     }
   ]
 });

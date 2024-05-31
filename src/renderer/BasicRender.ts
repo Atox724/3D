@@ -20,8 +20,8 @@ import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
-import monitor from "@/store/monitor";
 import { debounce, resizeListener } from "@/utils";
+import monitor from "@/utils/monitor";
 
 import { EgoCarRender } from "./modules";
 
@@ -42,7 +42,7 @@ DefaultLoadingManager.onLoad = () => {
   }
 };
 
-export default abstract class Renderer {
+export abstract class Renderer {
   initialized: boolean;
 
   renderer: WebGLRenderer;

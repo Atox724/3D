@@ -9,7 +9,7 @@ import {
   TrafficLight3Vertical
 } from "@/assets/model";
 
-import BasicTarget from "../basic_target";
+import { Target } from "../BasicTarget";
 
 enum TrafficLightTypeEnum {
   TrafficLight1 = 1, // 一灯红绿灯
@@ -40,7 +40,7 @@ const modelFiles: Record<TrafficLightType, string> = {
 
 const gltfLoader = new GLTFLoader();
 
-export default class TrafficLightRender extends BasicTarget {
+export default class TrafficLightRender extends Target {
   topic = ["pilothmi_traffic_light_local"];
 
   static preloading() {
