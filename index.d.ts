@@ -1,5 +1,15 @@
 /// <reference types="vite/client" />
 
+interface Window {
+  performance: Performance & {
+    memory?: {
+      jsHeapSizeLimit: number;
+      totalJSHeapSize: number;
+      usedJSHeapSize: number;
+    };
+  };
+}
+
 declare const __COMMITID__: string;
 
 declare module "*.vue" {

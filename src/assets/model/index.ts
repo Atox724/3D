@@ -1,4 +1,6 @@
 /* eslint-disable simple-import-sort/exports */
+// 自车
+export { default as EgoCar } from "./participant/自车.gltf?url";
 // participant 交通参与者
 export { default as SUV } from "./participant/SUV.gltf?url";
 export { default as Truck } from "./participant/中卡车.gltf?url";

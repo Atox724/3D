@@ -7,8 +7,11 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ElDivider: typeof import('element-plus/es')['ElDivider']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     Monitor: typeof import('./src/components/Monitor/index.vue')['default']
     MonitorChart: typeof import('./src/components/Monitor/MonitorChart.vue')['default']
+    MonitorPanel: typeof import('./src/components/Monitor/MonitorPanel.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

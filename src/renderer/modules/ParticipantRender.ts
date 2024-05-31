@@ -1,6 +1,14 @@
-import * as THREE from "three";
+import {
+  type AnimationClip,
+  AnimationMixer,
+  Color,
+  Mesh,
+  type Object3D,
+  SkinnedMesh,
+  type Vector3
+} from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils";
+import { clone } from "three/examples/jsm/utils/SkeletonUtils";
 
 import {
   Animal,
@@ -58,8 +66,8 @@ enum ParticipantTypeEnum {
 interface ParticipantData {
   id: number;
   type: number; // 元素类型
-  position: THREE.Vector3; // 模型中心位置
-  rotation: THREE.Vector3; // 模型偏转值
+  position: Vector3; // 模型中心位置
+  rotation: Vector3; // 模型偏转值
   vehicleLightStatus?: { brake: number; lampSignal: number };
   doorObject?: {
     leftFront: boolean;
@@ -71,12 +79,12 @@ interface ParticipantData {
     trunkUp?: boolean;
   };
   color?: string;
-  sizeinfo?: THREE.Vector3;
+  sizeinfo?: Vector3;
 }
 
 type ParticipantType = keyof typeof ParticipantTypeEnum;
 
-const cacheModels = {} as Record<ParticipantType, THREE.Object3D>;
+const cacheModels = {} as Record<ParticipantType, Object3D>;
 
 const modelFiles: Record<ParticipantType, string> = {
   PEDESTRIAN: Man,
@@ -104,7 +112,7 @@ const modelFiles: Record<ParticipantType, string> = {
 };
 
 const gltfLoader = new GLTFLoader();
-const animationsList: Record<string, THREE.AnimationClip[]> = {};
+const animationsList: Record<string, AnimationClip[]> = {};
 
 const colorList = ["#a7a7a7", "#13c2c2", "#faad14", "#ff0000"];
 
@@ -134,6 +142,7 @@ export default class ParticipantRender extends BasicTarget {
         cacheModels[type] = model;
         return model;
       }
+      return Promise.reject(`not find type: ${type}`);
     } catch (error) {
       return Promise.reject(error);
     }
@@ -141,12 +150,12 @@ export default class ParticipantRender extends BasicTarget {
 
   createModel(modelData: ParticipantData) {
     const { id, type } = modelData;
-    let model: THREE.Object3D;
+    let model: Object3D;
     const typeName = ParticipantTypeEnum[type] as ParticipantType;
     if (type === ParticipantTypeEnum.PEDESTRIAN) {
-      model = SkeletonUtils.clone(cacheModels.PEDESTRIAN);
+      model = clone(cacheModels.PEDESTRIAN);
       model.children[0].rotation.z = Math.PI;
-      const mixer = new THREE.AnimationMixer(model);
+      const mixer = new AnimationMixer(model);
       const action = mixer.clipAction(
         animationsList[ParticipantTypeEnum[type]][0]
       );
@@ -165,12 +174,12 @@ export default class ParticipantRender extends BasicTarget {
     return model;
   }
 
-  setModelAttributes(model: THREE.Object3D, modelData: ParticipantData) {
+  setModelAttributes(model: Object3D, modelData: ParticipantData) {
     const { position, rotation, color } = modelData;
 
     model.traverse((child) => {
-      if (child instanceof THREE.Mesh || child instanceof THREE.SkinnedMesh) {
-        child.material.color.set(new THREE.Color(color || colorList[0]));
+      if (child instanceof Mesh || child instanceof SkinnedMesh) {
+        child.material.color.set(new Color(color || colorList[0]));
       }
     });
 

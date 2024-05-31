@@ -1,4 +1,4 @@
-import { Object3D, Vector3 } from "three";
+import type { Object3D, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 import {
@@ -346,6 +346,7 @@ export default class TrafficSignalRender extends BasicTarget {
         cacheModels[type] = model;
         return model;
       }
+      return Promise.reject(`not find type: ${type}`);
     } catch (error) {
       return Promise.reject(error);
     }

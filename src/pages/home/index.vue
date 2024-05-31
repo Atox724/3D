@@ -2,21 +2,21 @@
   <section class="page-wrapper">
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor />
+      <Monitor :memory="UserReadableRenderer.renderer.info.memory" />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
-import RENDERER from "@/store/renderer";
+import UserReadableRenderer from "@/store/renderer/userReadable";
 
 const CANVAS_ID = "canvas_id";
 
 onMounted(() => {
-  RENDERER.initialize(CANVAS_ID);
+  UserReadableRenderer.initialize(CANVAS_ID);
 });
 
 onBeforeUnmount(() => {
-  RENDERER.dispose();
+  UserReadableRenderer.dispose();
 });
 </script>
 <style lang="less" scoped>

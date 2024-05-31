@@ -1,6 +1,6 @@
 <template>
   <section class="chart-wrapper">
-    <div class="chart-title">
+    <div class="chart-title" :style="{ color: colorlist[chartStatus] }">
       <span>渲染</span>
       <span>{{ fpsNumber }}fps</span>
     </div>
@@ -9,32 +9,63 @@
 </template>
 <script lang="ts" setup>
 import { type EChartsType, init } from "echarts";
-const fpsNumber = ref(0);
+
+import monitor from "@/store/monitor";
+
+const colorlist = ["#52c41a", "#fa8c16", "#f5222d"];
+
 const chart = ref<HTMLDivElement>();
 
 const myChart = shallowRef<EChartsType>();
 
 const chartData: number[] = [];
 
-setInterval(() => {
-  if (chartData.length >= 10) chartData.shift();
-  chartData.push(Math.floor(Math.random() * 60) + 1);
+const fpsNumber = ref(0);
+const chartStatus = ref(0);
 
-  myChart.value?.setOption({
-    series: [
-      {
-        data: chartData
-      }
-    ]
-  });
-}, 1000);
+let timer: number;
+
+const startRender = () => {
+  timer = setInterval(() => {
+    fpsNumber.value = monitor.fps;
+    if (chartData.length >= 20) chartData.shift();
+    chartData.push(monitor.fps);
+
+    let status = 0;
+    if (monitor.fps < 60 * 0.6) status = 2;
+    else if (monitor.fps < 60 * 0.8) status = 1;
+
+    if (status !== chartStatus.value) {
+      chartStatus.value = status;
+    }
+
+    myChart.value?.setOption({
+      series: [
+        {
+          data: chartData,
+          areaStyle: {
+            color: colorlist[status]
+          },
+          itemStyle: {
+            color: colorlist[status]
+          }
+        }
+      ]
+    });
+    monitor.resetFps();
+  }, 1000);
+};
+
+const stopRender = () => {
+  clearInterval(timer);
+};
 
 onMounted(() => {
   myChart.value = init(chart.value);
   myChart.value.setOption({
     grid: {
       left: 0,
-      top: 0,
+      top: 5,
       right: 0,
       bottom: 0
     },
@@ -55,6 +86,7 @@ onMounted(() => {
       {
         data: chartData,
         type: "line",
+        smooth: false,
         silent: true,
         showSymbol: false,
         animation: false,
@@ -62,7 +94,11 @@ onMounted(() => {
       }
     ]
   });
+
+  startRender();
 });
+
+onBeforeUnmount(stopRender);
 </script>
 <style lang="less" scoped>
 .chart-wrapper {

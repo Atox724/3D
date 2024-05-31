@@ -1,13 +1,22 @@
-import * as THREE from "three";
+import {
+  BufferAttribute,
+  Color,
+  Mesh,
+  ShaderMaterial,
+  Shape,
+  ShapeGeometry,
+  Vector2,
+  type Vector3
+} from "three";
 
 import BasicTarget, { targetZIndex } from "../basic_target";
 
 interface CrosswalkData {
   id: number;
   type: number; // 元素类型
-  shape: THREE.Vector3[];
-  position: THREE.Vector3; // 中心点坐标，z轴坐标将忽略
-  rotation: THREE.Vector3; // 朝向角，通常来说只识别z轴的偏向角
+  shape: Vector3[];
+  position: Vector3; // 中心点坐标，z轴坐标将忽略
+  rotation: Vector3; // 朝向角，通常来说只识别z轴的偏向角
   color: { r: number; g: number; b: number };
 }
 
@@ -19,22 +28,22 @@ export default class CrosswalkRender extends BasicTarget {
     if (!data.length) return;
     data.forEach((item) => {
       const { id, shape, position, rotation, color } = item;
-      const points = shape.map((point) => new THREE.Vector2(point.x, point.y));
-      const side1 = new THREE.Vector2().subVectors(points[0], points[1]);
-      const side2 = new THREE.Vector2().subVectors(points[1], points[2]);
+      const points = shape.map((point) => new Vector2(point.x, point.y));
+      const side1 = new Vector2().subVectors(points[0], points[1]);
+      const side2 = new Vector2().subVectors(points[1], points[2]);
       const aspect = side1.length() / side2.length();
       let pnts = [...points]; // 使用解构赋值创建 pnts 数组的副本
       if (aspect > 1) {
         pnts = [...pnts.slice(1), pnts[0]]; // 将 pnts 数组向右旋转一位
       }
 
-      const shapeGeo = new THREE.ShapeGeometry(new THREE.Shape(pnts));
+      const shapeGeo = new ShapeGeometry(new Shape(pnts));
       // 动态计算条纹数量
       const stripes = aspect > 1 ? side1.length() : side2.length();
 
       const uvs = new Float32Array([0, 0, 1, 0, 1, stripes, 0, stripes]);
-      shapeGeo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
-      const shapeMat = new THREE.ShaderMaterial({
+      shapeGeo.setAttribute("uv", new BufferAttribute(uvs, 2));
+      const shapeMat = new ShaderMaterial({
         vertexShader: `
           varying vec2 vUv;
         
@@ -57,10 +66,10 @@ export default class CrosswalkRender extends BasicTarget {
         `,
         transparent: true,
         uniforms: {
-          customColor: { value: new THREE.Color(color.r, color.g, color.b) } // 设置默认自定义颜色
+          customColor: { value: new Color(color.r, color.g, color.b) } // 设置默认自定义颜色
         }
       });
-      const shapeMesh = new THREE.Mesh(shapeGeo, shapeMat);
+      const shapeMesh = new Mesh(shapeGeo, shapeMat);
       shapeMesh.position.set(position.x, position.y, targetZIndex.crosswalk);
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
       this.modelList[id] = shapeMesh;

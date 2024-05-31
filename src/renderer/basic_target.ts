@@ -1,4 +1,10 @@
-import * as THREE from "three";
+import {
+  AnimationMixer,
+  Mesh,
+  type Object3D,
+  type Scene,
+  SkinnedMesh
+} from "three";
 
 export const targetZIndex = {
   frespace: 0.01,
@@ -6,21 +12,21 @@ export const targetZIndex = {
 };
 
 export default abstract class BasicTarget<T = object> {
-  scene: THREE.Scene;
+  scene: Scene;
 
-  modelList: Record<string, THREE.Object3D>;
+  modelList: Record<string, Object3D>;
 
   abstract readonly topic: string[];
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: Scene) {
     this.scene = scene;
 
     this.modelList = {};
   }
 
-  disposeObject(obj: THREE.Object3D) {
+  disposeObject(obj: Object3D) {
     obj.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof Mesh) {
         child.geometry.dispose();
 
         if (Array.isArray(child.material)) {
@@ -31,16 +37,14 @@ export default abstract class BasicTarget<T = object> {
           child.material.dispose();
         }
       }
-      if (child instanceof THREE.SkinnedMesh) {
+      if (child instanceof SkinnedMesh) {
         child.skeleton.dispose();
       }
     });
 
     this.scene.remove(obj);
     const mixerKey = obj.userData.type + obj.userData.id + "Mixer";
-    const mixer = this.scene.userData.mixers?.[
-      mixerKey
-    ] as THREE.AnimationMixer;
+    const mixer = this.scene.userData.mixers?.[mixerKey] as AnimationMixer;
     if (mixer) {
       mixer.stopAllAction();
       obj.animations?.forEach((animation) => {

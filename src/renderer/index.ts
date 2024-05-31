@@ -1,29 +1,33 @@
 import { ElMessage, type MessageHandler } from "element-plus";
-import * as THREE from "three";
+import {
+  AmbientLight,
+  AnimationMixer,
+  CircleGeometry,
+  CylinderGeometry,
+  DefaultLoadingManager,
+  DoubleSide,
+  HemisphereLight,
+  Mesh,
+  MeshBasicMaterial,
+  MeshPhongMaterial,
+  PerspectiveCamera,
+  PlaneGeometry,
+  Scene,
+  WebGLRenderer
+} from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { Timer } from "three/examples/jsm/misc/Timer";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
-import car from "@/assets/model/participant/自车.gltf?url";
 import monitor from "@/store/monitor";
-import { VIEW_WS } from "@/store/websocket";
 import { debounce, resizeListener } from "@/utils";
 
-import BasicScene from "./basic_scene";
-import BasicTarget from "./basic_target";
-import {
-  CrosswalkRender,
-  FreespaceRender,
-  ObstacleRender,
-  ParticipantRender,
-  TrafficLightRender,
-  TrafficSignalRender
-} from "./modules";
+import { EgoCarRender } from "./modules";
 
 // 监听3d场景绘制进度
 let hideThreeLoading: MessageHandler | null;
-THREE.DefaultLoadingManager.onStart = () => {
+DefaultLoadingManager.onStart = () => {
   if (!hideThreeLoading) {
     hideThreeLoading = ElMessage.info({
       message: "3d场景加载中",
@@ -31,58 +35,47 @@ THREE.DefaultLoadingManager.onStart = () => {
     });
   }
 };
-THREE.DefaultLoadingManager.onLoad = () => {
+DefaultLoadingManager.onLoad = () => {
   if (hideThreeLoading) {
     hideThreeLoading.close();
     hideThreeLoading = null;
   }
 };
 
-const gltfLoader = new GLTFLoader();
-
-class Renderer extends BasicScene {
+export default abstract class Renderer {
   initialized: boolean;
+
+  renderer: WebGLRenderer;
+  scene: Scene;
+  camera: PerspectiveCamera;
+
+  timer: Timer;
 
   resizeOb?: ResizeObserver;
   controls?: OrbitControls;
 
-  createRender: BasicTarget[];
+  egoCarRender?: EgoCarRender;
 
   constructor() {
-    super();
     this.initialized = false;
 
-    this.camera.fov = 60;
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.near = 0.1;
-    this.camera.far = 1000;
+    this.renderer = new WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+    this.scene = new Scene();
+    this.camera = new PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
     this.camera.up.set(0, 0, 1);
     this.camera.position.set(-22, 0, 12);
 
-    this.createRender = [
-      new ObstacleRender(this.scene),
-      new ParticipantRender(this.scene),
-      new FreespaceRender(this.scene),
-      new TrafficLightRender(this.scene),
-      new TrafficSignalRender(this.scene),
-      new CrosswalkRender(this.scene)
-    ];
+    this.timer = new Timer();
 
-    this.preload().then(() => {
-      this.registerModelRender();
-    });
-  }
-
-  preload() {
-    const preloadArray = [
-      ObstacleRender,
-      ParticipantRender,
-      TrafficLightRender,
-      TrafficSignalRender
-    ];
-    return Promise.allSettled(
-      preloadArray.map((modelRender) => modelRender.preloading())
-    );
+    this.egoCarRender = new EgoCarRender(this.scene);
   }
 
   initialize(canvasId: string) {
@@ -107,11 +100,6 @@ class Renderer extends BasicScene {
     this.createLights();
 
     this.setScene();
-
-    gltfLoader.load(car, (gltf) => {
-      const model = gltf.scene;
-      this.scene.add(model);
-    });
 
     this.render();
   }
@@ -164,21 +152,21 @@ class Renderer extends BasicScene {
   }
 
   createLights() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
+    const ambientLight = new AmbientLight(0xffffff, 0.8);
+    const hemisphereLight = new HemisphereLight(0xffffff, 0x000000, 1);
     hemisphereLight.position.set(0, 0, 1);
     this.scene.add(ambientLight, hemisphereLight);
   }
 
   createGround() {
-    const geometry = new THREE.PlaneGeometry(500, 500);
-    const material = new THREE.MeshPhongMaterial({
+    const geometry = new PlaneGeometry(500, 500);
+    const material = new MeshPhongMaterial({
       color: 0x525862,
-      side: THREE.DoubleSide,
+      side: DoubleSide,
       transparent: true,
       opacity: 0.5
     });
-    const plane = new THREE.Mesh(geometry, material);
+    const plane = new Mesh(geometry, material);
     plane.position.z = 0.005;
 
     const reflector = new Reflector(geometry, {
@@ -190,18 +178,18 @@ class Renderer extends BasicScene {
   }
 
   setScene() {
-    // this.scene.fog = new THREE.FogExp2(0x525862, 0.02);
+    // this.scene.fog = new FogExp2(0x525862, 0.02);
     const size = 1000;
-    const geometry = new THREE.CylinderGeometry(size / 2, size / 2, size);
-    const material = new THREE.MeshBasicMaterial({
+    const geometry = new CylinderGeometry(size / 2, size / 2, size);
+    const material = new MeshBasicMaterial({
       color: 0x525862,
-      side: THREE.DoubleSide
+      side: DoubleSide
     });
-    const cylinder = new THREE.Mesh(geometry, material);
+    const cylinder = new Mesh(geometry, material);
     cylinder.position.z = geometry.parameters.height / 2;
     cylinder.rotation.x = Math.PI / 2;
 
-    const reflector = new Reflector(new THREE.CircleGeometry(size / 2), {
+    const reflector = new Reflector(new CircleGeometry(size / 2), {
       textureWidth: window.innerWidth * window.devicePixelRatio,
       textureHeight: window.innerHeight * window.devicePixelRatio
     });
@@ -211,28 +199,21 @@ class Renderer extends BasicScene {
     this.scene.add(cylinder, reflector);
   }
 
-  registerModelRender() {
-    for (const instance of this.createRender) {
-      instance.topic.forEach((topic) => {
-        VIEW_WS.registerTargetMsg(topic, instance.update.bind(instance));
-      });
-    }
-  }
-
   renderLoop() {
     this.timer.update();
     const delta = this.timer.getDelta();
     this.controls?.update(delta);
 
     if (this.scene.userData.mixers) {
-      Object.values<THREE.AnimationMixer>(this.scene.userData.mixers).forEach(
+      Object.values<AnimationMixer>(this.scene.userData.mixers).forEach(
         (mixer) => {
           mixer.update(delta);
         }
       );
     }
 
-    super.render();
+    this.renderer.render(this.scene, this.camera);
+
     monitor.updateFps();
   }
 
@@ -241,12 +222,11 @@ class Renderer extends BasicScene {
   }
 
   dispose() {
-    super.dispose();
+    this.renderer.domElement.remove();
+    this.renderer.dispose();
     this.resizeOb?.disconnect();
     this.controls?.removeEventListener("end", this.resetCamera);
     this.controls?.dispose();
     this.initialized = false;
   }
 }
-
-export default Renderer;

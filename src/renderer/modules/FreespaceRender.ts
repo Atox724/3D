@@ -1,11 +1,21 @@
-import * as THREE from "three";
+import {
+  Color,
+  DoubleSide,
+  MathUtils,
+  Mesh,
+  MeshBasicMaterial,
+  Path,
+  Shape,
+  ShapeGeometry,
+  type Vector2
+} from "three";
 
 import BasicTarget, { targetZIndex } from "../basic_target";
 
 interface FreespaceData {
   id: number;
-  contour: THREE.Vector2[];
-  holes: THREE.Vector2[][];
+  contour: Vector2[];
+  holes: Vector2[][];
   x?: number;
   y?: number;
   z: number;
@@ -34,33 +44,33 @@ export default class FreespaceRender extends BasicTarget {
         holes = []
       } = item;
       if (contour.length < 3) return;
-      const shape = new THREE.Shape();
+      const shape = new Shape();
       shape.moveTo(contour[0].x, contour[0].y);
       contour.forEach((point) => {
         shape.lineTo(point.x, point.y);
       });
       holes.forEach((hole) => {
         if (hole.length < 3) return;
-        const holePath = new THREE.Path();
+        const holePath = new Path();
         holePath.moveTo(hole[0].x, hole[0].y);
         hole.forEach((point) => {
           holePath.lineTo(point.x, point.y);
         });
         shape.holes.push(holePath);
       });
-      const shapeGeometry = new THREE.ShapeGeometry(shape);
-      const material = new THREE.MeshBasicMaterial({
-        side: THREE.DoubleSide,
+      const shapeGeometry = new ShapeGeometry(shape);
+      const material = new MeshBasicMaterial({
+        side: DoubleSide,
         transparent: true,
-        color: new THREE.Color(color.r, color.g, color.b),
+        color: new Color(color.r, color.g, color.b),
         opacity: color.a
       });
-      const mesh = new THREE.Mesh(shapeGeometry, material);
+      const mesh = new Mesh(shapeGeometry, material);
       mesh.position.set(x, y, targetZIndex.frespace);
       mesh.rotation.set(
-        roll * THREE.MathUtils.DEG2RAD,
-        pitch * THREE.MathUtils.DEG2RAD,
-        yaw * THREE.MathUtils.DEG2RAD
+        roll * MathUtils.DEG2RAD,
+        pitch * MathUtils.DEG2RAD,
+        yaw * MathUtils.DEG2RAD
       );
       this.modelList[id] = mesh;
       this.scene.add(mesh);
