@@ -1,4 +1,5 @@
 import { ElMessage, type MessageHandler } from "element-plus";
+import { debounce } from "lodash-es";
 import {
   AmbientLight,
   AnimationMixer,
@@ -20,7 +21,6 @@ import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
-import { debounce, resizeListener } from "@/utils";
 import monitor from "@/utils/monitor";
 
 import { EgoCarRender } from "./modules";
@@ -85,13 +85,12 @@ export abstract class Renderer {
     const { clientWidth: width, clientHeight: height } = container;
 
     this.updateDimension(width, height);
-
-    this.resizeOb = resizeListener(
-      container,
+    this.resizeOb = new ResizeObserver(
       debounce(() => {
         this.updateDimension(container.clientWidth, container.clientHeight);
       }, 200)
     );
+    this.resizeOb.observe(container);
 
     container.appendChild(this.renderer.domElement);
 

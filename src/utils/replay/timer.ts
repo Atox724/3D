@@ -25,11 +25,6 @@ export class Timer {
     return this.raf !== null;
   }
 
-  /** 是否暂停 */
-  get isPaused() {
-    return !this.isActive && this.actionsLength;
-  }
-
   addAction(action: Action) {
     if (
       !this.actionsLength ||
@@ -44,7 +39,6 @@ export class Timer {
       this.actions.splice(index, 0, action);
     }
     if (this.raf === true) {
-      this.lastTimestamp = performance.now();
       this.raf = requestAnimationFrame(this.rafCheck.bind(this));
     }
   }
@@ -75,17 +69,13 @@ export class Timer {
     }
   }
 
-  stop() {
+  clear() {
     if (this.raf) {
       if (this.raf !== true) {
         cancelAnimationFrame(this.raf);
       }
       this.raf = null;
     }
-  }
-
-  clear() {
-    this.stop();
     this.actions.length = 0;
   }
 

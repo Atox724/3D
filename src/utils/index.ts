@@ -3,37 +3,6 @@ import {
   ProtobufElementSchema
 } from "./protobuffer/protobuf_parser";
 
-export function debounce(func: <T>(..._args: T[]) => void, delay = 0) {
-  let timerId: number;
-  return <T>(...args: T[]) => {
-    clearTimeout(timerId);
-    timerId = window.setTimeout(() => {
-      func(args);
-    }, delay);
-  };
-}
-
-export function throttle(func: <T>(..._args: T[]) => void, delay = 0) {
-  let timerId: number;
-  return <T>(...args: T[]) => {
-    if (!timerId) {
-      timerId = window.setTimeout(() => {
-        func(args);
-        timerId = 0;
-      }, delay);
-    }
-  };
-}
-
-export function resizeListener(
-  dom: HTMLElement,
-  callback: <T>(...args: T[]) => void
-) {
-  const ob = new ResizeObserver(callback);
-  ob.observe(dom);
-  return ob;
-}
-
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;

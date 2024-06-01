@@ -42,7 +42,7 @@
           >
         </template>
       </el-dropdown>
-      <el-button @click="emits('upload')">Upload</el-button>
+      <el-button @click="upload">Upload</el-button>
     </el-space>
   </section>
 </template>
@@ -50,6 +50,7 @@
 import { ArrowDown, VideoPause, VideoPlay } from "@element-plus/icons-vue";
 
 import { formatTime } from "@/utils";
+import { chooseFile } from "@/utils/file";
 
 const playRateOptions = [
   {
@@ -85,10 +86,17 @@ const emits = defineEmits<{
   (e: "update:currentDuration", progress: number): void;
   (e: "update:isPlay", isPlay: boolean): void;
   (e: "update:playRate", rate: number): void;
-  (e: "upload"): void;
+  (e: "upload", files: FileList): void;
 }>();
 
 const progress = ref(0);
+
+const upload = async () => {
+  const files = await chooseFile({ directory: true });
+  if (files) {
+    emits("upload", files);
+  }
+};
 
 watchEffect(() => {
   progress.value = (props.currentDuration / props.totalDuration) * 100;
