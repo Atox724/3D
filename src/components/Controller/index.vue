@@ -5,14 +5,10 @@
     </span>
     <el-slider
       v-model="progress"
-      class="progress-bar"
       :show-tooltip="false"
-      @change="
-        emits(
-          'update:currentDuration',
-          (($event as number) * totalDuration) / 100
-        )
-      "
+      class="progress-bar"
+      @change="progressChange($event as number)"
+      @input="progressInput($event as number)"
     />
     <span class="duration">
       {{ formatTime(totalDuration) }}
@@ -21,9 +17,9 @@
       <el-icon
         size="24"
         class="play-btn"
-        @click="emits('update:isPlay', !isPlay)"
+        @click="emits('playStateChange', !isPlay)"
       >
-        <VideoPlay v-if="isPlay" />
+        <VideoPlay v-if="!isPlay" />
         <VideoPause v-else />
       </el-icon>
       <el-dropdown @command="emits('update:playRate', $event)">
@@ -83,13 +79,30 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "update:currentDuration", progress: number): void;
-  (e: "update:isPlay", isPlay: boolean): void;
   (e: "update:playRate", rate: number): void;
+  (e: "playStateChange", isPlay: boolean): void;
   (e: "upload", files: FileList): void;
+  (e: "currentDurationChange", currentDuration: number): void;
 }>();
 
 const progress = ref(0);
+
+const progressChanging = ref(false);
+
+watchEffect(() => {
+  if (progressChanging.value) return;
+  progress.value = (props.currentDuration / props.totalDuration) * 100;
+});
+
+const progressInput = (val: number) => {
+  progressChanging.value = true;
+  progress.value = val;
+};
+
+const progressChange = (val: number) => {
+  progressChanging.value = false;
+  emits("currentDurationChange", (val / 100) * props.totalDuration);
+};
 
 const upload = async () => {
   const files = await chooseFile({ directory: true });
@@ -97,10 +110,6 @@ const upload = async () => {
     emits("upload", files);
   }
 };
-
-watchEffect(() => {
-  progress.value = (props.currentDuration / props.totalDuration) * 100;
-});
 </script>
 <style lang="less" scoped>
 .controller {

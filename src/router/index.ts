@@ -38,6 +38,11 @@ export default createRouter({
           component: () => import("@/pages/pro/replay.vue")
         }
       ]
+    },
+    {
+      path: "/test",
+      name: "Test",
+      component: () => import("@/pages/test.vue")
     }
   ]
 });

@@ -3,10 +3,12 @@
     <div class="controller-wrapper">
       <Controller
         v-model:play-rate="playRate"
-        v-model:current-duration="currentDuration"
-        v-model:is-play="isPlay"
+        :is-play="isPlay"
+        :current-duration="currentDuration"
         :total-duration="totalDuration"
         @upload="upload"
+        @play-state-change="onPlayChange"
+        @current-duration-change="currentDurationChange"
       />
     </div>
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
@@ -16,19 +18,14 @@
   </section>
 </template>
 <script lang="ts" setup>
-import { throttle } from "lodash-es";
-
 import { PLAY_RATE } from "@/config/replay";
 import EnggRender from "@/renderer/Pro";
 import emitter from "@/utils/emitter";
-import {
-  readFileAsText,
-  readFileFirstRow,
-  readFileLastRow
-} from "@/utils/file";
-import { ReplayWorker } from "@/utils/replay";
+import { LocalPlay } from "@/utils/replay/local";
+import { RemotePlay } from "@/utils/replay/remote";
+import type { PlayState } from "@/utils/replay/type";
 
-const replayWorker = new ReplayWorker();
+// const route = useRoute();
 
 const CANVAS_ID = "canvas_id";
 
@@ -38,58 +35,75 @@ const totalDuration = ref(0);
 const isPlay = ref(false);
 const playRate = ref(PLAY_RATE);
 
+let player: LocalPlay | RemotePlay | null = null;
+
 const upload = async (fileList: FileList) => {
-  const files = Array.from(fileList);
-  files.sort((a, b) => a.name.localeCompare(b.name));
-  const firstFile = files[0];
-  const lastFile = files[files.length - 1];
+  player = new LocalPlay();
+  player.init(fileList);
+};
 
-  const startRow = await readFileFirstRow(firstFile);
-  const endRow = await readFileLastRow(lastFile);
+const durationchange = (duration: number) => {
+  totalDuration.value = duration;
+};
 
-  const startTime = +startRow.split(":")[0];
-  const endTime = +endRow.split(":")[0];
+const timeupdate = (current: number) => {
+  if (!isPlay.value) return;
+  currentDuration.value = current;
+};
 
-  totalDuration.value = (endTime - startTime) / 1000;
+const playStateChange = (state: PlayState) => {
+  isPlay.value = state === "play";
+};
 
-  replayWorker.sendMessage({
-    type: "time",
+const currentDurationChange = (current: number) => {
+  isPlay.value = false;
+  currentDuration.value = current;
+  player?.postMessage({
+    type: "timeupdate",
     data: {
-      startTime,
-      endTime
+      currentDuration: current
     }
   });
+};
 
-  isPlay.value = true;
-
-  replayWorker.sendMessage({
-    type: "status",
-    data: {
-      status: "play"
-    }
-  });
-
-  for (const file of files) {
-    const data = await readFileAsText(file);
-    replayWorker.sendMessage({
-      type: "data",
-      data
+const onPlayChange = (val: boolean) => {
+  isPlay.value = val;
+  if (val) {
+    player?.postMessage({
+      type: "play",
+      data: {
+        currentDuration: currentDuration.value
+      }
     });
+  } else {
+    player?.postMessage({ type: "pause" });
   }
 };
 
-const updateDuration = throttle((data: any) => {
-  currentDuration.value = data.delay;
-}, 1000);
+// const loadFile = () => {
+//   if (route.query.prefix) {
+//     const url = `http://datapro.senseauto.com/api/data/aws/listAnonymous`;
+//     const params = {
+//       path: route.query.prefix,
+//       bucketName: route.query.bucket
+//     };
+//   }
+// };
 
 onMounted(() => {
   EnggRender.initialize(CANVAS_ID);
-  emitter.on("data", updateDuration);
+  emitter.on("durationchange", durationchange);
+  emitter.on("timeupdate", timeupdate);
+  emitter.on("playState", playStateChange);
 });
 
 onBeforeUnmount(() => {
   EnggRender.dispose();
-  emitter.off("data", updateDuration);
+  player?.dispose();
+  player = null;
+  emitter.off("durationchange", durationchange);
+  emitter.off("timeupdate", timeupdate);
+  emitter.off("playState", playStateChange);
 });
 </script>
 <style lang="less" scoped>

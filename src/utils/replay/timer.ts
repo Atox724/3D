@@ -49,6 +49,15 @@ export class Timer {
     this.raf = requestAnimationFrame(this.rafCheck.bind(this));
   }
 
+  stop() {
+    if (this.raf) {
+      if (this.raf !== true) {
+        cancelAnimationFrame(this.raf);
+      }
+      this.raf = null;
+    }
+  }
+
   private rafCheck() {
     const time = performance.now();
     this.timeOffset += (time - this.lastTimestamp) * this.speed;
@@ -70,12 +79,7 @@ export class Timer {
   }
 
   clear() {
-    if (this.raf) {
-      if (this.raf !== true) {
-        cancelAnimationFrame(this.raf);
-      }
-      this.raf = null;
-    }
+    this.stop();
     this.actions.length = 0;
   }
 
