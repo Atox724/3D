@@ -6,6 +6,7 @@ import type { MaybeArray, RemoteWorker, RequestWorker } from "./type";
 const timer = new Timer();
 
 let cacheFiles: File[] = [];
+let currentIndex = 0;
 
 let startTime = 0,
   endTime = 0,
@@ -18,18 +19,21 @@ const requestWorker = new Worker(
   { type: "module" }
 );
 
-requestWorker.onmessage = (ev: MessageEvent<RequestWorker.PostMessage>) => {
+requestWorker.onmessage = async (
+  ev: MessageEvent<RequestWorker.PostMessage>
+) => {
   const { type, data } = ev.data;
   if (type === "durationchange") {
     startTime = data.startTime;
     endTime = data.endTime;
     baselineTime = startTime;
     postMsg({ type, data });
-  } else if (type === "files") {
-    cacheFiles.push(...data);
-    cacheFiles.sort((a, b) => a.name.localeCompare(b.name));
-    loadstart(data);
-    play();
+  } else if (type === "file") {
+    if (!cacheFiles.length) {
+      cacheFiles = Array(data.total).fill(null);
+    }
+    cacheFiles[data.current] = data.file;
+    checkLoad(cacheFiles.slice(currentIndex));
   }
 };
 
@@ -101,6 +105,18 @@ const loadstart = async (files: File[]) => {
   }
 };
 
+const checkLoad = async (files: File[]) => {
+  for (const file of files) {
+    if (!file) return;
+    console.log(file.name, currentIndex);
+
+    currentIndex++;
+    const text = await readFileAsText(file);
+    const lines = text.split("\n");
+    processLines(lines);
+  }
+};
+
 const play = (currentDuration = 0) => {
   if (timer.isActive) return;
   timer.start(currentDuration);
@@ -157,6 +173,7 @@ onmessage = async (ev: MessageEvent<RemoteWorker.OnMessage>) => {
   if (type === "request") {
     cacheFiles = [];
     requestWorker.postMessage({ type, data });
+    play();
   } else if (type === "playstate") {
     if (data.state === "play") {
       play(data?.currentDuration);

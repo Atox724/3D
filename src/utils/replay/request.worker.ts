@@ -1,3 +1,5 @@
+import pLimit from "p-limit";
+
 import { readFileFirstRowByFile, readFileLastRowByFile } from "../file";
 import type { MaybeArray, RequestWorker } from "./type";
 
@@ -55,6 +57,7 @@ onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
       (response) => response.json()
     );
     const hmi_files = res.data;
+    const filesLength = hmi_files.length;
     const firstFile = hmi_files.shift()!;
     const lastFile = hmi_files.pop()!;
 
@@ -74,22 +77,42 @@ onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
         }
       },
       {
-        type: "files",
-        data: [firstResult]
+        type: "file",
+        data: {
+          file: firstResult,
+          current: 0,
+          total: filesLength - 1
+        }
+      },
+      {
+        type: "file",
+        data: {
+          file: lastResult,
+          current: filesLength - 1,
+          total: filesLength - 1
+        }
       }
     ]);
 
-    for (const hmi_file of hmi_files) {
-      const res = await requestHMIFile(hmi_file);
-      postMsg({
-        type: "files",
-        data: [res]
-      });
-    }
+    const limit = pLimit(6);
 
-    postMsg({
-      type: "files",
-      data: [lastResult]
-    });
+    const input: Promise<void>[] = [];
+
+    for (const hmi_file of hmi_files) {
+      const p = limit(() =>
+        requestHMIFile(hmi_file).then((res) => {
+          postMsg({
+            type: "file",
+            data: {
+              file: res,
+              current: hmi_files.indexOf(hmi_file) + 1,
+              total: filesLength - 1
+            }
+          });
+        })
+      );
+      input.push(p);
+    }
+    await Promise.all(input);
   }
 };

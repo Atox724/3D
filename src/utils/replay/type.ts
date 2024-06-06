@@ -118,6 +118,14 @@ export namespace RemoteWorker {
 }
 
 export namespace RequestWorker {
+  interface FileType {
+    type: "file";
+    data: {
+      file: File;
+      current: number;
+      total: number;
+    };
+  }
   export type OnMessage = MessageType.RequestType;
-  export type PostMessage = EventType.DurationType | EventType.FileType;
+  export type PostMessage = EventType.DurationType | FileType;
 }
