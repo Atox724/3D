@@ -22,11 +22,9 @@
         <VideoPlay v-if="!isPlay" />
         <VideoPause v-else />
       </el-icon>
-      <el-dropdown @command="emits('update:playRate', $event)">
+      <el-dropdown @command="playRateChange">
         <span class="el-dropdown-link">
-          {{
-            playRateOptions.find((item) => item.value === playRate)?.label ||
-            playRate
+          {{ playRateOptions.find((item) => item.value === rate)?.label || rate
           }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
         </span>
         <template #dropdown>
@@ -38,7 +36,7 @@
           >
         </template>
       </el-dropdown>
-      <el-button @click="upload">Upload</el-button>
+      <el-button v-if="showUpload" @click="upload">Upload</el-button>
     </el-space>
   </section>
 </template>
@@ -71,18 +69,28 @@ const playRateOptions = [
   }
 ];
 
-const props = defineProps<{
-  currentDuration: number;
-  totalDuration: number;
-  isPlay: boolean;
-  playRate: number;
-}>();
+const props = withDefaults(
+  defineProps<{
+    currentDuration?: number;
+    totalDuration?: number;
+    isPlay?: boolean;
+    playRate?: number;
+    showUpload?: boolean;
+  }>(),
+  {
+    currentDuration: 0,
+    totalDuration: 0,
+    isPlay: false,
+    playRate: 1,
+    showUpload: false
+  }
+);
 
 const emits = defineEmits<{
-  (e: "update:playRate", rate: number): void;
+  (e: "playRateChange", rate: number): void;
   (e: "playStateChange", isPlay: boolean): void;
-  (e: "upload", files: FileList): void;
   (e: "currentDurationChange", currentDuration: number): void;
+  (e: "upload", files: FileList): void;
 }>();
 
 const progress = ref(0);
@@ -104,12 +112,23 @@ const progressChange = (val: number) => {
   emits("currentDurationChange", (val / 100) * props.totalDuration);
 };
 
+const rate = ref(props.playRate);
+
+const playRateChange = (val: number) => {
+  emits("playRateChange", val);
+  rate.value = val;
+};
+
 const upload = async () => {
   const files = await chooseFile({ directory: true });
   if (files) {
     emits("upload", files);
   }
 };
+
+watchEffect(() => {
+  rate.value = props.playRate;
+});
 </script>
 <style lang="less" scoped>
 .controller {

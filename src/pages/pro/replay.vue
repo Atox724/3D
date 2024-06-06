@@ -2,35 +2,106 @@
   <section class="page-wrapper">
     <div class="controller-wrapper">
       <Controller
-        v-model:play-rate="playRate"
-        v-model:current-duration="currentDuration"
-        v-model:is-play="isPlay"
-        :total-duration="1000000"
+        :is-play="isPlay"
+        :current-duration="currentDuration"
+        :total-duration="totalDuration"
+        :show-upload="!route.query.path"
+        @upload="upload"
+        @play-state-change="onPlayChange"
+        @play-rate-change="onPlayRateChange"
+        @current-duration-change="onCurrentDurationChange"
       />
     </div>
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor :memory="ProRender.renderer.info.memory" />
+      <Monitor :memory="EnggRender.renderer.info.memory" />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
-import { PLAY_RATE } from "@/config/replay";
-import ProRender from "@/renderer/Pro";
+import EnggRender from "@/renderer/Pro";
+import { LocalPlay } from "@/utils/replay/local";
+import { RemotePlay } from "@/utils/replay/remote";
+
+import { usePlayer } from "./utils";
+
+const route = useRoute();
+
+const { currentDuration, totalDuration, isPlay } = usePlayer();
 
 const CANVAS_ID = "canvas_id";
 
-const currentDuration = ref(0);
+let player: LocalPlay | RemotePlay | null = null;
 
-const isPlay = ref(false);
-const playRate = ref(PLAY_RATE);
+if (route.query.path) {
+  player = new RemotePlay();
+  player.init("/api", route.query);
+} else {
+  player = new LocalPlay();
+}
+
+const upload = async (fileList: FileList) => {
+  if (player instanceof LocalPlay) {
+    player.init(Array.from(fileList));
+  }
+};
+
+const onPlayChange = (val: boolean) => {
+  isPlay.value = val;
+  if (val) {
+    player?.postMessage({
+      type: "playstate",
+      data: {
+        state: "play",
+        currentDuration: currentDuration.value
+      }
+    });
+  } else {
+    player?.postMessage({
+      type: "playstate",
+      data: {
+        state: "pause"
+      }
+    });
+  }
+};
+
+const onPlayRateChange = (rate: number) => {
+  player?.postMessage({
+    type: "rate",
+    data: rate
+  });
+};
+
+const onCurrentDurationChange = (current: number) => {
+  isPlay.value = false;
+  currentDuration.value = current;
+  player?.postMessage({
+    type: "timeupdate",
+    data: {
+      currentDuration: current
+    }
+  });
+};
+
+// const loadFile = () => {
+//   if (route.query.prefix) {
+//     const url = `http://datapro.senseauto.com/api/data/aws/listAnonymous`;
+//     const params = {
+//       path: route.query.prefix,
+//       bucketName: route.query.bucket
+//     };
+//   }
+// };
 
 onMounted(() => {
-  ProRender.initialize(CANVAS_ID);
+  EnggRender.initialize(CANVAS_ID);
 });
 
 onBeforeUnmount(() => {
-  ProRender.dispose();
+  EnggRender.dispose();
+  player?.dispose();
+  player = null;
 });
 </script>
 <style lang="less" scoped>

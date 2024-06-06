@@ -64,6 +64,13 @@ export default defineConfig({
   },
   server: {
     open: true,
-    strictPort: false
+    strictPort: false,
+    proxy: {
+      "/api": {
+        target: "http://datapro.senseauto.com/api/data/aws/listAnonymous",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, "")
+      }
+    }
   }
 });

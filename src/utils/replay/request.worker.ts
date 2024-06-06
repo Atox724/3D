@@ -1,3 +1,6 @@
+import { readFileFirstRowByFile, readFileLastRowByFile } from "../file";
+import type { MaybeArray, RequestWorker } from "./type";
+
 interface HMIFileType {
   modifyTime: string;
   name: string;
@@ -8,130 +11,85 @@ interface HMIFileType {
   urlHMI: string;
 }
 
-interface QueueType {
-  requestFunc: () => any;
-  index: number;
+interface HMIResponseType {
+  code: number;
+  data: HMIFileType[];
+  message: string;
 }
 
-// 自定义的请求队列类
-class RequestQueue {
-  maxConcurrency: number;
-  callback: (...args: any[]) => void;
-  queue: QueueType[];
-  activeCount: number;
-  cancelTokens: never[];
-  constructor(maxConcurrency = 3, callback: (...args: any[]) => void) {
-    this.maxConcurrency = maxConcurrency;
-    this.callback = callback;
-    this.queue = [];
-    this.activeCount = 0;
-    this.cancelTokens = [];
-  }
-
-  async add(requestFunc: QueueType["requestFunc"], index: QueueType["index"]) {
-    this.queue.push({ requestFunc, index });
-    this.processQueue();
-  }
-
-  async processQueue() {
-    if (this.activeCount >= this.maxConcurrency || this.queue.length === 0) {
-      return;
-    }
-
-    const { requestFunc, index } = this.queue[0];
-    this.queue.shift();
-    this.activeCount++;
-
-    try {
-      const result = await requestFunc();
-      this.callback(result, index);
-    } catch (error) {
-      console.error(`Error processing request ${index}:`, error);
-    } finally {
-      this.activeCount--;
-      this.processQueue();
-    }
-  }
-}
-
-onmessage = async (ev) => {
-  const { url, params } = ev.data;
-  const urlStr = new URL(url);
-  for (const key in params) {
-    urlStr.searchParams.append(key, params[key]);
-  }
-  const res = await fetch(urlStr.toString()).then((response) =>
-    response.json()
+const requestHMIFile = async (hmi_file: HMIFileType) => {
+  const res = await fetch(hmi_file.preSigned).then((response) =>
+    response.blob()
   );
-  const hmi_files = res.data as HMIFileType[];
-  const callback = (result: string, index: number) => {
-    postMessage({
-      type: "data",
-      data: {
-        result,
-        index
-      }
-    });
-  };
+  const file = new File([res], hmi_file.name, {
+    type: hmi_file.type
+  });
+  return file;
+};
 
-  const requestQueue = new RequestQueue(1, callback); // 最大并发数为3
-  const firstFile = hmi_files.shift()!;
-  const lastFile = hmi_files.pop()!;
-  const requestFirstFunc = async () => {
-    const response = await fetch(firstFile.preSigned).then((response) =>
-      response.text()
-    );
-    return response;
-  };
-  const requestLastFunc = async () => {
-    const response = await fetch(lastFile.preSigned).then((response) =>
-      response.text()
-    );
-    return response;
-  };
-  const [firstResult, lastResult] = await Promise.all([
-    requestFirstFunc(),
-    requestLastFunc()
-  ]);
-  // 找到第一个非空行的索引
-  let firstRowIndex = firstResult.indexOf("\n");
-  while (firstRowIndex !== -1 && firstResult[firstRowIndex + 1] === "\n") {
-    firstRowIndex = firstResult.indexOf("\n", firstRowIndex + 2);
-  }
-  if (firstRowIndex === -1) {
-    // 如果所有行都是空行，则设定为 0
-    firstRowIndex = 0;
-  }
-  const firstRow = firstResult.slice(0, firstRowIndex);
-  const startTime = +firstRow.split(":")[0];
+const getDuration = async (firstFile: File, lastFile: File) => {
+  const startRow = await readFileFirstRowByFile(firstFile);
+  const endRow = await readFileLastRowByFile(lastFile);
 
-  // 找到最后一个非空行的索引
-  let lastRowIndex = lastResult.lastIndexOf("\n");
-  while (lastRowIndex !== -1 && !lastResult[lastRowIndex + 1]) {
-    lastRowIndex = lastResult.lastIndexOf("\n", lastRowIndex - 2);
-  }
-  if (lastRowIndex === -1) {
-    // 如果所有行都是空行，则设定为最后一个字符索引
-    lastRowIndex = lastResult.length - 1;
-  }
-  const lastRow = lastResult.slice(lastRowIndex + 1);
-  const endTime = +lastRow.split(":")[0];
+  const startTime = +startRow.split(":")[0] / 1000;
+  const endTime = +endRow.split(":")[0] / 1000;
+  return { startTime, endTime };
+};
 
-  postMessage({
-    type: "time",
-    data: {
-      startTime,
-      endTime
+const postMsg = (msg: MaybeArray<RequestWorker.PostMessage>) => {
+  if (Array.isArray(msg)) {
+    msg.forEach(postMsg);
+  } else {
+    postMessage(msg);
+  }
+};
+
+onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
+  const { type, data } = ev.data;
+  if (type === "request") {
+    const urlStr = new URL(data.url, location.origin);
+    for (const key in data.params) {
+      urlStr.searchParams.append(key, data.params[key]);
     }
-  });
+    const res = await fetch(urlStr.toString()).then<HMIResponseType>(
+      (response) => response.json()
+    );
+    const hmi_files = res.data;
+    const firstFile = hmi_files.shift()!;
+    const lastFile = hmi_files.pop()!;
 
-  hmi_files.forEach((file, index) => {
-    const requestFunc = async () => {
-      const response = await fetch(file.preSigned).then((response) =>
-        response.text()
-      );
-      return response;
-    };
-    requestQueue.add(requestFunc, index);
-  });
+    const [firstResult, lastResult] = await Promise.all([
+      requestHMIFile(firstFile),
+      requestHMIFile(lastFile)
+    ]);
+
+    const { startTime, endTime } = await getDuration(firstResult, lastResult);
+
+    postMsg([
+      {
+        type: "durationchange",
+        data: {
+          startTime,
+          endTime
+        }
+      },
+      {
+        type: "files",
+        data: [firstResult]
+      }
+    ]);
+
+    for (const hmi_file of hmi_files) {
+      const res = await requestHMIFile(hmi_file);
+      postMsg({
+        type: "files",
+        data: [res]
+      });
+    }
+
+    postMsg({
+      type: "files",
+      data: [lastResult]
+    });
+  }
 };

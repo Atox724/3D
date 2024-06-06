@@ -1,4 +1,3 @@
-import { PLAY_RATE } from "@/config/replay";
 import { binarySearch } from "@/utils";
 
 export interface Action {
@@ -9,7 +8,7 @@ export interface Action {
 
 export class Timer {
   timeOffset = 0;
-  speed = PLAY_RATE;
+  speed = 1;
 
   private actions: Action[] = [];
   private raf: number | true | null = null;
@@ -60,7 +59,9 @@ export class Timer {
 
   private rafCheck() {
     const time = performance.now();
-    this.timeOffset += (time - this.lastTimestamp) * this.speed;
+    // FIX: 最大延迟为 1 帧, 避免一直卡在 while 中
+    const diff = Math.min(time - this.lastTimestamp, 1000 / 60);
+    this.timeOffset += diff * this.speed;
     this.lastTimestamp = time;
     while (this.actionsLength) {
       const action = this.actions[0];

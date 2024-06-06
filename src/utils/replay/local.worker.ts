@@ -98,18 +98,18 @@ const loadstart = async (files: File[]) => {
 const play = (currentDuration = 0) => {
   if (timer.isActive) return;
   timer.start(currentDuration);
-  postMsg({ type: "playState", data: { state: "play" } });
+  postMsg({ type: "playstatechange", data: "play" });
 };
 
 const pause = () => {
   timer.stop();
-  postMsg({ type: "playState", data: { state: "pause" } });
+  postMsg({ type: "playstatechange", data: "pause" });
 };
 
 const timeupdate = async (currentDuration: number) => {
   isJump = true;
   timer.clear();
-  postMsg({ type: "playState", data: { state: "pause" } });
+  postMsg({ type: "playstatechange", data: "pause" });
   const totalDuration = endTime - startTime;
   let maybeFileIndex = Math.floor(
     (currentDuration / totalDuration) * (cacheFiles.length - 1)
@@ -141,12 +141,12 @@ const timeupdate = async (currentDuration: number) => {
   const lines = text.split("\n").slice(maybeRowIndex);
   baselineTime = +lines[0].split(":")[0] / 1000;
   timer.start();
-  postMsg({ type: "playState", data: { state: "play" } });
+  postMsg({ type: "playstatechange", data: "play" });
   processLines(lines);
   loadstart(cacheFiles.slice(maybeFileIndex + 1));
 };
 
-const postMsg = (msg: MaybeArray<LocalWorker.PostMessage.Type>) => {
+const postMsg = (msg: MaybeArray<LocalWorker.PostMessage>) => {
   if (Array.isArray(msg)) {
     msg.forEach(postMsg);
   } else {
@@ -154,24 +154,28 @@ const postMsg = (msg: MaybeArray<LocalWorker.PostMessage.Type>) => {
   }
 };
 
-onmessage = async (ev: MessageEvent<LocalWorker.OnMessage.Type>) => {
+onmessage = async (ev: MessageEvent<LocalWorker.OnMessage>) => {
   const { type, data } = ev.data;
-  if (type === "file") {
-    cacheFiles = Array.from(data);
+  if (type === "files") {
+    cacheFiles = data;
     await getDuration();
     postMsg({
-      type: "time",
+      type: "durationchange",
       data: {
         startTime,
         endTime
       }
     });
     autoplay();
-  } else if (type === "play") {
-    play(data?.currentDuration);
-  } else if (type === "pause") {
-    pause();
+  } else if (type === "playstate") {
+    if (data.state === "play") {
+      play(data?.currentDuration);
+    } else {
+      pause();
+    }
   } else if (type === "timeupdate") {
     timeupdate(data.currentDuration);
+  } else if (type === "rate") {
+    timer.setSpeed(data);
   }
 };

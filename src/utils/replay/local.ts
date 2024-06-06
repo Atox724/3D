@@ -1,6 +1,6 @@
-import emitter from "../emitter";
 import { VIEW_WS } from "../websocket";
-import type { LocalWorker } from "./type";
+import emitter from "./emitter";
+import type { Local } from "./type";
 import { BasicPlay } from "./utils";
 
 export class LocalPlay extends BasicPlay {
@@ -14,33 +14,27 @@ export class LocalPlay extends BasicPlay {
     this.worker.onmessage = this.onMessage;
   }
 
-  init(files: FileList) {
+  init(files: File[]) {
     this.postMessage({
-      type: "file",
+      type: "files",
       data: files
     });
   }
 
-  postMessage(msg: LocalWorker.OnMessage.Type) {
+  postMessage(msg: Local.PostMessage) {
     this.worker.postMessage(msg);
   }
 
-  onMessage = (ev: MessageEvent<LocalWorker.PostMessage.Type>) => {
+  onMessage = (ev: MessageEvent<Local.OnMessage>) => {
     const { type, data } = ev.data;
+    emitter.emit(type, data);
     switch (type) {
-      case "time":
+      case "durationchange":
         this.startTime = data.startTime;
         this.endTime = data.endTime;
-        emitter.emit("durationchange", this.duration);
-        break;
-      case "playState":
-        emitter.emit("playState", data.state);
         break;
       case "data":
         VIEW_WS.dispatchTargetMsg(data.topic, data.data);
-        break;
-      case "timeupdate":
-        emitter.emit("timeupdate", data.currentDuration);
         break;
     }
   };

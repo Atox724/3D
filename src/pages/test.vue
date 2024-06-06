@@ -3,10 +3,8 @@
 </template>
 <script lang="ts" setup>
 const params = {
-  filePath: "true",
-  prefix:
-    "/L2/segment/feature/26112/2024_06/A02-720/2024_06_03/2024_06_03_19_14_16/hmi_files",
-  bucket: "sdc_adas_3"
+  path: "/L2/segment/feature/26346/2024_06/A02-946/2024_06_05/2024_06_05_21_56_43/hmi_files",
+  bucketName: "sdc_adas_3"
 };
 const router = useRouter();
 router.push({
