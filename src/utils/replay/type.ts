@@ -57,12 +57,22 @@ export namespace EventType {
     data: File[];
   }
 
+  export interface LoadStateType {
+    type: "loadstate";
+    data: {
+      state: "loadstart" | "loading" | "loadend";
+      current: number;
+      total: number;
+    };
+  }
+
   export type ALL =
-    | EventType.PlayStateType
-    | EventType.DurationType
-    | EventType.TimeUpdateType
-    | EventType.DataType
-    | EventType.FileType;
+    | PlayStateType
+    | DurationType
+    | TimeUpdateType
+    | DataType
+    | FileType
+    | LoadStateType;
 }
 
 export namespace Local {
@@ -70,7 +80,8 @@ export namespace Local {
     | EventType.PlayStateType
     | EventType.DurationType
     | EventType.TimeUpdateType
-    | EventType.DataType;
+    | EventType.DataType
+    | EventType.LoadStateType;
   export type PostMessage =
     | MessageType.FileType
     | MessageType.PlayStateType
@@ -79,16 +90,8 @@ export namespace Local {
 }
 
 export namespace LocalWorker {
-  export type OnMessage =
-    | MessageType.FileType
-    | MessageType.PlayStateType
-    | MessageType.RateType
-    | EventType.TimeUpdateType;
-  export type PostMessage =
-    | EventType.PlayStateType
-    | EventType.DurationType
-    | EventType.TimeUpdateType
-    | EventType.DataType;
+  export type OnMessage = Local.PostMessage;
+  export type PostMessage = Local.OnMessage;
 }
 
 export namespace Remote {
@@ -96,7 +99,8 @@ export namespace Remote {
     | EventType.PlayStateType
     | EventType.DurationType
     | EventType.TimeUpdateType
-    | EventType.DataType;
+    | EventType.DataType
+    | EventType.LoadStateType;
   export type PostMessage =
     | MessageType.RequestType
     | MessageType.PlayStateType
@@ -105,27 +109,12 @@ export namespace Remote {
 }
 
 export namespace RemoteWorker {
-  export type OnMessage =
-    | MessageType.RequestType
-    | MessageType.PlayStateType
-    | MessageType.RateType
-    | EventType.TimeUpdateType;
-  export type PostMessage =
-    | EventType.PlayStateType
-    | EventType.DurationType
-    | EventType.TimeUpdateType
-    | EventType.DataType;
+  export type OnMessage = Remote.PostMessage;
+  export type PostMessage = Remote.OnMessage;
 }
 
-export namespace RequestWorker {
-  interface FileType {
-    type: "file";
-    data: {
-      file: File;
-      current: number;
-      total: number;
-    };
-  }
-  export type OnMessage = MessageType.RequestType;
-  export type PostMessage = EventType.DurationType | FileType;
+export interface Action {
+  /** 距开始时间的延迟: 毫秒ms */
+  delay: number;
+  doAction: () => void;
 }

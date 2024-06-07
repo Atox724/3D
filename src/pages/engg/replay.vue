@@ -6,6 +6,7 @@
         :current-duration="currentDuration"
         :total-duration="totalDuration"
         :show-upload="!route.query.path"
+        :load-progress="loadProgress"
         @upload="upload"
         @play-state-change="onPlayChange"
         @play-rate-change="onPlayRateChange"
@@ -27,7 +28,7 @@ import { usePlayer } from "./utils";
 
 const route = useRoute();
 
-const { currentDuration, totalDuration, isPlay } = usePlayer();
+const { currentDuration, totalDuration, loadProgress, isPlay } = usePlayer();
 
 const CANVAS_ID = "canvas_id";
 

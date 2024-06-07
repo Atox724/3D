@@ -8,7 +8,7 @@ export class LocalPlay extends BasicPlay {
 
   constructor() {
     super();
-    this.worker = new Worker(new URL("./local.worker.ts", import.meta.url), {
+    this.worker = new Worker(new URL("./new.worker.ts", import.meta.url), {
       type: "module"
     });
     this.worker.onmessage = this.onMessage;

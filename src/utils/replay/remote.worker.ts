@@ -1,40 +1,68 @@
+// import pLimit from "p-limit";
+
+import { throttle } from "lodash-es";
+
 import { binarySearch, formatMsg } from "..";
-import { readFileAsText, readFileBothRowByFile } from "../file";
+import {
+  readFileAsText,
+  readFileBothRowByFile,
+  readFileFirstRowByFile,
+  readFileLastRowByFile
+} from "../file";
 import { Timer } from "./timer";
-import type { MaybeArray, RemoteWorker, RequestWorker } from "./type";
+import type { MaybeArray, MessageType, RemoteWorker } from "./type";
+
+interface HMIFileType {
+  modifyTime: string;
+  name: string;
+  path: string;
+  preSigned: string;
+  size: string;
+  type: string;
+  urlHMI: string;
+}
+
+interface HMIResponseType {
+  code: number;
+  data: HMIFileType[];
+  message: string;
+}
 
 const timer = new Timer();
 
 let cacheFiles: File[] = [];
 let currentIndex = 0;
+let loadedTotalDuration = 0,
+  actionCurrentDuration = 0;
 
 let startTime = 0,
   endTime = 0,
+  totalDuration = 0,
   baselineTime = 0;
 
 let needStop = false;
 
-const requestWorker = new Worker(
-  new URL("./request.worker.ts", import.meta.url),
-  { type: "module" }
-);
+const requestHMIFile = async (hmi_file: HMIFileType) => {
+  const res = await fetch(hmi_file.preSigned).then((response) =>
+    response.blob()
+  );
+  const file = new File([res], hmi_file.name, {
+    type: hmi_file.type
+  });
+  return file;
+};
 
-requestWorker.onmessage = async (
-  ev: MessageEvent<RequestWorker.PostMessage>
-) => {
-  const { type, data } = ev.data;
-  if (type === "durationchange") {
-    startTime = data.startTime;
-    endTime = data.endTime;
-    baselineTime = startTime;
-    postMsg({ type, data });
-  } else if (type === "file") {
-    if (!cacheFiles.length) {
-      cacheFiles = Array(data.total).fill(null);
-    }
-    cacheFiles[data.current] = data.file;
-    checkLoad(cacheFiles.slice(currentIndex));
-  }
+const getDuration = async () => {
+  const firstFile = cacheFiles[0];
+  const lastFile = cacheFiles[cacheFiles.length - 1];
+
+  const startRow = await readFileFirstRowByFile(firstFile);
+  const endRow = await readFileLastRowByFile(lastFile);
+
+  startTime = +startRow.split(":")[0] / 1000;
+  endTime = +endRow.split(":")[0] / 1000;
+  totalDuration = endTime - startTime;
+  baselineTime = startTime;
 };
 
 const postMsg = (msg: MaybeArray<RemoteWorker.PostMessage>) => {
@@ -43,6 +71,84 @@ const postMsg = (msg: MaybeArray<RemoteWorker.PostMessage>) => {
   } else {
     postMessage(msg);
   }
+};
+
+const postProgress = throttle((currentDuration) => {
+  postMsg({
+    type: "loadstate",
+    data: {
+      state:
+        currentDuration === 0
+          ? "loadstart"
+          : currentDuration === totalDuration
+            ? "loadend"
+            : "loading",
+      current: currentDuration,
+      total: totalDuration
+    }
+  });
+}, 1000);
+
+const requestHandler = async (data: MessageType.RequestType["data"]) => {
+  const urlStr = new URL(data.url, location.origin);
+  for (const key in data.params) {
+    urlStr.searchParams.append(key, data.params[key]);
+  }
+  const res = await fetch(urlStr.toString()).then<HMIResponseType>((response) =>
+    response.json()
+  );
+  const hmi_files = [...res.data];
+  const filesLength = hmi_files.length;
+  const firstFile = hmi_files.shift()!;
+  const lastFile = hmi_files.pop()!;
+
+  const [firstResult, lastResult] = await Promise.all([
+    requestHMIFile(firstFile),
+    requestHMIFile(lastFile)
+  ]);
+
+  cacheFiles = Array(filesLength).fill(null);
+  cacheFiles[0] = firstResult;
+  cacheFiles[filesLength - 1] = lastResult;
+  await getDuration();
+  postMsg({
+    type: "durationchange",
+    data: {
+      startTime,
+      endTime
+    }
+  });
+  // const limit = pLimit(6);
+
+  // const input: Promise<void>[] = [];
+
+  while (hmi_files.length) {
+    const files = hmi_files.splice(0, 6);
+    await Promise.all(
+      files.map((hmi_file) => {
+        return new Promise((resolve) => {
+          requestHMIFile(hmi_file).then(async (file) => {
+            cacheFiles[res.data.indexOf(hmi_file)] = file;
+            await checkLoad(cacheFiles.slice(currentIndex));
+            resolve(null);
+          });
+        });
+      })
+    );
+  }
+
+  // for (const hmi_file of hmi_files) {
+  //   await requestHMIFile(hmi_file).then((res) => {
+  //     cacheFiles[hmi_files.indexOf(hmi_file) + 1] = res;
+  //     return checkLoad(cacheFiles.slice(currentIndex));
+  //   });
+  // }
+  // await Promise.all(input);
+};
+
+const autoplay = () => {
+  loadstart(cacheFiles);
+  play();
 };
 
 const processLines = (lines: string[]) => {
@@ -57,6 +163,7 @@ const processLines = (lines: string[]) => {
       continue;
     }
     const currentTime = +timeStr / 1000;
+    const currentDuration = currentTime - startTime;
     const action = {
       delay: currentTime - baselineTime,
       doAction() {
@@ -74,18 +181,21 @@ const processLines = (lines: string[]) => {
           }
           data = formatMsg(data);
           if (data) {
-            postMsg([
-              {
-                type: "data",
-                data
-              },
-              {
+            postMsg({
+              type: "data",
+              data
+            });
+            if (currentDuration - actionCurrentDuration >= 1000) {
+              postMsg({
                 type: "timeupdate",
                 data: {
-                  currentDuration: currentTime - startTime
+                  currentDuration
                 }
-              }
-            ]);
+              });
+              actionCurrentDuration = currentDuration;
+            } else if (currentDuration - actionCurrentDuration < 0) {
+              actionCurrentDuration = currentDuration;
+            }
           }
         } catch (error) {
           // console.log(error);
@@ -93,12 +203,14 @@ const processLines = (lines: string[]) => {
       }
     };
     timer.addAction(action);
+
+    loadedTotalDuration = currentDuration;
   }
 };
 
 const loadstart = async (files: File[]) => {
   for (const file of files) {
-    if (needStop) return;
+    if (needStop || !file) return;
     const text = await readFileAsText(file);
     const lines = text.split("\n");
     processLines(lines);
@@ -114,6 +226,7 @@ const checkLoad = async (files: File[]) => {
     const text = await readFileAsText(file);
     const lines = text.split("\n");
     processLines(lines);
+    postProgress(loadedTotalDuration);
   }
 };
 
@@ -132,13 +245,13 @@ const timeupdate = async (currentDuration: number) => {
   needStop = true;
   timer.clear();
   postMsg({ type: "playstatechange", data: "pause" });
-  const totalDuration = endTime - startTime;
   let maybeFileIndex = Math.floor(
     (currentDuration / totalDuration) * (cacheFiles.length - 1)
   );
   let maybeRowIndex = -1;
   while (maybeRowIndex === -1) {
     const file = cacheFiles[maybeFileIndex];
+    if (!file) return;
     const { firstRow, lastRow } = await readFileBothRowByFile(file);
     const fileStartDuration = +firstRow.split(":")[0] / 1000 - startTime;
     const fileEndDuration = +lastRow.split(":")[0] / 1000 - startTime;
@@ -171,9 +284,8 @@ const timeupdate = async (currentDuration: number) => {
 onmessage = async (ev: MessageEvent<RemoteWorker.OnMessage>) => {
   const { type, data } = ev.data;
   if (type === "request") {
-    cacheFiles = [];
-    requestWorker.postMessage({ type, data });
-    play();
+    requestHandler(data);
+    autoplay();
   } else if (type === "playstate") {
     if (data.state === "play") {
       play(data?.currentDuration);

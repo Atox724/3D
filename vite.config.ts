@@ -67,7 +67,8 @@ export default defineConfig({
     strictPort: false,
     proxy: {
       "/api": {
-        target: "http://datapro.senseauto.com/api/data/aws/listAnonymous",
+        // target: "http://datapro.senseauto.com/api/data/aws/listAnonymous",
+        target: "http://localhost:3000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "")
       }

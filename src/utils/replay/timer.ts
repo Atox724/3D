@@ -1,10 +1,8 @@
+import { throttle } from "lodash-es";
+
 import { binarySearch } from "@/utils";
 
-export interface Action {
-  /** 距开始时间的延迟: 毫秒ms */
-  delay: number;
-  doAction: () => void;
-}
+import type { Action } from "./type";
 
 export class Timer {
   timeOffset = 0;
@@ -24,11 +22,13 @@ export class Timer {
     return this.raf !== null;
   }
 
-  addAction(action: Action) {
-    if (
-      !this.actionsLength ||
-      this.actions[this.actions.length - 1].delay < action.delay
-    ) {
+  /** 最后一帧的延时 */
+  get lastDelay() {
+    return this.actions[this.actions.length - 1].delay;
+  }
+
+  addAction = throttle((action: Action) => {
+    if (!this.actionsLength || this.lastDelay < action.delay) {
       this.actions.push(action);
     } else {
       const index = binarySearch(
@@ -40,7 +40,7 @@ export class Timer {
     if (this.raf === true) {
       this.raf = requestAnimationFrame(this.rafCheck.bind(this));
     }
-  }
+  }, 1000 / 60);
 
   start(timeOffset = 0) {
     this.timeOffset = timeOffset;
@@ -68,6 +68,10 @@ export class Timer {
       if (this.timeOffset >= action.delay) {
         this.actions.shift();
         action.doAction();
+        if (performance.now() - time > 1000 / 60) {
+          // 如果超过16ms，则停止处理，避免阻塞
+          break;
+        }
       } else {
         break;
       }

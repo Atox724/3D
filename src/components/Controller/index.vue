@@ -6,6 +6,7 @@
     <el-slider
       v-model="progress"
       :show-tooltip="false"
+      :style="{ '--loaded-width': `${loadProgress}%` }"
       class="progress-bar"
       @change="progressChange($event as number)"
       @input="progressInput($event as number)"
@@ -76,13 +77,15 @@ const props = withDefaults(
     isPlay?: boolean;
     playRate?: number;
     showUpload?: boolean;
+    loadProgress?: number;
   }>(),
   {
     currentDuration: 0,
     totalDuration: 0,
     isPlay: false,
     playRate: 1,
-    showUpload: false
+    showUpload: false,
+    loadProgress: 0
   }
 );
 
@@ -149,6 +152,19 @@ watchEffect(() => {
   .progress-bar {
     flex: 1;
     padding: 0 18px;
+
+    :deep(.el-slider__runway) {
+      &::before {
+        content: "";
+        position: absolute;
+        display: block;
+        width: var(--loaded-width);
+        height: var(--el-slider-height);
+        background-color: var(--el-slider-main-bg-color);
+        opacity: 0.5;
+        transition: width 0.3s ease;
+      }
+    }
   }
 
   .play-btn {

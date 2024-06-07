@@ -1,3 +1,5 @@
+import { throttle } from "lodash-es";
+
 import { binarySearch, formatMsg } from "..";
 import {
   readFileAsText,
@@ -14,6 +16,7 @@ let cacheFiles: File[] = [];
 
 let startTime = 0,
   endTime = 0,
+  totalDuration = 0,
   baselineTime = 0;
 
 let isJump = false;
@@ -27,8 +30,25 @@ const getDuration = async () => {
 
   startTime = +startRow.split(":")[0] / 1000;
   endTime = +endRow.split(":")[0] / 1000;
+  totalDuration = endTime - startTime;
   baselineTime = startTime;
 };
+
+const postProgress = throttle((currentDuration: number) => {
+  postMsg({
+    type: "loadstate",
+    data: {
+      state:
+        currentDuration === 0
+          ? "loadstart"
+          : currentDuration === totalDuration
+            ? "loadend"
+            : "loading",
+      current: currentDuration,
+      total: totalDuration
+    }
+  });
+}, 1000);
 
 const autoplay = () => {
   loadstart(cacheFiles);
@@ -84,6 +104,7 @@ const processLines = (lines: string[]) => {
     };
     timer.addAction(action);
   }
+  postProgress(timer.lastDelay);
 };
 
 const loadstart = async (files: File[]) => {
@@ -110,7 +131,6 @@ const timeupdate = async (currentDuration: number) => {
   isJump = true;
   timer.clear();
   postMsg({ type: "playstatechange", data: "pause" });
-  const totalDuration = endTime - startTime;
   let maybeFileIndex = Math.floor(
     (currentDuration / totalDuration) * (cacheFiles.length - 1)
   );
