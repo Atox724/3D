@@ -7,6 +7,9 @@ import {
 import type { LocalWorker, MaybeArray } from "./type";
 
 const DUMP_MS = 1000 / 60;
+const MAX_LOAD_MS = 1000 * 10;
+
+const TIMESTEMP_LENGTH = 16;
 
 const cacheData = new Map<number, string[]>();
 let playIndex = 0;
@@ -18,12 +21,9 @@ let startTime = 0,
 const getDuration = async (firstFile: File, lastFile: File) => {
   const startRow = await readFileFirstRowByFile(firstFile);
   const endRow = await readFileLastRowByFile(lastFile);
-  const startColonIndex = startRow.indexOf(":");
-  const endColonIndex = endRow.indexOf(":");
-  if (startColonIndex === -1 || endColonIndex === -1) return;
 
-  startTime = +startRow.slice(0, startColonIndex) / 1000;
-  endTime = +endRow.slice(0, endColonIndex) / 1000;
+  startTime = +startRow.slice(0, TIMESTEMP_LENGTH) / 1000;
+  endTime = +endRow.slice(0, TIMESTEMP_LENGTH) / 1000;
   baselineTime = startTime;
 };
 
@@ -37,22 +37,19 @@ const postMsg = (msg: MaybeArray<LocalWorker.PostMessage>) => {
 
 const processLines = (lines: string[]) => {
   lines.forEach((line) => {
-    const colonIndex = line.indexOf(":");
-    if (colonIndex === -1) return;
-    const framestamp = Math.floor(
-      parseInt(line.slice(0, colonIndex)) / DUMP_MS / 1000
-    );
-    const cacheLines = cacheData.get(framestamp);
+    const framestamp = +line.slice(0, TIMESTEMP_LENGTH) / 1e3;
+    const index = Math.ceil((framestamp - startTime) / DUMP_MS) || 1;
+    const cacheLines = cacheData.get(index);
     if (!cacheLines) {
-      cacheData.set(framestamp, [line.slice(colonIndex + 1)]);
+      cacheData.set(index, [line.slice(TIMESTEMP_LENGTH + 1)]);
     } else {
-      cacheLines.push(line.slice(colonIndex + 1));
+      cacheLines.push(line.slice(TIMESTEMP_LENGTH + 1));
     }
     postMsg({
       type: "loadstate",
       data: {
         state: "loading",
-        current: framestamp * DUMP_MS,
+        current: framestamp,
         total: endTime
       }
     });

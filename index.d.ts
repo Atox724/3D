@@ -1,12 +1,14 @@
 /// <reference types="vite/client" />
 
+interface Memory {
+  jsHeapSizeLimit: number;
+  totalJSHeapSize: number;
+  usedJSHeapSize: number;
+}
+
 interface Window {
   performance: Performance & {
-    memory?: {
-      jsHeapSizeLimit: number;
-      totalJSHeapSize: number;
-      usedJSHeapSize: number;
-    };
+    memory?: Memory;
   };
 }
 

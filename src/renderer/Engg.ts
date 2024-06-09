@@ -6,6 +6,9 @@ import { CrosswalkRender, FreespaceRender } from "./modules";
 
 class EnggRender extends Renderer {
   createRender: Target[];
+
+  ips: string[] = [];
+
   constructor() {
     super();
     this.createRender = [
@@ -22,6 +25,9 @@ class EnggRender extends Renderer {
         VIEW_WS.registerTargetMsg(topic, instance.update.bind(instance));
       });
     }
+    VIEW_WS.registerTargetMsg("conn_list", (data: { conn_list?: string[] }) => {
+      this.ips = data.conn_list || [];
+    });
   }
 }
 

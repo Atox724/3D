@@ -14,6 +14,8 @@ import type { Target } from "./BasicTarget";
 class ProRender extends Renderer {
   createRender: Target[];
 
+  ips: string[] = [];
+
   constructor() {
     super();
     this.createRender = [
@@ -47,6 +49,9 @@ class ProRender extends Renderer {
         VIEW_WS.registerTargetMsg(topic, instance.update.bind(instance));
       });
     }
+    VIEW_WS.registerTargetMsg("conn_list", (data: { conn_list?: string[] }) => {
+      this.ips = data.conn_list || [];
+    });
   }
 }
 

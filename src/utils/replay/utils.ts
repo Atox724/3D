@@ -1,4 +1,6 @@
-export abstract class BasicPlay {
+import EventEmitter from "eventemitter3";
+
+export abstract class BasicPlay extends EventEmitter {
   startTime = 0;
   endTime = 0;
 

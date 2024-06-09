@@ -14,12 +14,12 @@
     </div>
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor :memory="EnggRender.renderer.info.memory" />
+      <Monitor :memory="ProRender.renderer.info.memory" :ips="ProRender.ips" />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
-import EnggRender from "@/renderer/Pro";
+import ProRender from "@/renderer/Pro";
 import { LocalPlay } from "@/utils/replay/local";
 import { RemotePlay } from "@/utils/replay/remote";
 
@@ -84,22 +84,12 @@ const onCurrentDurationChange = (current: number) => {
   });
 };
 
-// const loadFile = () => {
-//   if (route.query.prefix) {
-//     const url = `http://datapro.senseauto.com/api/data/aws/listAnonymous`;
-//     const params = {
-//       path: route.query.prefix,
-//       bucketName: route.query.bucket
-//     };
-//   }
-// };
-
 onMounted(() => {
-  EnggRender.initialize(CANVAS_ID);
+  ProRender.initialize(CANVAS_ID);
 });
 
 onBeforeUnmount(() => {
-  EnggRender.dispose();
+  ProRender.dispose();
   player?.dispose();
   player = null;
 });

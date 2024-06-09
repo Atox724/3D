@@ -6,14 +6,14 @@
     </div>
     <div class="panel-row">
       <span>WebGL: {{ geometries }}/{{ textures }}</span>
-      <span :class="{ 'multi-online': monitor.onlineList.length > 1 }">
+      <span :class="{ 'multi-online': ips.length > 1 }">
         <el-tooltip>
           <template #content>
-            <div v-for="(item, index) in monitor.onlineList" :key="index">
+            <div v-for="(item, index) in ips" :key="index">
               {{ item }}
             </div>
           </template>
-          实时在线: {{ monitor.onlineList.length }}
+          实时在线: {{ ips.length }}
         </el-tooltip>
       </span>
     </div>
@@ -23,10 +23,11 @@
 import type { WebGLInfo } from "three";
 
 import { formatBytes } from "@/utils";
-import monitor from "@/utils/monitor";
+import stats from "@/utils/stats";
 
 const props = defineProps<{
   memory: WebGLInfo["memory"];
+  ips: string[];
 }>();
 
 const usedMemory = ref(0);
@@ -34,26 +35,16 @@ const geometries = ref(0);
 const textures = ref(0);
 const memoryRatio = ref(0);
 
-let timer: number;
-const startUpdate = () => {
-  timer = setInterval(() => {
-    if (window.performance.memory) {
-      const { usedJSHeapSize, jsHeapSizeLimit } = window.performance.memory;
-      usedMemory.value = usedJSHeapSize;
-      memoryRatio.value = (usedJSHeapSize / jsHeapSizeLimit) * 100;
-    }
+onMounted(() => {
+  stats.on("memory", (memory) => {
+    usedMemory.value = memory.usedJSHeapSize;
+    memoryRatio.value = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
     geometries.value = props.memory.geometries;
     textures.value = props.memory.textures;
-  }, 1000);
-};
+  });
+});
 
-const stopUpdate = () => {
-  clearInterval(timer);
-};
-
-onMounted(startUpdate);
-
-onBeforeUnmount(stopUpdate);
+onBeforeUnmount(stats.dispose);
 </script>
 <style lang="less" scoped>
 .panel-wrapper {

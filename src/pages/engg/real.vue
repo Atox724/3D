@@ -2,7 +2,10 @@
   <section class="page-wrapper">
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor :memory="EnggRender.renderer.info.memory" />
+      <Monitor
+        :memory="EnggRender.renderer.info.memory"
+        :ips="EnggRender.ips"
+      />
     </div>
   </section>
 </template>

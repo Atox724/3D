@@ -15,42 +15,43 @@
     </div>
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor :memory="EnggRender.renderer.info.memory" />
+      <Monitor
+        :memory="EnggRender.renderer.info.memory"
+        :ips="EnggRender.ips"
+      />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
 import EnggRender from "@/renderer/Engg";
 import { LocalPlay } from "@/utils/replay/local";
-import { RemotePlay } from "@/utils/replay/remote";
-
-import { usePlayer } from "./utils";
 
 const route = useRoute();
 
-const { currentDuration, totalDuration, loadProgress, isPlay } = usePlayer();
-
 const CANVAS_ID = "canvas_id";
 
-let player: LocalPlay | RemotePlay | null = null;
+const player = new LocalPlay();
 
-if (route.query.path) {
-  player = new RemotePlay();
-  player.init("/api", route.query);
-} else {
-  player = new LocalPlay();
-}
+// if (route.query.path) {
+//   player = new RemotePlay();
+//   player.init("/api", route.query);
+// } else {
+//   player = new LocalPlay();
+// }
+
+const currentDuration = ref(0);
+const totalDuration = ref(0);
+const loadProgress = ref(0);
+const isPlay = ref(false);
 
 const upload = async (fileList: FileList) => {
-  if (player instanceof LocalPlay) {
-    player.init(Array.from(fileList));
-  }
+  player.init(Array.from(fileList));
 };
 
 const onPlayChange = (val: boolean) => {
   isPlay.value = val;
   if (val) {
-    player?.postMessage({
+    player.postMessage({
       type: "playstate",
       data: {
         state: "play",
@@ -58,7 +59,7 @@ const onPlayChange = (val: boolean) => {
       }
     });
   } else {
-    player?.postMessage({
+    player.postMessage({
       type: "playstate",
       data: {
         state: "pause"
@@ -68,7 +69,7 @@ const onPlayChange = (val: boolean) => {
 };
 
 const onPlayRateChange = (rate: number) => {
-  player?.postMessage({
+  player.postMessage({
     type: "rate",
     data: rate
   });
@@ -77,7 +78,7 @@ const onPlayRateChange = (rate: number) => {
 const onCurrentDurationChange = (current: number) => {
   isPlay.value = false;
   currentDuration.value = current;
-  player?.postMessage({
+  player.postMessage({
     type: "timeupdate",
     data: {
       currentDuration: current
@@ -85,24 +86,26 @@ const onCurrentDurationChange = (current: number) => {
   });
 };
 
-// const loadFile = () => {
-//   if (route.query.prefix) {
-//     const url = `http://datapro.senseauto.com/api/data/aws/listAnonymous`;
-//     const params = {
-//       path: route.query.prefix,
-//       bucketName: route.query.bucket
-//     };
-//   }
-// };
-
 onMounted(() => {
   EnggRender.initialize(CANVAS_ID);
+  player.on("durationchange", (data) => {
+    totalDuration.value = data.endTime - data.startTime;
+  });
+  player.on("timeupdate", (data) => {
+    currentDuration.value = data.currentDuration;
+  });
+  player.on("playstatechange", (data) => {
+    isPlay.value = data === "play";
+  });
+  player.on("loadstate", (data) => {
+    loadProgress.value =
+      Math.round((data.current / data.total) * 100 * 1e4) / 1e4;
+  });
 });
 
 onBeforeUnmount(() => {
   EnggRender.dispose();
-  player?.dispose();
-  player = null;
+  player.dispose();
 });
 </script>
 <style lang="less" scoped>

@@ -10,7 +10,7 @@
 <script lang="ts" setup>
 import { type EChartsType, init } from "echarts";
 
-import monitor from "@/utils/monitor";
+import stats from "@/utils/stats";
 
 const colorlist = ["#52c41a", "#fa8c16", "#f5222d"];
 
@@ -23,41 +23,32 @@ const chartData: number[] = [];
 const fpsNumber = ref(0);
 const chartStatus = ref(0);
 
-let timer: number;
+const fpsChange = (fps: number) => {
+  fpsNumber.value = fps;
+  if (chartData.length >= 20) chartData.shift();
+  chartData.push(fps);
 
-const startRender = () => {
-  timer = setInterval(() => {
-    fpsNumber.value = monitor.fps;
-    if (chartData.length >= 20) chartData.shift();
-    chartData.push(monitor.fps);
+  let status = 0;
+  if (fps < 60 * 0.6) status = 2;
+  else if (fps < 60 * 0.8) status = 1;
 
-    let status = 0;
-    if (monitor.fps < 60 * 0.6) status = 2;
-    else if (monitor.fps < 60 * 0.8) status = 1;
+  if (status !== chartStatus.value) {
+    chartStatus.value = status;
+  }
 
-    if (status !== chartStatus.value) {
-      chartStatus.value = status;
-    }
-
-    myChart.value?.setOption({
-      series: [
-        {
-          data: chartData,
-          areaStyle: {
-            color: colorlist[status]
-          },
-          itemStyle: {
-            color: colorlist[status]
-          }
+  myChart.value?.setOption({
+    series: [
+      {
+        data: chartData,
+        areaStyle: {
+          color: colorlist[status]
+        },
+        itemStyle: {
+          color: colorlist[status]
         }
-      ]
-    });
-    monitor.resetFps();
-  }, 1000);
-};
-
-const stopRender = () => {
-  clearInterval(timer);
+      }
+    ]
+  });
 };
 
 onMounted(() => {
@@ -95,10 +86,10 @@ onMounted(() => {
     ]
   });
 
-  startRender();
+  stats.on("fps", fpsChange);
 });
 
-onBeforeUnmount(stopRender);
+onBeforeUnmount(stats.dispose);
 </script>
 <style lang="less" scoped>
 .chart-wrapper {

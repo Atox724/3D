@@ -2,7 +2,7 @@
   <section class="monitor-wrapper">
     <MonitorChart />
     <el-divider direction="vertical" style="height: 100%"></el-divider>
-    <MonitorPanel :memory="memory" />
+    <MonitorPanel :memory="memory" :ips="ips" />
   </section>
 </template>
 <script lang="ts" setup>
@@ -10,6 +10,7 @@ import type { WebGLInfo } from "three";
 
 defineProps<{
   memory: WebGLInfo["memory"];
+  ips: string[];
 }>();
 </script>
 <style lang="less" scoped>

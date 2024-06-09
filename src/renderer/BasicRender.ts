@@ -21,7 +21,7 @@ import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
-import monitor from "@/utils/monitor";
+import stats from "@/utils/stats";
 
 import { EgoCarRender } from "./modules";
 
@@ -213,7 +213,7 @@ export abstract class Renderer {
 
     this.renderer.render(this.scene, this.camera);
 
-    monitor.updateFps();
+    stats.update();
   }
 
   render() {

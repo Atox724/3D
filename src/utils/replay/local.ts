@@ -1,10 +1,22 @@
-import { VIEW_WS } from "../websocket";
-import emitter from "./emitter";
-import type { Local } from "./type";
-import { BasicPlay } from "./utils";
+import EventEmitter from "eventemitter3";
 
-export class LocalPlay extends BasicPlay {
+import { VIEW_WS } from "../websocket";
+import type { Local } from "./type";
+
+type Events = {
+  [E in Local.OnMessage as E["type"]]: (data: E["data"]) => void;
+};
+
+export class LocalPlay extends EventEmitter<Events> {
   worker: Worker;
+
+  startTime = 0;
+  endTime = 0;
+
+  get duration() {
+    if (!this.startTime || !this.endTime) return Number.NaN;
+    return this.endTime - this.startTime;
+  }
 
   constructor() {
     super();
@@ -27,7 +39,7 @@ export class LocalPlay extends BasicPlay {
 
   onMessage = (ev: MessageEvent<Local.OnMessage>) => {
     const { type, data } = ev.data;
-    emitter.emit(type, data);
+    this.emit(type, data);
     switch (type) {
       case "durationchange":
         this.startTime = data.startTime;
@@ -41,5 +53,6 @@ export class LocalPlay extends BasicPlay {
 
   dispose() {
     this.worker.terminate();
+    this.removeAllListeners();
   }
 }

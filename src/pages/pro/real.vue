@@ -2,7 +2,7 @@
   <section class="page-wrapper">
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor :memory="ProRender.renderer.info.memory" />
+      <Monitor :memory="ProRender.renderer.info.memory" :ips="ProRender.ips" />
     </div>
   </section>
 </template>
