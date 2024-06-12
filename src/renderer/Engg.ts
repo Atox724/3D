@@ -2,7 +2,7 @@ import { VIEW_WS } from "@/utils/websocket";
 
 import { Renderer } from "./BasicRender";
 import type { Target } from "./BasicTarget";
-import { CrosswalkRender, FreespaceRender } from "./modules";
+import { BoxTargetRender, CrosswalkRender, FreespaceRender } from "./modules";
 
 class EnggRender extends Renderer {
   createRender: Target[];
@@ -13,7 +13,8 @@ class EnggRender extends Renderer {
     super();
     this.createRender = [
       new FreespaceRender(this.scene),
-      new CrosswalkRender(this.scene)
+      new CrosswalkRender(this.scene),
+      new BoxTargetRender(this.scene)
     ];
 
     this.registerModelRender();

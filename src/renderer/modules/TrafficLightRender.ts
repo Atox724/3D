@@ -91,11 +91,6 @@ export default class TrafficLightRender extends Target {
         this.modelList[id] = newModel;
       }
     });
-    Object.keys(this.modelList).forEach((id) => {
-      if (!data.find((item) => item.id === +id)) {
-        this.disposeObject(this.modelList[id]);
-        delete this.modelList[id];
-      }
-    });
+    this.checkModelByData(data);
   }
 }

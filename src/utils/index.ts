@@ -76,10 +76,10 @@ export function binarySearch<T>(arr: T[], comparator: (item: T) => number) {
 export function formatMsg(msg: string | ArrayBuffer | null) {
   if (typeof msg === "string") {
     const data = JSON.parse(msg);
-    if (data.value?.value0?.data) {
+    if (data.value?.value0) {
       return {
         topic: data.topic,
-        data: data.value.value0.data
+        data: data.value.value0
       };
     }
     return {

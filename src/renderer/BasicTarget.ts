@@ -11,7 +11,7 @@ export const targetZIndex = {
   crosswalk: 0.05
 };
 
-export abstract class Target<T = object> {
+export abstract class Target {
   scene: Scene;
 
   modelList: Record<string, Object3D>;
@@ -61,5 +61,14 @@ export abstract class Target<T = object> {
     this.modelList = {};
   }
 
-  abstract update(data: T[]): void;
+  checkModelByData<D extends Array<any>>(data: D, list = this.modelList) {
+    Object.keys(list).forEach((id) => {
+      if (!data.find((item) => item.id === +id)) {
+        this.disposeObject(list[id]);
+        delete list[id];
+      }
+    });
+  }
+
+  abstract update(data: any): void;
 }
