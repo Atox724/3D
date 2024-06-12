@@ -1,5 +1,5 @@
 export type MaybeArray<T> = T | T[];
-export type PlayState = "play" | "pause" | "loading";
+export type PlayState = "loading" | "play" | "pause" | "end";
 
 export namespace MessageType {
   export interface FileType {
@@ -17,11 +17,11 @@ export namespace MessageType {
     type: "playstate";
     data: {
       state: PlayState;
-      currentDuration?: number;
+      currentDuration: number;
     };
   }
-  export interface RateType {
-    type: "rate";
+  export interface PlayRateType {
+    type: "playrate";
     data: number;
   }
 }
@@ -40,21 +40,14 @@ export namespace EventType {
   }
   export interface TimeUpdateType {
     type: "timeupdate";
-    data: {
-      currentDuration: number;
-    };
+    data: number;
   }
   export interface DataType {
     type: "data";
     data: {
       topic: string;
-      data: any;
+      data: any[];
     };
-  }
-
-  export interface FileType {
-    type: "files";
-    data: File[];
   }
 
   export interface LoadStateType {
@@ -71,7 +64,6 @@ export namespace EventType {
     | DurationType
     | TimeUpdateType
     | DataType
-    | FileType
     | LoadStateType;
 }
 
@@ -85,7 +77,7 @@ export namespace Local {
   export type PostMessage =
     | MessageType.FileType
     | MessageType.PlayStateType
-    | MessageType.RateType
+    | MessageType.PlayRateType
     | EventType.TimeUpdateType;
 }
 
@@ -104,7 +96,7 @@ export namespace Remote {
   export type PostMessage =
     | MessageType.RequestType
     | MessageType.PlayStateType
-    | MessageType.RateType
+    | MessageType.PlayRateType
     | EventType.TimeUpdateType;
 }
 
@@ -113,8 +105,29 @@ export namespace RemoteWorker {
   export type PostMessage = Remote.OnMessage;
 }
 
-export interface Action {
-  /** 距开始时间的延迟: 毫秒ms */
-  delay: number;
-  doAction: () => void;
+export namespace Request {
+  export interface ResponseType {
+    type: "response";
+    data: {
+      text: string;
+      current: number;
+      total: number;
+    };
+  }
+
+  export interface ResponseFinishType {
+    type: "finish";
+    data?: null;
+  }
+
+  export type OnMessage =
+    | EventType.DurationType
+    | ResponseType
+    | ResponseFinishType;
+  export type PostMessage = MessageType.RequestType;
+}
+
+export namespace RequestWorker {
+  export type OnMessage = Request.PostMessage;
+  export type PostMessage = Request.OnMessage;
 }

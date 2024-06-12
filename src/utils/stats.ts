@@ -6,7 +6,7 @@ interface Events {
   memory: (memory: Memory) => void;
 }
 
-class Stats extends EventEmitter<Events> {
+export default class Stats extends EventEmitter<Events> {
   frames = 0;
 
   #beginTime = 0;
@@ -45,5 +45,3 @@ class Stats extends EventEmitter<Events> {
     this.removeAllListeners();
   }
 }
-
-export default new Stats();

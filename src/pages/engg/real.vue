@@ -3,16 +3,19 @@
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
       <Monitor
-        :memory="EnggRender.renderer.info.memory"
         :ips="EnggRender.ips"
+        v-bind="{ fps, memory, geometries, textures }"
       />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
+import { useMonitor } from "@/hooks/useMonitor";
 import EnggRender from "@/renderer/Engg";
 
 const CANVAS_ID = "canvas_id";
+
+const { fps, memory, geometries, textures } = useMonitor(EnggRender);
 
 onMounted(() => {
   EnggRender.initialize(CANVAS_ID);

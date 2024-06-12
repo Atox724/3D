@@ -10,7 +10,9 @@
 <script lang="ts" setup>
 import { type EChartsType, init } from "echarts";
 
-import stats from "@/utils/stats";
+const props = defineProps<{
+  fps: number;
+}>();
 
 const colorlist = ["#52c41a", "#fa8c16", "#f5222d"];
 
@@ -51,6 +53,8 @@ const fpsChange = (fps: number) => {
   });
 };
 
+watch(() => props.fps, fpsChange);
+
 onMounted(() => {
   myChart.value = init(chart.value);
   myChart.value.setOption({
@@ -85,11 +89,11 @@ onMounted(() => {
       }
     ]
   });
-
-  stats.on("fps", fpsChange);
 });
 
-onBeforeUnmount(stats.dispose);
+onBeforeUnmount(() => {
+  myChart.value?.dispose();
+});
 </script>
 <style lang="less" scoped>
 .chart-wrapper {

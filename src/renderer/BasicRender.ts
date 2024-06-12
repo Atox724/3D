@@ -21,7 +21,7 @@ import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
-import stats from "@/utils/stats";
+import Stats from "@/utils/stats";
 
 import { EgoCarRender } from "./modules";
 
@@ -56,6 +56,8 @@ export abstract class Renderer {
 
   egoCarRender?: EgoCarRender;
 
+  stats: Stats;
+
   constructor() {
     this.initialized = false;
 
@@ -74,6 +76,8 @@ export abstract class Renderer {
     this.camera.position.set(-22, 0, 12);
 
     this.timer = new Timer();
+
+    this.stats = new Stats();
 
     this.egoCarRender = new EgoCarRender(this.scene);
   }
@@ -213,7 +217,7 @@ export abstract class Renderer {
 
     this.renderer.render(this.scene, this.camera);
 
-    stats.update();
+    this.stats.update();
   }
 
   render() {
@@ -226,6 +230,7 @@ export abstract class Renderer {
     this.resizeOb?.disconnect();
     this.controls?.removeEventListener("end", this.resetCamera);
     this.controls?.dispose();
+    this.stats.dispose();
     this.initialized = false;
   }
 }

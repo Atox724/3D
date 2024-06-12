@@ -1,7 +1,10 @@
 <template>
   <section class="controller">
+    <el-space :size="18">
+      <slot name="left" />
+    </el-space>
     <span class="duration">
-      {{ formatTime(currentDuration) }}
+      {{ formatTime(current) }}
     </span>
     <el-slider
       v-model="progress"
@@ -12,16 +15,14 @@
       @input="progressInput($event as number)"
     />
     <span class="duration">
-      {{ formatTime(totalDuration) }}
+      {{ formatTime(total) }}
     </span>
     <el-space style="margin-left: 18px" :size="18">
-      <el-icon
-        size="24"
-        class="play-btn"
-        @click="emits('playStateChange', !isPlay)"
-      >
-        <VideoPlay v-if="!isPlay" />
-        <VideoPause v-else />
+      <el-icon size="24" class="play-btn" @click="playStateChange">
+        <Loading v-if="playState === 'loading'" />
+        <VideoPlay v-else-if="playState === 'pause'" />
+        <VideoPause v-else-if="playState === 'play'" />
+        <RefreshLeft v-else-if="playState === 'end'" />
       </el-icon>
       <el-dropdown @command="playRateChange">
         <span class="el-dropdown-link">
@@ -37,15 +38,21 @@
           >
         </template>
       </el-dropdown>
-      <el-button v-if="showUpload" @click="upload">Upload</el-button>
+      <slot name="right" />
     </el-space>
   </section>
 </template>
 <script lang="ts" setup>
-import { ArrowDown, VideoPause, VideoPlay } from "@element-plus/icons-vue";
+import {
+  ArrowDown,
+  Loading,
+  RefreshLeft,
+  VideoPause,
+  VideoPlay
+} from "@element-plus/icons-vue";
 
+import type { PlayState } from "@/typings";
 import { formatTime } from "@/utils";
-import { chooseFile } from "@/utils/file";
 
 const playRateOptions = [
   {
@@ -72,28 +79,25 @@ const playRateOptions = [
 
 const props = withDefaults(
   defineProps<{
-    currentDuration?: number;
-    totalDuration?: number;
-    isPlay?: boolean;
+    current?: number;
+    total?: number;
+    playState?: PlayState;
     playRate?: number;
-    showUpload?: boolean;
     loadProgress?: number;
   }>(),
   {
-    currentDuration: 0,
-    totalDuration: 0,
-    isPlay: false,
+    current: 0,
+    total: 0,
+    playState: "pause",
     playRate: 1,
-    showUpload: false,
     loadProgress: 0
   }
 );
 
 const emits = defineEmits<{
+  (e: "playStateChange", playState: PlayState, currentDuration?: number): void;
   (e: "playRateChange", rate: number): void;
-  (e: "playStateChange", isPlay: boolean): void;
-  (e: "currentDurationChange", currentDuration: number): void;
-  (e: "upload", files: FileList): void;
+  (e: "durationChange", current: number): void;
 }>();
 
 const progress = ref(0);
@@ -102,7 +106,7 @@ const progressChanging = ref(false);
 
 watchEffect(() => {
   if (progressChanging.value) return;
-  progress.value = (props.currentDuration / props.totalDuration) * 100;
+  progress.value = (props.current / props.total) * 100;
 });
 
 const progressInput = (val: number) => {
@@ -112,7 +116,23 @@ const progressInput = (val: number) => {
 
 const progressChange = (val: number) => {
   progressChanging.value = false;
-  emits("currentDurationChange", (val / 100) * props.totalDuration);
+  emits("durationChange", (val / 100) * props.total);
+};
+
+const playStateChange = () => {
+  switch (props.playState) {
+    case "loading":
+      break;
+    case "play":
+      emits("playStateChange", "pause");
+      break;
+    case "pause":
+      emits("playStateChange", "play", props.current);
+      break;
+    case "end":
+      emits("playStateChange", "play");
+      break;
+  }
 };
 
 const rate = ref(props.playRate);
@@ -120,13 +140,6 @@ const rate = ref(props.playRate);
 const playRateChange = (val: number) => {
   emits("playRateChange", val);
   rate.value = val;
-};
-
-const upload = async () => {
-  const files = await chooseFile({ directory: true });
-  if (files) {
-    emits("upload", files);
-  }
 };
 
 watchEffect(() => {

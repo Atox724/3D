@@ -1,7 +1,8 @@
 import EventEmitter from "eventemitter3";
 
+import type { Local } from "@/typings";
+
 import { VIEW_WS } from "../websocket";
-import type { Local } from "./type";
 
 type Events = {
   [E in Local.OnMessage as E["type"]]: (data: E["data"]) => void;
@@ -20,7 +21,7 @@ export class LocalPlay extends EventEmitter<Events> {
 
   constructor() {
     super();
-    this.worker = new Worker(new URL("./new.worker.ts", import.meta.url), {
+    this.worker = new Worker(new URL("./local.worker.ts", import.meta.url), {
       type: "module"
     });
     this.worker.onmessage = this.onMessage;

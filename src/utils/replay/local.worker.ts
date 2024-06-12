@@ -1,76 +1,90 @@
-import { throttle } from "lodash-es";
+import type { LocalWorker, MaybeArray, PlayState } from "@/typings";
+import { formatMsg, transform_MS } from "@/utils";
+import { readFileAsText } from "@/utils/file";
 
-import { binarySearch, formatMsg } from "..";
-import {
-  readFileAsText,
-  readFileBothRowByFile,
-  readFileFirstRowByFile,
-  readFileLastRowByFile
-} from "../file";
-import { Timer } from "./timer";
-import type { LocalWorker, MaybeArray } from "./type";
+import { getDuration } from "./utils";
 
-const timer = new Timer();
-
-let cacheFiles: File[] = [];
-
-let startTime = 0,
-  endTime = 0,
-  totalDuration = 0,
-  baselineTime = 0;
-
-let isJump = false;
-
-const getDuration = async () => {
-  const firstFile = cacheFiles[0];
-  const lastFile = cacheFiles[cacheFiles.length - 1];
-
-  const startRow = await readFileFirstRowByFile(firstFile);
-  const endRow = await readFileLastRowByFile(lastFile);
-
-  startTime = +startRow.split(":")[0] / 1000;
-  endTime = +endRow.split(":")[0] / 1000;
-  totalDuration = endTime - startTime;
-  baselineTime = startTime;
+const DUMP_MS = 1000 / 60;
+const postMsg = (msg: MaybeArray<LocalWorker.PostMessage>) => {
+  if (Array.isArray(msg)) {
+    msg.forEach(postMsg);
+  } else {
+    postMessage(msg);
+  }
 };
 
-const postProgress = throttle((currentDuration: number) => {
-  postMsg({
-    type: "loadstate",
-    data: {
-      state:
-        currentDuration === 0
-          ? "loadstart"
-          : currentDuration === totalDuration
-            ? "loadend"
-            : "loading",
-      current: currentDuration,
-      total: totalDuration
-    }
-  });
-}, 1000);
-
-const autoplay = () => {
-  loadstart(cacheFiles);
-  play();
+const getKeyByTime = (timestamp: number) => {
+  return Math.floor(transform_MS(timestamp) / DUMP_MS);
 };
 
-const processLines = (lines: string[]) => {
-  for (const line of lines) {
-    if (isJump) return;
-    if (!line.trim()) continue;
-    const [timeStr, base64] = line.split(":");
-    let jsonData = "";
-    try {
-      jsonData = atob(base64);
-    } catch (error) {
-      continue;
+class Player {
+  #initialized = false;
+
+  startTime = 0;
+  endTime = 0;
+  currentTime = 0;
+
+  #speed = 1;
+
+  #cacheData = new Map<number, string[]>();
+
+  #playTimer = 0;
+
+  #playState: PlayState = "pause";
+  get playState() {
+    return this.#playState;
+  }
+  set playState(state: PlayState) {
+    if (state !== this.#playState) {
+      this.#playState = state;
+      postMsg({
+        type: "playstatechange",
+        data: state
+      });
     }
-    const currentTime = +timeStr / 1000;
-    const action = {
-      delay: currentTime - baselineTime,
-      doAction() {
-        if (isJump) return;
+  }
+
+  async init(files: File[]) {
+    if (this.#initialized) return;
+    this.#initialized = true;
+    const duration = await getDuration(files[0], files[files.length - 1]);
+    if (!duration) return;
+    this.startTime = duration.startTime;
+    this.endTime = duration.endTime;
+    this.#loadData(files);
+  }
+
+  play(timestamp = this.startTime) {
+    if (!this.#initialized) return;
+    this.pause();
+    this.currentTime = timestamp;
+
+    let playIndex = -1;
+
+    this.#playTimer = setInterval(() => {
+      if (playIndex === -1) {
+        this.playState = "loading";
+        const key = getKeyByTime(this.currentTime || this.startTime);
+        playIndex = [...this.#cacheData.keys()].indexOf(key);
+        return;
+      }
+      if (this.currentTime >= this.endTime) {
+        this.playState = "end";
+        clearInterval(this.#playTimer);
+        return;
+      }
+      if (playIndex >= this.#cacheData.size) {
+        this.playState = "loading";
+        return;
+      }
+      this.playState = "play";
+      const datas = [...this.#cacheData.entries()];
+      const lines = datas[playIndex][1];
+      lines.forEach((line) => {
+        const colonIndex = line.indexOf(":");
+        if (colonIndex === -1) return;
+        const data = line.slice(colonIndex + 1);
+        const jsonData = atob(data);
         try {
           let data;
           if (jsonData[0] === "{") {
@@ -84,118 +98,94 @@ const processLines = (lines: string[]) => {
           }
           data = formatMsg(data);
           if (data) {
-            postMsg([
-              {
-                type: "data",
-                data
-              },
-              {
-                type: "timeupdate",
-                data: {
-                  currentDuration: currentTime - startTime
-                }
-              }
-            ]);
+            postMsg({
+              type: "data",
+              data
+            });
           }
         } catch (error) {
           // console.log(error);
         }
-      }
-    };
-    timer.addAction(action);
-  }
-  postProgress(timer.lastDelay);
-};
-
-const loadstart = async (files: File[]) => {
-  for (const file of files) {
-    if (isJump) return;
-    const text = await readFileAsText(file);
-    const lines = text.split("\n");
-    processLines(lines);
-  }
-};
-
-const play = (currentDuration = 0) => {
-  if (timer.isActive) return;
-  timer.start(currentDuration);
-  postMsg({ type: "playstatechange", data: "play" });
-};
-
-const pause = () => {
-  timer.stop();
-  postMsg({ type: "playstatechange", data: "pause" });
-};
-
-const timeupdate = async (currentDuration: number) => {
-  isJump = true;
-  timer.clear();
-  postMsg({ type: "playstatechange", data: "pause" });
-  let maybeFileIndex = Math.floor(
-    (currentDuration / totalDuration) * (cacheFiles.length - 1)
-  );
-  let maybeRowIndex = -1;
-  while (maybeRowIndex === -1) {
-    const file = cacheFiles[maybeFileIndex];
-    const { firstRow, lastRow } = await readFileBothRowByFile(file);
-    const fileStartDuration = +firstRow.split(":")[0] / 1000 - startTime;
-    const fileEndDuration = +lastRow.split(":")[0] / 1000 - startTime;
-    if (currentDuration < fileStartDuration) {
-      maybeFileIndex--;
-    } else if (currentDuration >= fileEndDuration) {
-      maybeFileIndex++;
-    } else {
-      const text = await readFileAsText(file);
-      const lines = text.split("\n");
-      maybeRowIndex = binarySearch(lines, (line) => {
-        const time = +line.split(":")[0];
-        const lineDuration = time / 1000 - startTime;
-        return lineDuration - currentDuration;
       });
-      break;
+      const lastLine = lines[lines.length - 1];
+      const colonIndex = lastLine.indexOf(":");
+      const timestamp = +lastLine.slice(0, colonIndex);
+      this.currentTime = transform_MS(timestamp);
+      postMsg({
+        type: "timeupdate",
+        data: this.currentTime - this.startTime
+      });
+      playIndex++;
+    }, DUMP_MS / this.#speed);
+  }
+
+  pause() {
+    this.playState = "pause";
+    clearInterval(this.#playTimer);
+  }
+
+  setSpeed(speed: number) {
+    this.#speed = speed;
+    if (this.playState === "play") {
+      this.play(this.currentTime);
     }
   }
-  isJump = false;
-  const startFile = cacheFiles[maybeFileIndex];
-  const text = await readFileAsText(startFile);
-  const lines = text.split("\n").slice(maybeRowIndex);
-  baselineTime = +lines[0].split(":")[0] / 1000;
-  timer.start();
-  postMsg({ type: "playstatechange", data: "play" });
-  processLines(lines);
-  loadstart(cacheFiles.slice(maybeFileIndex + 1));
-};
 
-const postMsg = (msg: MaybeArray<LocalWorker.PostMessage>) => {
-  if (Array.isArray(msg)) {
-    msg.forEach(postMsg);
-  } else {
-    postMessage(msg);
+  async #loadData(files: File[]) {
+    for (const file of files) {
+      const text = await readFileAsText(file);
+      const lines = text.split("\n");
+      this.#mergeFrames(lines);
+      postMsg({
+        type: "loadstate",
+        data: {
+          state: "loading",
+          current: files.indexOf(file) + 1,
+          total: files.length
+        }
+      });
+    }
   }
-};
+
+  #mergeFrames(lines: string[]) {
+    lines.forEach((line) => {
+      const colonIndex = line.indexOf(":");
+      if (colonIndex === -1) return;
+      const timestamp = +line.slice(0, colonIndex);
+      const key = getKeyByTime(timestamp);
+      const cacheLines = this.#cacheData.get(key);
+      if (!cacheLines) {
+        this.#cacheData.set(key, [line]);
+      } else {
+        cacheLines.push(line);
+      }
+    });
+  }
+}
+
+const player = new Player();
 
 onmessage = async (ev: MessageEvent<LocalWorker.OnMessage>) => {
   const { type, data } = ev.data;
   if (type === "files") {
-    cacheFiles = data;
-    await getDuration();
+    await player.init(data);
     postMsg({
       type: "durationchange",
       data: {
-        startTime,
-        endTime
+        startTime: player.startTime,
+        endTime: player.endTime
       }
     });
-    autoplay();
+    player.play();
   } else if (type === "playstate") {
     if (data.state === "play") {
-      play(data?.currentDuration);
-    } else {
-      pause();
+      player.play(data.currentDuration + player.startTime);
+    } else if (data.state === "pause") {
+      player.pause();
     }
   } else if (type === "timeupdate") {
-    timeupdate(data.currentDuration);
-  } else if (type === "rate") {
-    timer.setSpeed(data);
+    player.play(data + player.startTime);
+  } else if (type === "playrate") {
+    player.setSpeed(data);
   }
 };

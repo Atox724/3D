@@ -1,69 +1,7 @@
-// import pLimit from "p-limit";
+import type { MaybeArray, PlayState, RemoteWorker, Request } from "@/typings";
+import { formatMsg, transform_MS } from "@/utils";
 
-import { throttle } from "lodash-es";
-
-import { binarySearch, formatMsg } from "..";
-import {
-  readFileAsText,
-  readFileBothRowByFile,
-  readFileFirstRowByFile,
-  readFileLastRowByFile
-} from "../file";
-import { Timer } from "./timer";
-import type { MaybeArray, MessageType, RemoteWorker } from "./type";
-
-interface HMIFileType {
-  modifyTime: string;
-  name: string;
-  path: string;
-  preSigned: string;
-  size: string;
-  type: string;
-  urlHMI: string;
-}
-
-interface HMIResponseType {
-  code: number;
-  data: HMIFileType[];
-  message: string;
-}
-
-const timer = new Timer();
-
-let cacheFiles: File[] = [];
-let currentIndex = 0;
-let loadedTotalDuration = 0,
-  actionCurrentDuration = 0;
-
-let startTime = 0,
-  endTime = 0,
-  totalDuration = 0,
-  baselineTime = 0;
-
-let needStop = false;
-
-const requestHMIFile = async (hmi_file: HMIFileType) => {
-  const res = await fetch(hmi_file.preSigned).then((response) =>
-    response.blob()
-  );
-  const file = new File([res], hmi_file.name, {
-    type: hmi_file.type
-  });
-  return file;
-};
-
-const getDuration = async () => {
-  const firstFile = cacheFiles[0];
-  const lastFile = cacheFiles[cacheFiles.length - 1];
-
-  const startRow = await readFileFirstRowByFile(firstFile);
-  const endRow = await readFileLastRowByFile(lastFile);
-
-  startTime = +startRow.split(":")[0] / 1000;
-  endTime = +endRow.split(":")[0] / 1000;
-  totalDuration = endTime - startTime;
-  baselineTime = startTime;
-};
+const DUMP_MS = 1000 / 60;
 
 const postMsg = (msg: MaybeArray<RemoteWorker.PostMessage>) => {
   if (Array.isArray(msg)) {
@@ -73,101 +11,109 @@ const postMsg = (msg: MaybeArray<RemoteWorker.PostMessage>) => {
   }
 };
 
-const postProgress = throttle((currentDuration) => {
-  postMsg({
-    type: "loadstate",
-    data: {
-      state:
-        currentDuration === 0
-          ? "loadstart"
-          : currentDuration === totalDuration
-            ? "loadend"
-            : "loading",
-      current: currentDuration,
-      total: totalDuration
-    }
-  });
-}, 1000);
+const getKeyByTime = (timestamp: number) => {
+  return Math.floor(transform_MS(timestamp) / DUMP_MS);
+};
 
-const requestHandler = async (data: MessageType.RequestType["data"]) => {
-  const urlStr = new URL(data.url, location.origin);
-  for (const key in data.params) {
-    urlStr.searchParams.append(key, data.params[key]);
+class Player {
+  #initialized = false;
+
+  startTime = 0;
+  endTime = 0;
+  currentTime = 0;
+
+  #speed = 1;
+
+  #cacheData = new Map<number, string[]>();
+
+  #playTimer = 0;
+
+  #playState: PlayState = "pause";
+  get playState() {
+    return this.#playState;
   }
-  const res = await fetch(urlStr.toString()).then<HMIResponseType>((response) =>
-    response.json()
-  );
-  const hmi_files = [...res.data];
-  const filesLength = hmi_files.length;
-  const firstFile = hmi_files.shift()!;
-  const lastFile = hmi_files.pop()!;
-
-  const [firstResult, lastResult] = await Promise.all([
-    requestHMIFile(firstFile),
-    requestHMIFile(lastFile)
-  ]);
-
-  cacheFiles = Array(filesLength).fill(null);
-  cacheFiles[0] = firstResult;
-  cacheFiles[filesLength - 1] = lastResult;
-  await getDuration();
-  postMsg({
-    type: "durationchange",
-    data: {
-      startTime,
-      endTime
+  set playState(state: PlayState) {
+    if (state !== this.#playState) {
+      this.#playState = state;
+      postMsg({
+        type: "playstatechange",
+        data: state
+      });
     }
-  });
-  // const limit = pLimit(6);
+  }
 
-  // const input: Promise<void>[] = [];
-
-  while (hmi_files.length) {
-    const files = hmi_files.splice(0, 6);
-    await Promise.all(
-      files.map((hmi_file) => {
-        return new Promise((resolve) => {
-          requestHMIFile(hmi_file).then(async (file) => {
-            cacheFiles[res.data.indexOf(hmi_file)] = file;
-            await checkLoad(cacheFiles.slice(currentIndex));
-            resolve(null);
-          });
-        });
-      })
+  async init(url: string, params?: Record<string, any>) {
+    if (this.#initialized) return;
+    this.#initialized = true;
+    let requestWorker: Worker | null = new Worker(
+      new URL("./request.worker.ts", import.meta.url),
+      {
+        type: "module"
+      }
     );
+    requestWorker.onmessage = (ev: MessageEvent<Request.OnMessage>) => {
+      const { type, data } = ev.data;
+      if (type === "durationchange") {
+        this.startTime = data.startTime;
+        this.endTime = data.endTime;
+        postMsg({ type, data });
+      } else if (type === "response") {
+        const lines = data.text.split("\n");
+        this.#mergeFrames(lines);
+        postMsg({
+          type: "loadstate",
+          data: {
+            state: "loading",
+            current: data.current,
+            total: data.total
+          }
+        });
+      } else if (type === "finish") {
+        requestWorker?.terminate();
+        requestWorker = null;
+      }
+    };
+    requestWorker.postMessage({
+      type: "request",
+      data: {
+        url,
+        params
+      }
+    });
+    this.play();
   }
 
-  // for (const hmi_file of hmi_files) {
-  //   await requestHMIFile(hmi_file).then((res) => {
-  //     cacheFiles[hmi_files.indexOf(hmi_file) + 1] = res;
-  //     return checkLoad(cacheFiles.slice(currentIndex));
-  //   });
-  // }
-  // await Promise.all(input);
-};
+  play(timestamp = this.startTime) {
+    if (!this.#initialized) return;
+    this.pause();
+    this.currentTime = timestamp;
 
-const autoplay = () => {
-  loadstart(cacheFiles);
-  play();
-};
+    let playIndex = -1;
 
-const processLines = (lines: string[]) => {
-  for (const line of lines) {
-    if (needStop) return;
-    if (!line.trim()) continue;
-    const [timeStr, base64] = line.split(":");
-    let jsonData = "";
-    try {
-      jsonData = atob(base64);
-    } catch (error) {
-      continue;
-    }
-    const currentTime = +timeStr / 1000;
-    const currentDuration = currentTime - startTime;
-    const action = {
-      delay: currentTime - baselineTime,
-      doAction() {
-        if (needStop) return;
+    this.#playTimer = setInterval(() => {
+      if (playIndex === -1) {
+        this.playState = "loading";
+        const key = getKeyByTime(this.currentTime || this.startTime);
+        playIndex = [...this.#cacheData.keys()].indexOf(key);
+        return;
+      }
+      if (this.endTime && this.currentTime >= this.endTime) {
+        this.playState = "end";
+        clearInterval(this.#playTimer);
+        return;
+      }
+      if (playIndex >= this.#cacheData.size) {
+        this.playState = "loading";
+        return;
+      }
+      this.playState = "play";
+      const datas = [...this.#cacheData.entries()];
+      const lines = datas[playIndex][1];
+      lines.forEach((line) => {
+        const colonIndex = line.indexOf(":");
+        if (colonIndex === -1) return;
+        const data = line.slice(colonIndex + 1);
+        const jsonData = atob(data);
         try {
           let data;
           if (jsonData[0] === "{") {
@@ -185,116 +131,66 @@ const processLines = (lines: string[]) => {
               type: "data",
               data
             });
-            if (currentDuration - actionCurrentDuration >= 1000) {
-              postMsg({
-                type: "timeupdate",
-                data: {
-                  currentDuration
-                }
-              });
-              actionCurrentDuration = currentDuration;
-            } else if (currentDuration - actionCurrentDuration < 0) {
-              actionCurrentDuration = currentDuration;
-            }
           }
         } catch (error) {
           // console.log(error);
         }
-      }
-    };
-    timer.addAction(action);
-
-    loadedTotalDuration = currentDuration;
-  }
-};
-
-const loadstart = async (files: File[]) => {
-  for (const file of files) {
-    if (needStop || !file) return;
-    const text = await readFileAsText(file);
-    const lines = text.split("\n");
-    processLines(lines);
-  }
-};
-
-const checkLoad = async (files: File[]) => {
-  for (const file of files) {
-    if (!file) return;
-    console.log(file.name, currentIndex);
-
-    currentIndex++;
-    const text = await readFileAsText(file);
-    const lines = text.split("\n");
-    processLines(lines);
-    postProgress(loadedTotalDuration);
-  }
-};
-
-const play = (currentDuration = 0) => {
-  if (timer.isActive) return;
-  timer.start(currentDuration);
-  postMsg({ type: "playstatechange", data: "play" });
-};
-
-const pause = () => {
-  timer.stop();
-  postMsg({ type: "playstatechange", data: "pause" });
-};
-
-const timeupdate = async (currentDuration: number) => {
-  needStop = true;
-  timer.clear();
-  postMsg({ type: "playstatechange", data: "pause" });
-  let maybeFileIndex = Math.floor(
-    (currentDuration / totalDuration) * (cacheFiles.length - 1)
-  );
-  let maybeRowIndex = -1;
-  while (maybeRowIndex === -1) {
-    const file = cacheFiles[maybeFileIndex];
-    if (!file) return;
-    const { firstRow, lastRow } = await readFileBothRowByFile(file);
-    const fileStartDuration = +firstRow.split(":")[0] / 1000 - startTime;
-    const fileEndDuration = +lastRow.split(":")[0] / 1000 - startTime;
-    if (currentDuration < fileStartDuration) {
-      maybeFileIndex--;
-    } else if (currentDuration >= fileEndDuration) {
-      maybeFileIndex++;
-    } else {
-      const text = await readFileAsText(file);
-      const lines = text.split("\n");
-      maybeRowIndex = binarySearch(lines, (line) => {
-        const time = +line.split(":")[0];
-        const lineDuration = time / 1000 - startTime;
-        return lineDuration - currentDuration;
       });
-      break;
+      const lastLine = lines[lines.length - 1];
+      const colonIndex = lastLine.indexOf(":");
+      const timestamp = +lastLine.slice(0, colonIndex);
+      this.currentTime = transform_MS(timestamp);
+      postMsg({
+        type: "timeupdate",
+        data: this.currentTime - this.startTime
+      });
+      playIndex++;
+    }, DUMP_MS / this.#speed);
+  }
+
+  pause() {
+    this.playState = "pause";
+    clearInterval(this.#playTimer);
+  }
+
+  setSpeed(speed: number) {
+    this.#speed = speed;
+    if (this.playState === "play") {
+      this.play(this.currentTime);
     }
   }
-  needStop = false;
-  const startFile = cacheFiles[maybeFileIndex];
-  const text = await readFileAsText(startFile);
-  const lines = text.split("\n").slice(maybeRowIndex);
-  baselineTime = +lines[0].split(":")[0] / 1000;
-  timer.start();
-  postMsg({ type: "playstatechange", data: "play" });
-  processLines(lines);
-  loadstart(cacheFiles.slice(maybeFileIndex + 1));
-};
+
+  async #mergeFrames(lines: string[]) {
+    lines.forEach((line) => {
+      const colonIndex = line.indexOf(":");
+      if (colonIndex === -1) return;
+      const timestamp = +line.slice(0, colonIndex);
+      const key = getKeyByTime(timestamp);
+      const cacheLines = this.#cacheData.get(key);
+      if (!cacheLines) {
+        this.#cacheData.set(key, [line]);
+      } else {
+        cacheLines.push(line);
+      }
+    });
+  }
+}
+
+const player = new Player();
 
 onmessage = async (ev: MessageEvent<RemoteWorker.OnMessage>) => {
   const { type, data } = ev.data;
   if (type === "request") {
-    requestHandler(data);
-    autoplay();
+    player.init(data.url, data.params);
   } else if (type === "playstate") {
     if (data.state === "play") {
-      play(data?.currentDuration);
-    } else {
-      pause();
+      player.play(data.currentDuration + player.startTime);
+    } else if (data.state === "pause") {
+      player.pause();
     }
   } else if (type === "timeupdate") {
-    timeupdate(data.currentDuration);
-  } else if (type === "rate") {
-    timer.setSpeed(data);
+    player.play(data + player.startTime);
+  } else if (type === "playrate") {
+    player.setSpeed(data);
   }
 };

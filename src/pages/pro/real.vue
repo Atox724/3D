@@ -2,14 +2,20 @@
   <section class="page-wrapper">
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor :memory="ProRender.renderer.info.memory" :ips="ProRender.ips" />
+      <Monitor
+        :ips="ProRender.ips"
+        v-bind="{ fps, memory, geometries, textures }"
+      />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
+import { useMonitor } from "@/hooks/useMonitor";
 import ProRender from "@/renderer/Pro";
 
 const CANVAS_ID = "canvas_id";
+
+const { fps, memory, geometries, textures } = useMonitor(ProRender);
 
 onMounted(() => {
   ProRender.initialize(CANVAS_ID);

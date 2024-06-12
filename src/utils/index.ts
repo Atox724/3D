@@ -104,3 +104,14 @@ export function formatMsg(msg: string | ArrayBuffer | null) {
     console.log("unknown data", msg);
   }
 }
+
+/**
+ * 转换时间戳为毫秒时间戳
+ * @param timestamp 整数时间戳
+ * @returns 毫秒时间戳
+ */
+export function transform_MS(timestamp: number) {
+  const timeLength = timestamp.toFixed().length;
+  const lengthDiff = timeLength - 13;
+  return timestamp / Math.pow(10, lengthDiff);
+}

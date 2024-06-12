@@ -1,10 +1,23 @@
-import { VIEW_WS } from "../websocket";
-import emitter from "./emitter";
-import type { Remote } from "./type";
-import { BasicPlay } from "./utils";
+import EventEmitter from "eventemitter3";
 
-export class RemotePlay extends BasicPlay {
+import type { Remote } from "@/typings";
+
+import { VIEW_WS } from "../websocket";
+
+type Events = {
+  [E in Remote.OnMessage as E["type"]]: (data: E["data"]) => void;
+};
+
+export class RemotePlay extends EventEmitter<Events> {
   worker: Worker;
+
+  startTime = 0;
+  endTime = 0;
+
+  get duration() {
+    if (!this.startTime || !this.endTime) return Number.NaN;
+    return this.endTime - this.startTime;
+  }
 
   constructor() {
     super();
@@ -30,7 +43,7 @@ export class RemotePlay extends BasicPlay {
 
   onMessage = (ev: MessageEvent<Remote.OnMessage>) => {
     const { type, data } = ev.data;
-    emitter.emit(type, data);
+    this.emit(type, data);
     switch (type) {
       case "durationchange":
         this.startTime = data.startTime;
@@ -44,5 +57,6 @@ export class RemotePlay extends BasicPlay {
 
   dispose() {
     this.worker.terminate();
+    this.removeAllListeners();
   }
 }

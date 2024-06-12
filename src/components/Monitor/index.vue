@@ -1,16 +1,17 @@
 <template>
   <section class="monitor-wrapper">
-    <MonitorChart />
+    <MonitorChart :fps="fps" />
     <el-divider direction="vertical" style="height: 100%"></el-divider>
-    <MonitorPanel :memory="memory" :ips="ips" />
+    <MonitorPanel v-bind="{ memory, geometries, textures, ips }" />
   </section>
 </template>
 <script lang="ts" setup>
-import type { WebGLInfo } from "three";
-
 defineProps<{
-  memory: WebGLInfo["memory"];
+  memory: Window["performance"]["memory"];
+  geometries: number;
+  textures: number;
   ips: string[];
+  fps: number;
 }>();
 </script>
 <style lang="less" scoped>

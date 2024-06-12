@@ -2,96 +2,102 @@
   <section class="page-wrapper">
     <div class="controller-wrapper">
       <Controller
-        :is-play="isPlay"
-        :current-duration="currentDuration"
-        :total-duration="totalDuration"
-        :show-upload="!route.query.path"
-        @upload="upload"
-        @play-state-change="onPlayChange"
+        :play-state="playState"
+        :current="currentDuration"
+        :total="totalDuration"
+        :load-progress="loadProgress"
+        @play-state-change="onPlayStateChange"
         @play-rate-change="onPlayRateChange"
-        @current-duration-change="onCurrentDurationChange"
-      />
+        @duration-change="onDurationChange"
+      >
+        <template #right>
+          <el-button v-if="!route.query.path" @click="upload">Upload</el-button>
+        </template>
+      </Controller>
     </div>
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
-      <Monitor :memory="ProRender.renderer.info.memory" :ips="ProRender.ips" />
+      <Monitor
+        :ips="ProRender.ips"
+        v-bind="{ fps, memory, geometries, textures }"
+      />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
+import { useMonitor } from "@/hooks/useMonitor";
 import ProRender from "@/renderer/Pro";
+import type { PlayState } from "@/typings";
+import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";
-import { RemotePlay } from "@/utils/replay/remote";
-
-import { usePlayer } from "./utils";
 
 const route = useRoute();
 
-const { currentDuration, totalDuration, isPlay } = usePlayer();
-
 const CANVAS_ID = "canvas_id";
 
-let player: LocalPlay | RemotePlay | null = null;
+const { fps, memory, geometries, textures } = useMonitor(ProRender);
 
-if (route.query.path) {
-  player = new RemotePlay();
-  player.init("/api", route.query);
-} else {
-  player = new LocalPlay();
-}
+const player = new LocalPlay();
 
-const upload = async (fileList: FileList) => {
-  if (player instanceof LocalPlay) {
-    player.init(Array.from(fileList));
-  }
+const currentDuration = ref(0);
+const totalDuration = ref(0);
+const loadProgress = ref(0);
+const playState = ref<PlayState>("pause");
+
+const upload = async () => {
+  const fileList = await chooseFile({ directory: true });
+  if (!fileList) return;
+  player.init(Array.from(fileList));
 };
 
-const onPlayChange = (val: boolean) => {
-  isPlay.value = val;
-  if (val) {
-    player?.postMessage({
-      type: "playstate",
-      data: {
-        state: "play",
-        currentDuration: currentDuration.value
-      }
-    });
-  } else {
-    player?.postMessage({
-      type: "playstate",
-      data: {
-        state: "pause"
-      }
-    });
-  }
-};
-
-const onPlayRateChange = (rate: number) => {
-  player?.postMessage({
-    type: "rate",
-    data: rate
+const onPlayStateChange = (val: PlayState) => {
+  playState.value = val;
+  player.postMessage({
+    type: "playstate",
+    data: {
+      state: val,
+      currentDuration: currentDuration.value
+    }
   });
 };
 
-const onCurrentDurationChange = (current: number) => {
-  isPlay.value = false;
+const onPlayRateChange = (speed: number) => {
+  player.postMessage({
+    type: "playrate",
+    data: speed
+  });
+};
+
+const onDurationChange = (current: number) => {
+  playState.value = "pause";
   currentDuration.value = current;
-  player?.postMessage({
+  player.postMessage({
     type: "timeupdate",
-    data: {
-      currentDuration: current
-    }
+    data: current
   });
 };
 
 onMounted(() => {
   ProRender.initialize(CANVAS_ID);
+
+  player.on("durationchange", (data) => {
+    totalDuration.value = data.endTime - data.startTime;
+  });
+  player.on("timeupdate", (data) => {
+    currentDuration.value = data;
+  });
+  player.on("playstatechange", (data) => {
+    playState.value = data;
+  });
+  player.on("loadstate", (data) => {
+    loadProgress.value =
+      Math.round((data.current / data.total) * 100 * 1e4) / 1e4;
+  });
 });
 
 onBeforeUnmount(() => {
   ProRender.dispose();
-  player?.dispose();
-  player = null;
+  player.dispose();
 });
 </script>
 <style lang="less" scoped>
