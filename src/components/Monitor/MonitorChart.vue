@@ -61,7 +61,30 @@ const fpsChange = (fps: number) => {
   });
 };
 
-watch(() => props.fps, fpsChange);
+watch(
+  () => props.fps,
+  () => {
+    fpsChange(props.fps);
+    resetTimer();
+  }
+);
+
+let timer = 0;
+
+const startTimer = () => {
+  timer = setInterval(() => {
+    fpsChange(props.fps);
+  }, 1000);
+};
+
+const stopTimer = () => {
+  clearInterval(timer);
+};
+
+const resetTimer = () => {
+  stopTimer();
+  startTimer();
+};
 
 onMounted(() => {
   myChart.value = echarts.init(chart.value);
@@ -100,6 +123,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  stopTimer();
   myChart.value?.dispose();
 });
 </script>

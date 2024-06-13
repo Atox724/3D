@@ -49,7 +49,7 @@
     "vue-tsc": "^2.0.19"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "*.{js,jsx,ts,tsx,vue}": [
       "prettier --ignore-path .eslintignore --write",
       "eslint --fix"
     ]
