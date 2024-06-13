@@ -147,7 +147,7 @@ export default abstract class Renderer {
     // this.controls.enableDamping = true;
     this.controls.minDistance = 20;
     this.controls.maxDistance = 50;
-    this.controls.maxPolarAngle = Math.PI / 2;
+    // this.controls.maxPolarAngle = Math.PI / 2;
     this.controls.saveState();
 
     // this.controls.addEventListener("end", this.resetCamera);
@@ -171,12 +171,12 @@ export default abstract class Renderer {
     const plane = new Mesh(geometry, material);
     plane.position.z = 0.005;
 
-    const reflector = new Reflector(geometry, {
-      textureWidth: window.innerWidth * window.devicePixelRatio,
-      textureHeight: window.innerHeight * window.devicePixelRatio
-    });
+    // const reflector = new Reflector(geometry, {
+    //   textureWidth: window.innerWidth * window.devicePixelRatio,
+    //   textureHeight: window.innerHeight * window.devicePixelRatio
+    // });
 
-    this.scene.add(reflector, plane);
+    this.scene.add(plane);
   }
 
   setScene() {
@@ -198,7 +198,7 @@ export default abstract class Renderer {
 
     reflector.position.z = 0.005;
 
-    this.scene.add(cylinder, reflector);
+    this.scene.add(cylinder);
   }
 
   renderLoop() {

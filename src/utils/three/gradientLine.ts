@@ -41,13 +41,11 @@ export default class GradientLine extends BufferGeometry {
       new BufferAttribute(new Float32Array(count), 1)
     );
     this.setAttribute(
-      "index",
-      new BufferAttribute(new Uint16Array(indexCount), 1)
-    );
-    this.setAttribute(
       "customColor",
       new BufferAttribute(new Float32Array(count * 4), 4)
     );
+
+    this.setIndex(new BufferAttribute(new Uint16Array(indexCount), 1));
 
     if (opt.ratio) {
       this.setAttribute(
@@ -74,7 +72,8 @@ export default class GradientLine extends BufferGeometry {
     const attrDistance = this.getAttribute("lineDistance") as BufferAttribute;
     const attrRatio = this.getAttribute("lineRatio") as BufferAttribute;
     const attrCustomColor = this.getAttribute("customColor") as BufferAttribute;
-    const attrIndex = this.getAttribute("index") as BufferAttribute;
+
+    const attrIndex = this.getIndex() as BufferAttribute;
 
     const indexCount = Math.max(0, (path.length - 1) * 6);
     const count = path.length * VERTS_PER_POINT;
@@ -86,8 +85,9 @@ export default class GradientLine extends BufferGeometry {
       attrPosition.array = new Float32Array(count * 3);
       attrNormal.array = new Float32Array(count * 2);
       attrMiter.array = new Float32Array(count);
-      attrIndex.array = new Uint16Array(indexCount);
       attrCustomColor.array = new Float32Array(count * 4);
+
+      attrIndex.array = new Uint16Array(indexCount);
 
       if (attrRatio) {
         attrRatio.array = new Float32Array(count);

@@ -71,14 +71,14 @@ export default class PolygonRender extends Target {
     }
     data.data.forEach((modelData) => {
       const { id } = modelData;
-      const model = this.modelList[id];
+      const model = this.modelList.get(id);
       if (model) {
         this.setModelAttributes(model, modelData);
       } else {
         const newModel = this.createModel(modelData);
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
-        this.modelList[id] = newModel;
+        this.modelList.set(id, newModel);
       }
     });
     this.checkModelByData(data.data);

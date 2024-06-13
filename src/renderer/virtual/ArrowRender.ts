@@ -1,8 +1,10 @@
-import { ArrowHelper, Color, LineBasicMaterial, Vector3 } from "three";
+import { ArrowHelper, Color, Vector3 } from "three";
 
+import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
 
 interface DataType {
+  id?: string;
   color: { r: number; g: number; b: number };
   end_point: { x: number; y: number; z: number };
   origin: { x: number; y: number; z: number };
@@ -26,58 +28,46 @@ export default class ArrowRender extends Target {
     "perception_camera_arrow"
   ];
 
-  arrowCache: ArrowHelper[] = [];
+  checkModelByData<D extends Array<any>>(data: D, list = this.modelList) {
+    const cacheKeys = [...list.keys()];
+    while (list.size > data.length) {
+      const key = cacheKeys.pop();
+      if (!key) break;
+      const model = list.get(key);
+      if (model) this.disposeObject(model);
+      list.delete(key);
+    }
+  }
 
   update(data: UpdateData) {
     if (!data.data.length) {
-      // this.clear();
-      this.arrowCache.forEach((model) => {
-        this.scene.remove(model);
-        this.disposeObject(model);
-      });
-      this.arrowCache = [];
+      this.clear();
       return;
     }
-    const cacheLength = this.arrowCache.length;
-
+    const listLength = this.modelList.size;
     data.data.forEach((modelData, index) => {
-      const { origin, end_point, color } = modelData;
-      const direction = new Vector3(
-        end_point.x - origin.x,
-        end_point.y - origin.y,
-        end_point.z - origin.z
-      );
-      if (index < cacheLength) {
-        const arrow = this.arrowCache[index];
-        arrow.setLength(direction.length());
-        arrow.setDirection(direction.normalize());
-        arrow.position.set(origin.x, origin.y, origin.z);
-        arrow.setColor(new Color(color.r, color.g, color.b));
-        const lineMaterial = arrow.line.material as LineBasicMaterial;
-        lineMaterial.linewidth = 2.5;
+      const { origin: o, end_point, color: c } = modelData;
+      const origin = new Vector3(o.x, o.y, o.z);
+      const end = new Vector3(end_point.x, end_point.y, end_point.z);
+      // 计算方向向量
+      const sub = new Vector3().subVectors(end, origin);
+      const length = sub.length();
+      const dir = sub.normalize();
+      const color = new Color(c.r, c.g, c.b);
+      if (index < listLength) {
+        const arrow = [...this.modelList.values()][index] as ArrowHelper;
+        arrow.setLength(length);
+        arrow.setDirection(dir);
+        arrow.setColor(color);
+        arrow.position.set(origin.x, origin.y, origin.z + TARGET_ZINDEX.TARGET);
       } else {
-        const length = direction.length();
-        const arrow = new ArrowHelper(
-          direction.normalize(),
-          new Vector3(origin.x, origin.y, origin.z),
-          length,
-          new Color(color.r, color.g, color.b)
-        );
-        const lineMaterial = arrow.line.material as LineBasicMaterial;
-        lineMaterial.linewidth = 2.5;
-        this.arrowCache.push(arrow);
+        const arrow = new ArrowHelper(dir, origin, length, color);
+        arrow.position.set(origin.x, origin.y, origin.z + TARGET_ZINDEX.TARGET);
+        modelData.id = arrow.uuid;
+        this.modelList.set(arrow.uuid, arrow);
         this.scene.add(arrow);
       }
     });
-    if (cacheLength > data.data.length) {
-      let count = 0;
-      const arrowArrayLen = data.data.length;
-      for (let i = arrowArrayLen; i < cacheLength; ++i) {
-        this.scene.remove(this.arrowCache[i]);
-        this.disposeObject(this.arrowCache[i]);
-        ++count;
-      }
-      this.arrowCache.splice(arrowArrayLen, count);
-    }
+    this.checkModelByData(data.data);
   }
 }

@@ -364,7 +364,7 @@ export default class TrafficSignalRender extends Target {
     }
     data.forEach((modelData) => {
       const { id, type } = modelData;
-      const model = this.modelList[id];
+      const model = this.modelList.get(id);
       const typeName = TrafficSignalTypeEnum[type] as TrafficSignalType;
       if (model) {
         this.setModelAttributes(model, modelData);
@@ -372,7 +372,7 @@ export default class TrafficSignalRender extends Target {
         const newModel = cacheModels[typeName].clone();
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
-        this.modelList[id] = newModel;
+        this.modelList.set(id, newModel);
       }
     });
     this.checkModelByData(data);

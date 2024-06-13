@@ -9,14 +9,14 @@ import {
 export default abstract class Target {
   scene: Scene;
 
-  modelList: Record<string, Object3D>;
+  modelList: Map<string | number, Object3D>;
 
   abstract topic: readonly string[];
 
   constructor(scene: Scene) {
     this.scene = scene;
 
-    this.modelList = {};
+    this.modelList = new Map();
   }
 
   disposeObject(obj: Object3D) {
@@ -49,18 +49,16 @@ export default abstract class Target {
     }
   }
 
-  clear() {
-    Object.keys(this.modelList).forEach((id) => {
-      this.disposeObject(this.modelList[id]);
-    });
-    this.modelList = {};
+  clear(list = this.modelList) {
+    list.forEach(this.disposeObject.bind(this));
+    list.clear();
   }
 
   checkModelByData<D extends Array<any>>(data: D, list = this.modelList) {
-    Object.keys(list).forEach((id) => {
-      if (!data.find((item) => item.id === +id)) {
-        this.disposeObject(list[id]);
-        delete list[id];
+    list.forEach((model, id) => {
+      if (!data.find((item) => +item.id === +id)) {
+        this.disposeObject(model);
+        list.delete(id);
       }
     });
   }

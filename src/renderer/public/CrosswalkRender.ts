@@ -84,7 +84,7 @@ export default class CrosswalkRender extends Target {
       const shapeMesh = new Mesh(shapeGeo, shapeMat);
       shapeMesh.position.set(position.x, position.y, TARGET_ZINDEX.CROSSWALK);
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
-      this.modelList[id] = shapeMesh;
+      this.modelList.set(id, shapeMesh);
       this.scene.add(shapeMesh);
     });
   }

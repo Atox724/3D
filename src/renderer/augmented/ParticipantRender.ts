@@ -206,14 +206,14 @@ export default class ParticipantRender extends Target {
     }
     data.data.forEach((modelData) => {
       const { id, type } = modelData;
-      const model = this.modelList[id];
+      const model = this.modelList.get(id);
       const typeName = ParticipantTypeEnum[type] as ParticipantType;
       if (model) {
         if (model.userData.type !== ParticipantTypeEnum[type]) {
           this.disposeObject(model);
           const newModel = this.createModel(modelData);
           this.scene.add(newModel);
-          this.modelList[id] = newModel;
+          this.modelList.set(id, newModel);
           this.setModelAttributes(newModel, modelData);
         } else {
           this.setModelAttributes(model, modelData);
@@ -222,7 +222,7 @@ export default class ParticipantRender extends Target {
         const newModel = this.createModel(modelData);
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
-        this.modelList[id] = newModel;
+        this.modelList.set(id, newModel);
       }
     });
     this.checkModelByData(data.data);

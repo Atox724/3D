@@ -101,16 +101,15 @@ export default class ObstacleRender extends Target {
     }
     data.data.forEach((modelData) => {
       const { id, type } = modelData;
-      const model = this.modelList[id];
+      const model = this.modelList.get(id);
       const typeName = ObstacleTypeEnum[type] as ObstacleType;
       if (model) {
-        this.modelList[id] = model;
         this.setModelAttributes(model, modelData);
       } else if (cacheModels[typeName]) {
         const newModel = cacheModels[typeName].clone();
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
-        this.modelList[id] = newModel;
+        this.modelList.set(id, newModel);
       }
     });
     this.checkModelByData(data.data);

@@ -73,7 +73,7 @@ export default class FreespaceRender extends Target {
         pitch * MathUtils.DEG2RAD,
         yaw * MathUtils.DEG2RAD
       );
-      this.modelList[id] = mesh;
+      this.modelList.set(id, mesh);
       this.scene.add(mesh);
     });
   }

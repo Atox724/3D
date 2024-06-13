@@ -23,9 +23,6 @@ importers:
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
-      inherits:
-        specifier: ^2.0.4
-        version: 2.0.4
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21

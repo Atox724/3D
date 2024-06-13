@@ -40,10 +40,8 @@ export default class Line extends BufferGeometry {
       "lineMiter",
       new BufferAttribute(new Float32Array(count), 1)
     );
-    this.setAttribute(
-      "index",
-      new BufferAttribute(new Uint16Array(indexCount), 1)
-    );
+
+    this.setIndex(new BufferAttribute(new Uint16Array(indexCount), 1));
 
     if (opt.ratio) {
       this.setAttribute(
@@ -68,7 +66,8 @@ export default class Line extends BufferGeometry {
     const attrMiter = this.getAttribute("lineMiter") as BufferAttribute;
     const attrDistance = this.getAttribute("lineDistance") as BufferAttribute;
     const attrRatio = this.getAttribute("lineRatio") as BufferAttribute;
-    const attrIndex = this.getAttribute("index") as BufferAttribute;
+
+    const attrIndex = this.getIndex() as BufferAttribute;
 
     const indexCount = Math.max(0, (path.length - 1) * 12);
     const count = path.length * VERTS_PER_POINT;
@@ -80,6 +79,7 @@ export default class Line extends BufferGeometry {
       attrPosition.array = new Float32Array(count * 3);
       attrNormal.array = new Float32Array(count * 2);
       attrMiter.array = new Float32Array(count);
+
       attrIndex.array = new Uint16Array(indexCount);
 
       if (attrRatio) {

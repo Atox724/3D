@@ -79,7 +79,7 @@ export default class TrafficLightRender extends Target {
     }
     data.forEach((modelData) => {
       const { id, type } = modelData;
-      const model = this.modelList[id];
+      const model = this.modelList.get(id);
       const typeName = TrafficLightTypeEnum[type] as TrafficLightType;
       if (model) {
         this.setModelAttributes(model, modelData);
@@ -87,7 +87,7 @@ export default class TrafficLightRender extends Target {
         const newModel = cacheModels[typeName].clone();
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
-        this.modelList[id] = newModel;
+        this.modelList.set(id, newModel);
       }
     });
     this.checkModelByData(data);

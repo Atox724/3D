@@ -33,21 +33,11 @@ interface UpdateData {
   type: "polyline";
 }
 
-const Line = ThreeLine2D();
-const CustomizedVertexLine = CustomizedVertexColorThreeLine2D();
-
 export default class LineRender extends Target {
   topic: string[] = [];
 
-  polyline_obj: Mesh[] = [];
-
   update(data: UpdateData) {
-    // this.clear()
-    this.polyline_obj.forEach((item) => {
-      this.scene.remove(item);
-      this.disposeObject(item);
-    });
-    this.polyline_obj = [];
+    this.clear();
 
     if (!data.data.length) return;
     data.data.forEach((item) => {
@@ -90,7 +80,7 @@ export default class LineRender extends Target {
           gradient_line_mat
         );
         color_trajectory_obj.position.z = TARGET_ZINDEX.LANELINE;
-        this.polyline_obj.push(color_trajectory_obj);
+        this.modelList.set(color_trajectory_obj.uuid, color_trajectory_obj);
         this.scene.add(color_trajectory_obj);
       }
       if (draw_solid_line) {
@@ -111,7 +101,7 @@ export default class LineRender extends Target {
           line_style.mat
         );
         solid_trajectory_obj.position.z = TARGET_ZINDEX.LANELINE;
-        this.polyline_obj.push(solid_trajectory_obj);
+        this.modelList.set(solid_trajectory_obj.uuid, solid_trajectory_obj);
         this.scene.add(solid_trajectory_obj);
       }
     });
