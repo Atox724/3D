@@ -8,7 +8,7 @@ const params = {
 };
 const router = useRouter();
 router.push({
-  name: "EnggReplay",
+  name: "VirtualReplay",
   query: params
 });
 </script>

@@ -6,12 +6,7 @@ import {
   SkinnedMesh
 } from "three";
 
-export const targetZIndex = {
-  frespace: 0.01,
-  crosswalk: 0.05
-};
-
-export abstract class Target {
+export default abstract class Target {
   scene: Scene;
 
   modelList: Record<string, Object3D>;

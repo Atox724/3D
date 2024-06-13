@@ -3,26 +3,27 @@
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
       <Monitor
-        :ips="EnggRender.ips"
+        :ips="renderer.ips"
         v-bind="{ fps, memory, geometries, textures }"
       />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
+import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import EnggRender from "@/renderer/Engg";
+import { Augmented } from "@/renderer";
 
-const CANVAS_ID = "canvas_id";
+const renderer = new Augmented();
 
-const { fps, memory, geometries, textures } = useMonitor(EnggRender);
+const { fps, memory, geometries, textures } = useMonitor(renderer);
 
 onMounted(() => {
-  EnggRender.initialize(CANVAS_ID);
+  renderer.initialize(CANVAS_ID);
 });
 
 onBeforeUnmount(() => {
-  EnggRender.dispose();
+  renderer.dispose();
 });
 </script>
 <style lang="less" scoped>

@@ -18,15 +18,16 @@
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
       <Monitor
-        :ips="EnggRender.ips"
+        :ips="renderer.ips"
         v-bind="{ geometries, textures, memory, fps }"
       />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
+import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import EnggRender from "@/renderer/Engg";
+import { Virtual } from "@/renderer";
 import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";
@@ -34,9 +35,9 @@ import { RemotePlay } from "@/utils/replay/remote";
 
 const route = useRoute();
 
-const CANVAS_ID = "canvas_id";
+const renderer = new Virtual();
 
-const { fps, memory, geometries, textures } = useMonitor(EnggRender);
+const { fps, memory, geometries, textures } = useMonitor(renderer);
 
 let player: LocalPlay | RemotePlay | null = null;
 if (route.query.path) {
@@ -85,7 +86,7 @@ const onDurationChange = (current: number) => {
 };
 
 onMounted(() => {
-  EnggRender.initialize(CANVAS_ID);
+  renderer.initialize(CANVAS_ID);
   player?.on("durationchange", (data) => {
     totalDuration.value = data.endTime - data.startTime;
   });
@@ -103,7 +104,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  EnggRender.dispose();
+  renderer.dispose();
   player?.dispose();
   player = null;
 });

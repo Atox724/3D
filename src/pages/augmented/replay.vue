@@ -18,24 +18,25 @@
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
       <Monitor
-        :ips="ProRender.ips"
+        :ips="renderer.ips"
         v-bind="{ fps, memory, geometries, textures }"
       />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
+import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import ProRender from "@/renderer/Pro";
+import { Augmented } from "@/renderer";
 import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";
 
 const route = useRoute();
 
-const CANVAS_ID = "canvas_id";
+const renderer = new Augmented();
 
-const { fps, memory, geometries, textures } = useMonitor(ProRender);
+const { fps, memory, geometries, textures } = useMonitor(renderer);
 
 const player = new LocalPlay();
 
@@ -78,7 +79,7 @@ const onDurationChange = (current: number) => {
 };
 
 onMounted(() => {
-  ProRender.initialize(CANVAS_ID);
+  renderer.initialize(CANVAS_ID);
 
   player.on("durationchange", (data) => {
     totalDuration.value = data.endTime - data.startTime;
@@ -96,7 +97,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  ProRender.dispose();
+  renderer.dispose();
   player.dispose();
 });
 </script>

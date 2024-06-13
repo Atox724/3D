@@ -10,8 +10,8 @@ import {
   WarningSign,
   WaterBarrierYellow
 } from "@/assets/model";
+import Target from "@/renderer/target";
 
-import { Target } from "../BasicTarget";
 // 障碍物与交通提示物
 enum ObstacleTypeEnum {
   OBSTACLE_ISOLATION_BARREL = 294, // 障碍物隔离桶   2 隔离桶
@@ -31,6 +31,17 @@ interface ObstacleData {
   position: Vector3; // 模型中心位置
   rotation: Vector3; // 模型偏转值
 }
+
+interface UpdateData {
+  data: ObstacleData[];
+  defaultEnable: boolean;
+  group: string;
+  style: Record<string, any>;
+  timestamp_nsec: number;
+  topic: string;
+  type: "obstacleModel";
+}
+
 type ObstacleType = keyof typeof ObstacleTypeEnum;
 const cacheModels = {} as Record<ObstacleType, Object3D>;
 const modelFiles: Record<ObstacleType, string> = {
@@ -82,12 +93,13 @@ export default class ObstacleRender extends Target {
     model.rotation.set(rotation.x, rotation.y, rotation.z);
   }
 
-  update(data: ObstacleData[]) {
-    if (!data.length) {
+  update(data: UpdateData) {
+    if (data.type !== "obstacleModel") return;
+    if (!data.data.length) {
       this.clear();
       return;
     }
-    data.forEach((modelData) => {
+    data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList[id];
       const typeName = ObstacleTypeEnum[type] as ObstacleType;
@@ -101,6 +113,6 @@ export default class ObstacleRender extends Target {
         this.modelList[id] = newModel;
       }
     });
-    this.checkModelByData(data);
+    this.checkModelByData(data.data);
   }
 }

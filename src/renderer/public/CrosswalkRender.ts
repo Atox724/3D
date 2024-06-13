@@ -9,7 +9,8 @@ import {
   type Vector3
 } from "three";
 
-import { Target, targetZIndex } from "../BasicTarget";
+import { TARGET_ZINDEX } from "@/constants";
+import Target from "@/renderer/target";
 
 interface CrosswalkData {
   id: number;
@@ -20,13 +21,24 @@ interface CrosswalkData {
   color: { r: number; g: number; b: number };
 }
 
+interface UpdateData {
+  data: CrosswalkData[];
+  defaultEnable: boolean;
+  group: string;
+  style: Record<string, any>;
+  timestamp_nsec: number;
+  topic: string;
+  type: "crosswalk";
+}
+
 export default class CrosswalkRender extends Target {
   topic = ["pilothmi_cross_walk_local"];
 
-  update(data: CrosswalkData[]) {
+  update(data: UpdateData) {
+    if (data.type !== "crosswalk") return;
     this.clear();
-    if (!data.length) return;
-    data.forEach((item) => {
+    if (!data.data.length) return;
+    data.data.forEach((item) => {
       const { id, shape, position, rotation, color } = item;
       const points = shape.map((point) => new Vector2(point.x, point.y));
       const side1 = new Vector2().subVectors(points[0], points[1]);
@@ -70,7 +82,7 @@ export default class CrosswalkRender extends Target {
         }
       });
       const shapeMesh = new Mesh(shapeGeo, shapeMat);
-      shapeMesh.position.set(position.x, position.y, targetZIndex.crosswalk);
+      shapeMesh.position.set(position.x, position.y, TARGET_ZINDEX.CROSSWALK);
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
       this.modelList[id] = shapeMesh;
       this.scene.add(shapeMesh);

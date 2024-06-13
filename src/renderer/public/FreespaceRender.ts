@@ -10,7 +10,8 @@ import {
   type Vector2
 } from "three";
 
-import { Target, targetZIndex } from "../BasicTarget";
+import { TARGET_ZINDEX } from "@/constants";
+import Target from "@/renderer/target";
 
 interface FreespaceData {
   id: number;
@@ -66,7 +67,7 @@ export default class FreespaceRender extends Target {
         opacity: color.a
       });
       const mesh = new Mesh(shapeGeometry, material);
-      mesh.position.set(x, y, targetZIndex.frespace);
+      mesh.position.set(x, y, TARGET_ZINDEX.FREESPACE);
       mesh.rotation.set(
         roll * MathUtils.DEG2RAD,
         pitch * MathUtils.DEG2RAD,

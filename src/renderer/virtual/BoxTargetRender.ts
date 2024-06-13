@@ -9,7 +9,7 @@ import {
   type Object3D
 } from "three";
 
-import { Target } from "../BasicTarget";
+import Target from "@/renderer/target";
 
 interface TargetData {
   color: { r: number; g: number; b: number };
@@ -78,10 +78,14 @@ const edgesMesh = new LineSegments(
 
 export default class BoxTargetRender extends Target {
   topic = [
-    "perception_radar_front",
+    "dpc_planning_debug_info",
     "perception_obstacle_fusion",
     "perception_fusion /perception/fusion/object",
+    "perception_radar_front",
+    "perception_camera_roadlines center_camera_fov30",
+    "perception_camera_roadlines center_camera_fov120",
     "perception_camera_front",
+    "perception_camera_roadlines nv_cameras",
     "perception_camera_nv"
   ];
 

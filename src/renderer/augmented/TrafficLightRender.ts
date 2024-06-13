@@ -8,8 +8,7 @@ import {
   TrafficLight3Horizontal,
   TrafficLight3Vertical
 } from "@/assets/model";
-
-import { Target } from "../BasicTarget";
+import Target from "@/renderer/target";
 
 enum TrafficLightTypeEnum {
   TrafficLight1 = 1, // 一灯红绿灯

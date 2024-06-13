@@ -1,10 +1,11 @@
+import { HZ } from "@/constants";
 import type { LocalWorker, MaybeArray, PlayState } from "@/typings";
 import { formatMsg, transform_MS } from "@/utils";
 import { readFileAsText } from "@/utils/file";
 
 import { getDuration } from "./utils";
 
-const DUMP_MS = 1000 / 60;
+const DUMP_MS = 1000 / HZ;
 const postMsg = (msg: MaybeArray<LocalWorker.PostMessage>) => {
   if (Array.isArray(msg)) {
     msg.forEach(postMsg);

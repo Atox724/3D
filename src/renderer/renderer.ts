@@ -21,9 +21,8 @@ import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
+import { EgoCarRender } from "@/renderer/public";
 import Stats from "@/utils/stats";
-
-import { EgoCarRender } from "./modules";
 
 // 监听3d场景绘制进度
 let hideThreeLoading: MessageHandler | null;
@@ -42,7 +41,7 @@ DefaultLoadingManager.onLoad = () => {
   }
 };
 
-export abstract class Renderer {
+export default abstract class Renderer {
   initialized: boolean;
 
   renderer: WebGLRenderer;

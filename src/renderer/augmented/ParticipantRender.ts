@@ -21,8 +21,7 @@ import {
   Tricycle,
   Truck
 } from "@/assets/model";
-
-import { Target } from "../BasicTarget";
+import Target from "@/renderer/target";
 
 enum ParticipantTypeEnum {
   // 交通参与者
@@ -80,6 +79,16 @@ interface ParticipantData {
   };
   color?: string;
   sizeinfo?: Vector3;
+}
+
+interface UpdateData {
+  data: ParticipantData[];
+  defaultEnable: boolean;
+  group: string;
+  style: Record<string, any>;
+  timestamp_nsec: number;
+  topic: string;
+  type: "participantModel";
 }
 
 type ParticipantType = keyof typeof ParticipantTypeEnum;
@@ -189,12 +198,13 @@ export default class ParticipantRender extends Target {
     model.rotation.set(rotation.x, rotation.y, rotation.z);
   }
 
-  update(data: ParticipantData[]) {
-    if (!data.length) {
+  update(data: UpdateData) {
+    if (data.type !== "participantModel") return;
+    if (!data.data.length) {
       this.clear();
       return;
     }
-    data.forEach((modelData) => {
+    data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList[id];
       const typeName = ParticipantTypeEnum[type] as ParticipantType;
@@ -215,6 +225,6 @@ export default class ParticipantRender extends Target {
         this.modelList[id] = newModel;
       }
     });
-    this.checkModelByData(data);
+    this.checkModelByData(data.data);
   }
 }

@@ -1,7 +1,8 @@
+import { HZ } from "@/constants";
 import type { MaybeArray, PlayState, RemoteWorker, Request } from "@/typings";
 import { formatMsg, transform_MS } from "@/utils";
 
-const DUMP_MS = 1000 / 60;
+const DUMP_MS = 1000 / HZ;
 
 const postMsg = (msg: MaybeArray<RemoteWorker.PostMessage>) => {
   if (Array.isArray(msg)) {

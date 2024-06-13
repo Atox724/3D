@@ -2,8 +2,7 @@ import type { Object3D, Scene } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 import { EgoCar } from "@/assets/model";
-
-import { Target } from "../BasicTarget";
+import Target from "@/renderer/target";
 
 const gltfLoader = new GLTFLoader();
 

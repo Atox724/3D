@@ -77,8 +77,7 @@ import {
   X_weight,
   X_width
 } from "@/assets/model";
-
-import { Target } from "../BasicTarget";
+import Target from "@/renderer/target";
 
 enum TrafficSignalTypeEnum {
   Unknown = 0, //未知

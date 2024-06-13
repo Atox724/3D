@@ -8,7 +8,14 @@
   </section>
 </template>
 <script lang="ts" setup>
-import { type EChartsType, init } from "echarts";
+import { LineChart } from "echarts/charts";
+import { GridComponent } from "echarts/components";
+import * as echarts from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+
+import { HZ } from "@/constants";
+
+echarts.use([GridComponent, LineChart, CanvasRenderer]);
 
 const props = defineProps<{
   fps: number;
@@ -18,7 +25,7 @@ const colorlist = ["#52c41a", "#fa8c16", "#f5222d"];
 
 const chart = ref<HTMLDivElement>();
 
-const myChart = shallowRef<EChartsType>();
+const myChart = shallowRef<echarts.ECharts>();
 
 const chartData: number[] = [];
 
@@ -26,13 +33,14 @@ const fpsNumber = ref(0);
 const chartStatus = ref(0);
 
 const fpsChange = (fps: number) => {
+  if (fps < 0) return;
   fpsNumber.value = fps;
   if (chartData.length >= 20) chartData.shift();
   chartData.push(fps);
 
   let status = 0;
-  if (fps < 60 * 0.6) status = 2;
-  else if (fps < 60 * 0.8) status = 1;
+  if (fps < HZ * 0.6) status = 2;
+  else if (fps < HZ * 0.8) status = 1;
 
   if (status !== chartStatus.value) {
     chartStatus.value = status;
@@ -56,7 +64,7 @@ const fpsChange = (fps: number) => {
 watch(() => props.fps, fpsChange);
 
 onMounted(() => {
-  myChart.value = init(chart.value);
+  myChart.value = echarts.init(chart.value);
   myChart.value.setOption({
     grid: {
       left: 0,

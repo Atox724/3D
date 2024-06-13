@@ -3,26 +3,27 @@
     <div :id="CANVAS_ID" class="canvas-wrapper"></div>
     <div class="monitor-wrapper">
       <Monitor
-        :ips="ProRender.ips"
+        :ips="renderer.ips"
         v-bind="{ fps, memory, geometries, textures }"
       />
     </div>
   </section>
 </template>
 <script lang="ts" setup>
+import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import ProRender from "@/renderer/Pro";
+import { Virtual } from "@/renderer";
 
-const CANVAS_ID = "canvas_id";
+const renderer = new Virtual();
 
-const { fps, memory, geometries, textures } = useMonitor(ProRender);
+const { fps, memory, geometries, textures } = useMonitor(renderer);
 
 onMounted(() => {
-  ProRender.initialize(CANVAS_ID);
+  renderer.initialize(CANVAS_ID);
 });
 
 onBeforeUnmount(() => {
-  ProRender.dispose();
+  renderer.dispose();
 });
 </script>
 <style lang="less" scoped>
