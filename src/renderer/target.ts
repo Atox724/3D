@@ -11,7 +11,7 @@ export default abstract class Target {
 
   modelList: Record<string, Object3D>;
 
-  abstract readonly topic: string[];
+  abstract topic: readonly string[];
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -65,5 +65,5 @@ export default abstract class Target {
     });
   }
 
-  abstract update(data: any): void;
+  abstract update(data: any, topic?: string): void;
 }

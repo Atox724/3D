@@ -23,12 +23,18 @@ importers:
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
+      inherits:
+        specifier: ^2.0.4
+        version: 2.0.4
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
       p-limit:
         specifier: ^5.0.0
         version: 5.0.0
+      polyline-normals:
+        specifier: ^2.0.2
+        version: 2.0.2
       protobufjs:
         specifier: ^7.3.0
         version: 7.3.0
@@ -978,6 +984,9 @@ packages:
     resolution: {integrity: sha512-VaUJspBffn/LMCJVoMvSAdmscJyS1auj5Zulnn5UoYcY531UWmdwhRWkcGKnGU93m5HSXP9LP2usOryrBtQowA==}
     engines: {node: '>=16'}
 
+  gl-vec2@1.3.0:
+    resolution: {integrity: sha512-YiqaAuNsheWmUV0Sa8k94kBB0D6RWjwZztyO+trEYS8KzJ6OQB/4686gdrf59wld4hHFIvaxynO3nRxpk1Ij/A==}
+
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -1323,6 +1332,12 @@ packages:
 
   pkg-types@1.1.1:
     resolution: {integrity: sha512-ko14TjmDuQJ14zsotODv7dBlwxKhUKQEhuhmbqo1uCi9BB0Z2alo/wAXg6q1dTR5TyuqYyWhjtfe/Tsh+X28jQ==}
+
+  polyline-miter-util@1.0.1:
+    resolution: {integrity: sha512-/3u91zz6mBerBZo6qnOJOTjv7EfPhKtsV028jMyj86YpzLRNmCCFfrX7IO9tCEQ2W4x45yc+vKOezjf7u2Nd6Q==}
+
+  polyline-normals@2.0.2:
+    resolution: {integrity: sha512-dpHrAi61ymhsB4N0XlNb3YpkKJeTFnXBXDWpeH8Ucstq0TUZrCN3YK4Jlgk8ofMWN25lhGC4wnxLMv+TUK8rig==}
 
   postcss-selector-parser@6.1.0:
     resolution: {integrity: sha512-UMz42UD0UY0EApS0ZL9o1XnLhSTtvvvLe5Dc2H2O56fvRZi+KulDyf5ctDhhtYJBGKStV2FL1fy6253cmLgqVQ==}
@@ -2580,6 +2595,8 @@ snapshots:
 
   get-stream@8.0.1: {}
 
+  gl-vec2@1.3.0: {}
+
   glob-parent@5.1.2:
     dependencies:
       is-glob: 4.0.3
@@ -2911,6 +2928,14 @@ snapshots:
       confbox: 0.1.7
       mlly: 1.7.0
       pathe: 1.1.2
+
+  polyline-miter-util@1.0.1:
+    dependencies:
+      gl-vec2: 1.3.0
+
+  polyline-normals@2.0.2:
+    dependencies:
+      polyline-miter-util: 1.0.1
 
   postcss-selector-parser@6.1.0:
     dependencies:

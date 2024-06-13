@@ -150,7 +150,7 @@ export default abstract class Renderer {
     this.controls.maxPolarAngle = Math.PI / 2;
     this.controls.saveState();
 
-    this.controls.addEventListener("end", this.resetCamera);
+    // this.controls.addEventListener("end", this.resetCamera);
   }
 
   createLights() {

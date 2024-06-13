@@ -1,1 +1,1 @@
-export { default as BoxTargetRender } from "./BoxTargetRender";
+export { default as CustomizedRender } from "./CustomizedRender";

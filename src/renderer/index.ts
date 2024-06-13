@@ -7,6 +7,7 @@ import {
 import { CrosswalkRender, FreespaceRender } from "@/renderer/public";
 import Renderer from "@/renderer/renderer";
 import type Target from "@/renderer/target";
+import { CustomizedRender } from "@/renderer/virtual";
 import { VIEW_WS } from "@/utils/websocket";
 
 class Virtual extends Renderer {
@@ -18,8 +19,8 @@ class Virtual extends Renderer {
     super();
     this.createRender = [
       new FreespaceRender(this.scene),
-      new CrosswalkRender(this.scene)
-      // new BoxTargetRender(this.scene)
+      new CrosswalkRender(this.scene),
+      new CustomizedRender(this.scene)
     ];
 
     this.registerModelRender();

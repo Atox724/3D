@@ -131,3 +131,8 @@ export namespace RequestWorker {
   export type OnMessage = Request.PostMessage;
   export type PostMessage = Request.OnMessage;
 }
+
+export interface Point2 {
+  x: number;
+  y: number;
+}

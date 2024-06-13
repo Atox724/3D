@@ -7,7 +7,7 @@ class WebsocketServer {
   isConnection: boolean;
   allow_reconnect?: boolean;
 
-  target_msg_map: Record<string, (data: any) => void>;
+  target_msg_map: Record<string, (data: any, topic: string) => void>;
 
   constructor(url: string) {
     this.url = url;
@@ -78,7 +78,7 @@ class WebsocketServer {
   }
 
   dispatchTargetMsg<T>(topic: string, data: T) {
-    this.target_msg_map[topic]?.(data);
+    this.target_msg_map[topic]?.(data, topic);
   }
 
   dispose() {

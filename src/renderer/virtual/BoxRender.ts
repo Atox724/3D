@@ -11,7 +11,7 @@ import {
 
 import Target from "@/renderer/target";
 
-interface TargetData {
+interface DataType {
   color: { r: number; g: number; b: number };
   extra_info: string[];
   height: number;
@@ -24,46 +24,14 @@ interface TargetData {
   yaw: number; // 偏转角
 }
 
-interface PolygonData {
-  color: { r: number; g: number; b: number };
-  contour: {
-    x: number;
-    y: number;
-  }[];
-  height: number;
-  id: number;
-  show_id: boolean;
-  type: number;
-}
-
-interface BoxData {
-  arrow_array: {
-    data: any[];
-    defaultEnable: boolean;
-    group: string;
-    style: Record<string, any>;
-    timestamp_nsec: number;
-    topic: string;
-    type: "arrow";
-  };
-  box_target_array: {
-    data: TargetData[];
-    defaultEnable: boolean;
-    group: string;
-    style: Record<string, any>;
-    timestamp_nsec: number;
-    topic: string;
-    type: "target";
-  };
-  polygon_array: {
-    data: PolygonData[];
-    defaultEnable: boolean;
-    group: string;
-    style: Record<string, any>;
-    timestamp_nsec: number;
-    topic: string;
-    type: "polygon";
-  };
+interface UpdateData {
+  data: DataType[];
+  defaultEnable: boolean;
+  group: string;
+  style: Record<string, any>;
+  timestamp_nsec: number;
+  topic: string;
+  type: "target";
 }
 
 const boxMaterial = new MeshLambertMaterial();
@@ -76,20 +44,17 @@ const edgesMesh = new LineSegments(
   edgesMaterial
 );
 
-export default class BoxTargetRender extends Target {
+export default class BoxRender extends Target {
+  /** 这里的topic没有实际用处, 已由中间层 CustomizedRender 处理 */
   topic = [
-    "dpc_planning_debug_info",
+    "dpc_stopline",
     "perception_obstacle_fusion",
-    "perception_fusion /perception/fusion/object",
+    "perception_fusion",
     "perception_radar_front",
-    "perception_camera_roadlines center_camera_fov30",
-    "perception_camera_roadlines center_camera_fov120",
-    "perception_camera_front",
-    "perception_camera_roadlines nv_cameras",
-    "perception_camera_nv"
+    "perception_camera_target"
   ];
 
-  createBox(modelData: TargetData) {
+  createModel(modelData: DataType) {
     const { id, color, type } = modelData;
     const group = new Group();
     const boxMeshNew = boxMesh.clone();
@@ -111,7 +76,7 @@ export default class BoxTargetRender extends Target {
     return group;
   }
 
-  setBoxAttributes(model: Object3D, modelData: TargetData) {
+  setModelAttributes(model: Object3D, modelData: DataType) {
     const { yaw, x, y, length, width, height, color } = modelData;
     model.rotation.z = yaw;
     model.position.set(x, y, height / 2);
@@ -128,23 +93,23 @@ export default class BoxTargetRender extends Target {
     edgesMeshMaterial.color.setRGB(color.r, color.g, color.b);
   }
 
-  update(data: BoxData) {
-    if (!data) {
+  update(data: UpdateData) {
+    if (!data.data.length) {
       this.clear();
       return;
     }
-    data.box_target_array.data.forEach((modelData) => {
+    data.data.forEach((modelData) => {
       const { id } = modelData;
       const model = this.modelList[id];
       if (model) {
-        this.setBoxAttributes(model, modelData);
+        this.setModelAttributes(model, modelData);
       } else {
-        const newModel = this.createBox(modelData);
-        this.setBoxAttributes(newModel, modelData);
+        const newModel = this.createModel(modelData);
+        this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
         this.modelList[id] = newModel;
       }
     });
-    this.checkModelByData(data.box_target_array.data);
+    this.checkModelByData(data.data);
   }
 }
