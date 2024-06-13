@@ -90,8 +90,11 @@ class Player {
     this.currentTime = timestamp;
 
     let playIndex = -1;
+    let accumulatedTime = 0;
 
     this.#playTimer = setInterval(() => {
+      accumulatedTime += DUMP_MS * this.#speed;
+
       if (playIndex === -1) {
         this.playState = "loading";
         const key = getKeyByTime(this.currentTime || this.startTime);
@@ -109,44 +112,56 @@ class Player {
       }
       this.playState = "play";
       const datas = [...this.#cacheData.entries()];
-      const lines = datas[playIndex][1];
-      lines.forEach((line) => {
-        const colonIndex = line.indexOf(":");
-        if (colonIndex === -1) return;
-        const data = line.slice(colonIndex + 1);
-        const jsonData = atob(data);
-        try {
-          let data;
-          if (jsonData[0] === "{") {
-            data = jsonData;
-          } else {
-            const uint8buffer = new Uint8Array(jsonData.length);
-            for (let i = 0; i < jsonData.length; i++) {
-              uint8buffer[i] = jsonData.charCodeAt(i);
-            }
-            data = uint8buffer.buffer;
-          }
-          data = formatMsg(data);
-          if (data) {
-            postMsg({
-              type: "data",
-              data
-            });
-          }
-        } catch (error) {
-          // console.log(error);
+      while (accumulatedTime >= DUMP_MS) {
+        if (this.currentTime >= this.endTime) {
+          this.playState = "end";
+          clearInterval(this.#playTimer);
+          return;
         }
-      });
-      const lastLine = lines[lines.length - 1];
-      const colonIndex = lastLine.indexOf(":");
-      const timestamp = +lastLine.slice(0, colonIndex);
-      this.currentTime = transform_MS(timestamp);
-      postMsg({
-        type: "timeupdate",
-        data: this.currentTime - this.startTime
-      });
-      playIndex++;
-    }, DUMP_MS / this.#speed);
+        if (playIndex >= this.#cacheData.size) {
+          this.playState = "loading";
+          return;
+        }
+        const lines = datas[playIndex][1];
+        lines.forEach((line) => {
+          const colonIndex = line.indexOf(":");
+          if (colonIndex === -1) return;
+          const data = line.slice(colonIndex + 1);
+          const jsonData = atob(data);
+          try {
+            let data;
+            if (jsonData[0] === "{") {
+              data = jsonData;
+            } else {
+              const uint8buffer = new Uint8Array(jsonData.length);
+              for (let i = 0; i < jsonData.length; i++) {
+                uint8buffer[i] = jsonData.charCodeAt(i);
+              }
+              data = uint8buffer.buffer;
+            }
+            data = formatMsg(data);
+            if (data) {
+              postMsg({
+                type: "data",
+                data
+              });
+            }
+          } catch (error) {
+            // console.log(error);
+          }
+        });
+        const lastLine = lines[lines.length - 1];
+        const colonIndex = lastLine.indexOf(":");
+        const timestamp = +lastLine.slice(0, colonIndex);
+        this.currentTime = transform_MS(timestamp);
+        postMsg({
+          type: "timeupdate",
+          data: this.currentTime - this.startTime
+        });
+        playIndex++;
+        accumulatedTime -= DUMP_MS;
+      }
+    }, DUMP_MS);
   }
 
   pause() {
