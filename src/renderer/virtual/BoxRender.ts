@@ -1,110 +1,84 @@
-import {
-  BoxGeometry,
-  EdgesGeometry,
-  Group,
-  LineBasicMaterial,
-  LineSegments,
-  Mesh,
-  MeshLambertMaterial,
-  type Object3D
-} from "three";
+import type { Scene } from "three";
 
-import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
 
-interface DataType {
-  color: { r: number; g: number; b: number };
-  extra_info: string[];
-  height: number;
-  id: number;
-  length: number;
-  type: number;
-  width: number;
-  x: number;
-  y: number;
-  yaw: number; // 偏转角
+import { Box, type BoxUpdateData } from "../public";
+
+const topic = [
+  "dpc_planning_debug_info",
+  "perception_obstacle_fusion",
+  "perception_fusion /perception/fusion/object",
+  "perception_radar_front",
+  "perception_camera_front",
+  "perception_camera_nv"
+] as const;
+type TopicType = (typeof topic)[number];
+
+type ArrowData1 = { box_array: BoxUpdateData };
+type ArrowData2 = { box_target_array: BoxUpdateData };
+type ArrowData = ArrowData1 | ArrowData2;
+
+interface ArrowUpdateDataMap extends Record<TopicType, ArrowData> {
+  dpc_planning_debug_info: ArrowData1;
+  perception_obstacle_fusion: ArrowData2;
+  "perception_fusion /perception/fusion/object": ArrowData2;
+  perception_radar_front: ArrowData2;
+  perception_camera_front: ArrowData2;
+  perception_camera_nv: ArrowData2;
 }
 
-interface UpdateData {
-  data: DataType[];
-  defaultEnable: boolean;
-  group: string;
-  style: Record<string, any>;
-  timestamp_nsec: number;
-  topic: string;
-  type: "target";
+type CreateRenderType1 = { box_array: Box };
+type CreateRenderType2 = { box_target_array: Box };
+type CreateRenderType = CreateRenderType1 | CreateRenderType2;
+
+interface CreateRenderMap extends Record<TopicType, CreateRenderType> {
+  dpc_planning_debug_info: CreateRenderType1;
+  perception_obstacle_fusion: CreateRenderType2;
+  "perception_fusion /perception/fusion/object": CreateRenderType2;
+  perception_radar_front: CreateRenderType2;
+  perception_camera_front: CreateRenderType2;
+  perception_camera_nv: CreateRenderType2;
 }
-
-const boxMaterial = new MeshLambertMaterial();
-const boxGeometry = new BoxGeometry(1, 1, 1);
-const boxMesh = new Mesh(boxGeometry, boxMaterial);
-
-const edgesMaterial = new LineBasicMaterial();
-const edgesMesh = new LineSegments(
-  new EdgesGeometry(boxGeometry),
-  edgesMaterial
-);
 
 export default class BoxRender extends Target {
-  topic: readonly string[] = [];
+  topic: readonly string[] = topic;
 
-  createModel(modelData: DataType) {
-    const { color, type } = modelData;
-    const group = new Group();
+  createRender: CreateRenderMap;
 
-    const boxMeshMaterial = boxMaterial.clone();
-    boxMeshMaterial.transparent = true;
-    boxMeshMaterial.opacity = !type ? 0.8 : 0.15;
-    boxMeshMaterial.color.setRGB(color.r, color.g, color.b);
+  constructor(scene: Scene) {
+    super(scene);
 
-    const boxMeshNew = boxMesh.clone();
-    boxMeshNew.material = boxMeshMaterial;
-    boxMeshNew.name = "box";
-
-    const edgesMeshMaterial = edgesMaterial.clone();
-    edgesMeshMaterial.color.setRGB(color.r, color.g, color.b);
-
-    const edgesMeshNew = edgesMesh.clone();
-    edgesMeshNew.material = edgesMeshMaterial;
-    edgesMeshNew.name = "edges";
-    group.add(boxMeshNew, edgesMeshNew);
-    return group;
-  }
-
-  setModelAttributes(model: Object3D, modelData: DataType) {
-    const { yaw, x, y, length, width, height, color } = modelData;
-    model.rotation.z = yaw;
-    model.position.set(x, y, height / 2 + TARGET_ZINDEX.TARGET);
-
-    const boxMeshNew = model.getObjectByName("box");
-    if (boxMeshNew instanceof Mesh) {
-      boxMeshNew.scale.set(length, width, height);
-      boxMeshNew.material.color.setRGB(color.r, color.g, color.b);
-    }
-    const edgesMeshNew = model.getObjectByName("edges");
-    if (edgesMeshNew instanceof LineSegments) {
-      edgesMeshNew.scale.set(length, width, height);
-      edgesMeshNew.material.color.setRGB(color.r, color.g, color.b);
-    }
-  }
-
-  update(data: UpdateData) {
-    if (!data.data.length) {
-      this.clear();
-      return;
-    }
-    data.data.forEach((modelData) => {
-      const { id } = modelData;
-      const model = this.modelList.get(id);
-      if (model) {
-        this.setModelAttributes(model, modelData);
-      } else {
-        const newModel = this.createModel(modelData);
-        this.setModelAttributes(newModel, modelData);
-        this.scene.add(newModel);
-        this.modelList.set(id, newModel);
+    this.createRender = {
+      dpc_planning_debug_info: {
+        box_array: new Box(scene)
+      },
+      perception_obstacle_fusion: {
+        box_target_array: new Box(scene)
+      },
+      "perception_fusion /perception/fusion/object": {
+        box_target_array: new Box(scene)
+      },
+      perception_radar_front: {
+        box_target_array: new Box(scene)
+      },
+      perception_camera_front: {
+        box_target_array: new Box(scene)
+      },
+      perception_camera_nv: {
+        box_target_array: new Box(scene)
       }
-    });
-    this.checkModelByData(data.data);
+    };
+  }
+
+  update<T extends TopicType>(data: ArrowUpdateDataMap[T], topic: T) {
+    if ("box_array" in data) {
+      (this.createRender[topic] as CreateRenderType1).box_array.update(
+        data.box_array
+      );
+    } else {
+      (this.createRender[topic] as CreateRenderType2).box_target_array.update(
+        data.box_target_array
+      );
+    }
   }
 }

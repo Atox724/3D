@@ -1,11 +1,14 @@
 import { VIEW_WS } from "@/utils/websocket";
 
-import { CrosswalkRender } from "../public";
 import Renderer from "../renderer";
 import type Target from "../target";
-import CustomizedRender from "./CustomizedRender";
-import LaneLineRender from "./LaneLineRender";
-import LaneRender from "./LaneRender";
+import ArrowRender from "./ArrowRender";
+import BoxRender from "./BoxRender";
+import CrosswalkRender from "./CrosswalkRender";
+import FreespaceRender from "./FreespaceRender";
+import PolygonRender from "./PolygonRender";
+import PolylineRender from "./PolylineRender";
+import TextRender from "./TextRender";
 
 export default class Virtual extends Renderer {
   createRender: Target[];
@@ -15,10 +18,13 @@ export default class Virtual extends Renderer {
   constructor() {
     super();
     this.createRender = [
-      new LaneRender(this.scene),
+      new FreespaceRender(this.scene),
       new CrosswalkRender(this.scene),
-      new CustomizedRender(this.scene),
-      new LaneLineRender(this.scene)
+      new ArrowRender(this.scene),
+      new BoxRender(this.scene),
+      new PolylineRender(this.scene),
+      new PolygonRender(this.scene),
+      new TextRender(this.scene)
     ];
 
     this.registerModelRender();

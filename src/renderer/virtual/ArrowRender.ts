@@ -1,63 +1,85 @@
-import { ArrowHelper, Color, Vector3 } from "three";
+import type { Scene } from "three";
 
-import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
-import type { UpdateDataTool } from "@/typings";
 
-interface DataType {
-  id?: string;
-  color: { r: number; g: number; b: number };
-  end_point: { x: number; y: number; z: number };
-  origin: { x: number; y: number; z: number };
+import { Arrow, type ArrowUpdateData } from "../public";
+
+const topic = [
+  "perception_obstacle_fusion",
+  "perception_fusion /perception/fusion/object",
+  "perception_radar_front",
+  "perception_camera_front",
+  "perception_camera_nv",
+
+  "localization_global_history_trajectory",
+  "localization_local_history_trajectory"
+] as const;
+type TopicType = (typeof topic)[number];
+
+type ArrowData1 = { arrow_array: ArrowUpdateData };
+type ArrowData2 = ArrowUpdateData;
+type ArrowData = ArrowData1 | ArrowData2;
+
+interface ArrowUpdateDataMap extends Record<TopicType, ArrowData> {
+  perception_obstacle_fusion: ArrowData1;
+  "perception_fusion /perception/fusion/object": ArrowData1;
+  perception_radar_front: ArrowData1;
+  perception_camera_front: ArrowData1;
+  perception_camera_nv: ArrowData1;
+  localization_global_history_trajectory: ArrowData2;
+  localization_local_history_trajectory: ArrowData2;
 }
 
-interface UpdateData extends UpdateDataTool<DataType[]> {
-  type: "arrow";
+type CreateRenderType1 = { arrow_array: Arrow };
+type CreateRenderType2 = Arrow;
+type CreateRenderType = CreateRenderType1 | CreateRenderType2;
+
+interface CreateRenderMap extends Record<TopicType, CreateRenderType> {
+  perception_obstacle_fusion: CreateRenderType1;
+  "perception_fusion /perception/fusion/object": CreateRenderType1;
+  perception_radar_front: CreateRenderType1;
+  perception_camera_front: CreateRenderType1;
+  perception_camera_nv: CreateRenderType1;
+  localization_global_history_trajectory: CreateRenderType2;
+  localization_local_history_trajectory: CreateRenderType2;
 }
 
 export default class ArrowRender extends Target {
-  topic: readonly string[] = [];
+  topic: readonly string[] = topic;
 
-  checkModelByData<D extends Array<any>>(data: D, list = this.modelList) {
-    const cacheKeys = [...list.keys()];
-    while (list.size > data.length) {
-      const key = cacheKeys.pop();
-      if (!key) break;
-      const model = list.get(key);
-      if (model) this.disposeObject(model);
-      list.delete(key);
-    }
+  createRender: CreateRenderMap;
+
+  constructor(scene: Scene) {
+    super(scene);
+
+    this.createRender = {
+      perception_obstacle_fusion: {
+        arrow_array: new Arrow(scene)
+      },
+      "perception_fusion /perception/fusion/object": {
+        arrow_array: new Arrow(scene)
+      },
+      perception_radar_front: {
+        arrow_array: new Arrow(scene)
+      },
+      perception_camera_front: {
+        arrow_array: new Arrow(scene)
+      },
+      perception_camera_nv: {
+        arrow_array: new Arrow(scene)
+      },
+      localization_global_history_trajectory: new Arrow(scene),
+      localization_local_history_trajectory: new Arrow(scene)
+    };
   }
 
-  update(data: UpdateData) {
-    if (!data.data.length) {
-      this.clear();
-      return;
+  update<T extends TopicType>(data: ArrowUpdateDataMap[T], topic: T) {
+    if ("arrow_array" in data) {
+      (this.createRender[topic] as CreateRenderType1).arrow_array.update(
+        data.arrow_array
+      );
+    } else {
+      (this.createRender[topic] as CreateRenderType2).update(data);
     }
-    const listLength = this.modelList.size;
-    data.data.forEach((modelData, index) => {
-      const { origin: o, end_point, color: c } = modelData;
-      const origin = new Vector3(o.x, o.y, o.z);
-      const end = new Vector3(end_point.x, end_point.y, end_point.z);
-      // 计算方向向量
-      const sub = new Vector3().subVectors(end, origin);
-      const length = sub.length();
-      const dir = sub.normalize();
-      const color = new Color(c.r, c.g, c.b);
-      if (index < listLength) {
-        const arrow = [...this.modelList.values()][index] as ArrowHelper;
-        arrow.setLength(length);
-        arrow.setDirection(dir);
-        arrow.setColor(color);
-        arrow.position.set(origin.x, origin.y, origin.z + TARGET_ZINDEX.TARGET);
-      } else {
-        const arrow = new ArrowHelper(dir, origin, length, color);
-        arrow.position.set(origin.x, origin.y, origin.z + TARGET_ZINDEX.TARGET);
-        modelData.id = arrow.uuid;
-        this.modelList.set(arrow.uuid, arrow);
-        this.scene.add(arrow);
-      }
-    });
-    this.checkModelByData(data.data);
   }
 }

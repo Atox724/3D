@@ -1,11 +1,12 @@
 import { VIEW_WS } from "@/utils/websocket";
 
-import { CrosswalkRender } from "../public";
 import Renderer from "../renderer";
 import type Target from "../target";
-import LaneRender from "./LaneRender";
+import CrosswalkRender from "./CrosswalkRender";
+import FreespaceRender from "./FreespaceRender";
 import ObstacleRender from "./ObstacleRender";
 import ParticipantRender from "./ParticipantRender";
+import PolylineRender from "./PolylineRender";
 import TrafficLightRender from "./TrafficLightRender";
 import TrafficSignalRender from "./TrafficSignalRender";
 
@@ -19,10 +20,11 @@ export default class Augmented extends Renderer {
     this.createRender = [
       new ObstacleRender(this.scene),
       new ParticipantRender(this.scene),
-      new LaneRender(this.scene),
+      new FreespaceRender(this.scene),
       new TrafficLightRender(this.scene),
       new TrafficSignalRender(this.scene),
-      new CrosswalkRender(this.scene)
+      new CrosswalkRender(this.scene),
+      new PolylineRender(this.scene)
     ];
 
     this.preload().then(() => {

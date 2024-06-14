@@ -14,23 +14,27 @@ import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 
 interface CrosswalkData {
+  color: { r: number; g: number; b: number };
   id: number;
-  type: number; // 元素类型
-  shape: Vector3[];
   position: Vector3; // 中心点坐标，z轴坐标将忽略
   rotation: Vector3; // 朝向角，通常来说只识别z轴的偏向角
-  color: { r: number; g: number; b: number };
+  shape: Vector3[];
+
+  type?: number; // 元素类型
+  lane_ids?: number[];
 }
 
 export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
   type: "crosswalk";
 }
 
-export default class CrosswalkRender extends Target {
-  topic = ["pilothmi_cross_walk_local"];
+export default class Crosswalk extends Target {
+  topic: readonly string[] = [
+    "localmap_crosswalk",
+    "pilothmi_cross_walk_local"
+  ];
 
   update(data: UpdateData) {
-    if (data.type !== "crosswalk") return;
     this.clear();
     if (!data.data.length) return;
     data.data.forEach((item) => {

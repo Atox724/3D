@@ -12,27 +12,33 @@ import {
 
 import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 
-export interface UpdateData {
-  id: number;
+interface DataType {
+  color: { r: number; g: number; b: number; a: number };
   contour: Vector2[];
   holes: Vector2[][];
+  z: number;
+
+  id?: number;
   x?: number;
   y?: number;
-  z: number;
-  color: { r: number; g: number; b: number; a: number };
   yaw?: number;
   pitch?: number;
   roll?: number;
 }
 
-export default abstract class FreespaceRender extends Target {
-  abstract topic: readonly string[];
+export interface UpdateData extends UpdateDataTool<DataType[]> {
+  type: "freespace";
+}
 
-  update(data: UpdateData[]) {
+export default class Freespace extends Target {
+  topic: readonly string[] = ["localmap_lane_lane"];
+
+  update(data: UpdateData) {
     this.clear();
-    if (!data.length) return;
-    data.forEach((item) => {
+    if (!data.data.length) return;
+    data.data.forEach((item) => {
       const {
         id,
         x = 0,
@@ -73,7 +79,7 @@ export default abstract class FreespaceRender extends Target {
         pitch * MathUtils.DEG2RAD,
         yaw * MathUtils.DEG2RAD
       );
-      this.modelList.set(id, mesh);
+      this.modelList.set(id || mesh.uuid, mesh);
       this.scene.add(mesh);
     });
   }

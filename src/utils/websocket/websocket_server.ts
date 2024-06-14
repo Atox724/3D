@@ -7,7 +7,7 @@ class WebsocketServer {
   isConnection: boolean;
   allow_reconnect?: boolean;
 
-  target_msg_map: Record<string, (data: any, topic: string) => void>;
+  target_msg_map: Record<string, Set<(data: any, topic: string) => void>>;
 
   constructor(url: string) {
     this.url = url;
@@ -74,11 +74,34 @@ class WebsocketServer {
   }
 
   registerTargetMsg<T>(topic: string, callback: (data: T) => void) {
-    this.target_msg_map[topic] = callback;
+    if (!this.target_msg_map[topic]) {
+      this.target_msg_map[topic] = new Set([callback]);
+    } else {
+      this.target_msg_map[topic].add(callback);
+    }
   }
 
+  typeList = [
+    "arrow",
+    "target",
+    "crosswalk",
+    "freespace",
+    "polygon",
+    "polyline",
+    "text_sprite"
+  ];
+
   dispatchTargetMsg<T>(topic: string, data: T) {
-    this.target_msg_map[topic]?.(data, topic);
+    if (this.target_msg_map[topic]) {
+      this.target_msg_map[topic].forEach((callback) => {
+        callback(data, topic);
+      });
+    } else {
+      // @ts-ignore
+      if (this.typeList.indexOf(data.type) > -1 && !topic.startsWith("pilot")) {
+        console.log(topic, data);
+      }
+    }
   }
 
   dispose() {

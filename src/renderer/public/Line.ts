@@ -4,7 +4,7 @@ import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GradientLine from "@/utils/three/gradientLine";
-import Line from "@/utils/three/line";
+import Line2D from "@/utils/three/line";
 import {
   CustomizedShader,
   DashedShader,
@@ -43,8 +43,16 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 
 export type UpdateData = JSONData | BufferData;
 
-export default abstract class LineRender extends Target {
-  abstract topic: readonly string[];
+export default class Line extends Target {
+  topic: readonly string[] = [
+    "dpc_planning_debug_info",
+    "perception_camera_roadlines center_camera_fov30",
+    "perception_camera_roadlines center_camera_fov120",
+    "perception_camera_roadlines nv_cameras",
+    "localmap_center_line",
+    "localmap_lane_line",
+    "localmap_stop_line"
+  ];
 
   update(data: UpdateData, _topic?: string) {
     this.clear();
@@ -105,7 +113,7 @@ export default abstract class LineRender extends Target {
           item.color,
           item.width
         );
-        const base_trajectory_geometry = new Line(
+        const base_trajectory_geometry = new Line2D(
           point.map((line) => [line.x, line.y]),
           {
             distances: line_style.distance,
