@@ -1,10 +1,11 @@
 import type { Scene } from "three";
 
+import { PILOTHMI_RENDER_TOPIC } from "@/constants";
 import { Freespace, type FreespaceUpdateData } from "@/renderer/public";
 
 import Target from "../target";
 
-const topic = ["pilothmi_lane_line"] as const;
+const topic = [PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINE] as const;
 type TopicType = (typeof topic)[number];
 
 type LaneData = FreespaceUpdateData;
@@ -14,7 +15,7 @@ type CreateRenderType = Freespace;
 type CreateRenderMap = Record<TopicType, CreateRenderType>;
 
 export default class FreespaceRender extends Target {
-  topic: readonly string[] = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
@@ -22,7 +23,7 @@ export default class FreespaceRender extends Target {
     super(scene);
 
     this.createRender = {
-      pilothmi_lane_line: new Freespace(scene)
+      [PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINE]: new Freespace(scene)
     };
   }
 

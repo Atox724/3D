@@ -10,6 +10,7 @@ import {
   WarningSign,
   WaterBarrierYellow
 } from "@/assets/model";
+import { PILOTHMI_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 
@@ -53,9 +54,9 @@ const modelFiles: Record<ObstacleType, string> = {
 const gltfLoader = new GLTFLoader();
 
 export default class ObstacleRender extends Target {
-  topic = [
-    "pilothmi_perception_obstacle_fusion object",
-    "pilothmi_perception_obstacle_local"
+  topic: readonly PILOTHMI_RENDER_TOPIC[] = [
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_PERCEPTION_OBSTACLE_FUSION_OBJECT,
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_PERCEPTION_OBSTACLE_LOCAL
   ];
 
   static preloading() {

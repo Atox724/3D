@@ -169,7 +169,7 @@ export default abstract class Renderer {
       opacity: 0.5
     });
     const plane = new Mesh(geometry, material);
-    plane.position.z = 0.005;
+    // plane.position.z = 0.005;
 
     // const reflector = new Reflector(geometry, {
     //   textureWidth: window.innerWidth * window.devicePixelRatio,
@@ -196,7 +196,7 @@ export default abstract class Renderer {
       textureHeight: window.innerHeight * window.devicePixelRatio
     });
 
-    reflector.position.z = 0.005;
+    // reflector.position.z = 0.005;
 
     this.scene.add(cylinder);
   }

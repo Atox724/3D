@@ -1,9 +1,14 @@
 import type { Scene } from "three";
 
+import { PILOTHMI_RENDER_TOPIC } from "@/constants";
+
 import { Crosswalk, type CrosswalkUpdateData } from "../public";
 import Target from "../target";
 
-const topic = ["pilothmi_cross_walk_local", "pilothmi_cross_walk"] as const;
+const topic = [
+  PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK,
+  PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK_LOCAL
+] as const;
 type TopicType = (typeof topic)[number];
 
 type CrosswalkData = CrosswalkUpdateData;
@@ -13,7 +18,7 @@ type CreateRenderType = Crosswalk;
 type CreateRenderMap = Record<TopicType, CreateRenderType>;
 
 export default class CrosswalkRender extends Target {
-  topic: readonly string[] = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
@@ -21,8 +26,8 @@ export default class CrosswalkRender extends Target {
     super(scene);
 
     this.createRender = {
-      pilothmi_cross_walk_local: new Crosswalk(scene),
-      pilothmi_cross_walk: new Crosswalk(scene)
+      [PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK]: new Crosswalk(scene),
+      [PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK_LOCAL]: new Crosswalk(scene)
     };
   }
 

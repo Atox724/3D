@@ -1,10 +1,11 @@
 import type { Scene } from "three";
 
+import { PERCEPTION_RENDER_TOPIC } from "@/constants";
 import { Freespace, type FreespaceUpdateData } from "@/renderer/public";
 
 import Target from "../target";
 
-const topic = ["localmap_lane_lane"] as const;
+const topic = [PERCEPTION_RENDER_TOPIC.LOCALMAP_LANE_LANE] as const;
 type TopicType = (typeof topic)[number];
 
 type LaneData = FreespaceUpdateData;
@@ -23,7 +24,7 @@ export default class FreespaceRender extends Target {
     super(scene);
 
     this.createRender = {
-      localmap_lane_lane: new Freespace(scene)
+      [PERCEPTION_RENDER_TOPIC.LOCALMAP_LANE_LANE]: new Freespace(scene)
     };
   }
 

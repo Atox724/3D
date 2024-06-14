@@ -1,9 +1,11 @@
 import type { Scene } from "three";
 
+import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+
 import { Crosswalk, type CrosswalkUpdateData } from "../public";
 import Target from "../target";
 
-const topic = ["localmap_crosswalk"] as const;
+const topic = [PERCEPTION_RENDER_TOPIC.LOCALMAP_CROSSWALK] as const;
 type TopicType = (typeof topic)[number];
 
 type CrosswalkData = CrosswalkUpdateData;
@@ -21,7 +23,7 @@ export default class CrosswalkRender extends Target {
     super(scene);
 
     this.createRender = {
-      localmap_crosswalk: new Crosswalk(scene)
+      [PERCEPTION_RENDER_TOPIC.LOCALMAP_CROSSWALK]: new Crosswalk(scene)
     };
   }
 

@@ -1,18 +1,19 @@
 import type { Scene } from "three";
 
+import { PERCEPTION_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Arrow, type ArrowUpdateData } from "../public";
 
 const topic = [
-  "perception_obstacle_fusion",
-  "perception_fusion /perception/fusion/object",
-  "perception_radar_front",
-  "perception_camera_front",
-  "perception_camera_nv",
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV,
 
-  "localization_global_history_trajectory",
-  "localization_local_history_trajectory"
+  PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY,
+  PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY
 ] as const;
 type TopicType = (typeof topic)[number];
 
@@ -21,13 +22,14 @@ type ArrowData2 = ArrowUpdateData;
 type ArrowData = ArrowData1 | ArrowData2;
 
 interface ArrowUpdateDataMap extends Record<TopicType, ArrowData> {
-  perception_obstacle_fusion: ArrowData1;
-  "perception_fusion /perception/fusion/object": ArrowData1;
-  perception_radar_front: ArrowData1;
-  perception_camera_front: ArrowData1;
-  perception_camera_nv: ArrowData1;
-  localization_global_history_trajectory: ArrowData2;
-  localization_local_history_trajectory: ArrowData2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: ArrowData1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: ArrowData1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: ArrowData1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: ArrowData1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: ArrowData1;
+
+  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY]: ArrowData2;
+  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY]: ArrowData2;
 }
 
 type CreateRenderType1 = { arrow_array: Arrow };
@@ -35,13 +37,14 @@ type CreateRenderType2 = Arrow;
 type CreateRenderType = CreateRenderType1 | CreateRenderType2;
 
 interface CreateRenderMap extends Record<TopicType, CreateRenderType> {
-  perception_obstacle_fusion: CreateRenderType1;
-  "perception_fusion /perception/fusion/object": CreateRenderType1;
-  perception_radar_front: CreateRenderType1;
-  perception_camera_front: CreateRenderType1;
-  perception_camera_nv: CreateRenderType1;
-  localization_global_history_trajectory: CreateRenderType2;
-  localization_local_history_trajectory: CreateRenderType2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: CreateRenderType1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: CreateRenderType1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: CreateRenderType1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: CreateRenderType1;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: CreateRenderType1;
+
+  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY]: CreateRenderType2;
+  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY]: CreateRenderType2;
 }
 
 export default class ArrowRender extends Target {
@@ -53,23 +56,25 @@ export default class ArrowRender extends Target {
     super(scene);
 
     this.createRender = {
-      perception_obstacle_fusion: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: {
         arrow_array: new Arrow(scene)
       },
-      "perception_fusion /perception/fusion/object": {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: {
         arrow_array: new Arrow(scene)
       },
-      perception_radar_front: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: {
         arrow_array: new Arrow(scene)
       },
-      perception_camera_front: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: {
         arrow_array: new Arrow(scene)
       },
-      perception_camera_nv: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: {
         arrow_array: new Arrow(scene)
       },
-      localization_global_history_trajectory: new Arrow(scene),
-      localization_local_history_trajectory: new Arrow(scene)
+      [PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY]:
+        new Arrow(scene),
+      [PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY]:
+        new Arrow(scene)
     };
   }
 

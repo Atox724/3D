@@ -1,8 +1,9 @@
 import { Mesh, ShaderMaterial } from "three";
 
-import { TARGET_ZINDEX } from "@/constants";
+import { PERCEPTION_RENDER_TOPIC, PILOTHMI_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+import DepthContainer from "@/utils/three/depthTester";
 import GradientLine from "@/utils/three/gradientLine";
 import Line2D from "@/utils/three/line";
 import {
@@ -44,33 +45,52 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 export type UpdateData = JSONData | BufferData;
 
 export default class Line extends Target {
-  topic: readonly string[] = [
-    "dpc_planning_debug_info",
-    "perception_camera_roadlines center_camera_fov30",
-    "perception_camera_roadlines center_camera_fov120",
-    "perception_camera_roadlines nv_cameras",
-    "localmap_center_line",
-    "localmap_lane_line",
-    "localmap_stop_line"
+  topic: readonly (PILOTHMI_RENDER_TOPIC | PERCEPTION_RENDER_TOPIC)[] = [
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINES,
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_STOP_LINE,
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_PLANNING_LINES_INFO,
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_PILOT_PLANNING_TRAJECTORY,
+
+    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO,
+    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_OTHERLINE,
+    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_REFERENCE_LINE,
+    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_EDGELINE,
+    PERCEPTION_RENDER_TOPIC.DPC_LFP_PLANNING_TRAJECTORY,
+    PERCEPTION_RENDER_TOPIC.DPC_LFP_PLANNING_PLANLINE,
+
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_ROADLINES_CENTER_FOV30,
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_ROADLINES_CENTER_FOV120,
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_ROADLINES_NV,
+
+    PERCEPTION_RENDER_TOPIC.LOCALMAP_CENTER_LINE,
+    PERCEPTION_RENDER_TOPIC.LOCALMAP_LANE_LINE,
+    PERCEPTION_RENDER_TOPIC.LOCALMAP_STOP_LINE,
+    PERCEPTION_RENDER_TOPIC.LOCALMAP_SPEEDBUMP,
+
+    PERCEPTION_RENDER_TOPIC.MEMDRIVE_REF_ROUTE_TRAJECTORY
   ];
 
-  update(data: UpdateData, _topic?: string) {
+  trajectory_pos_z = DepthContainer.queryDepth();
+
+  update(data: UpdateData) {
     this.clear();
 
     if (!data.data.length) return;
-    data.data.forEach((item) => {
+    data.data.forEach((item, index) => {
       let draw_solid_line = true;
-      let draw_gradient_line = false;
+      let draw_gradient_line = true;
       switch (item.lineType) {
         case 0:
           draw_solid_line = true;
           draw_gradient_line = true;
           break;
         case 1:
+          draw_solid_line = true;
           draw_gradient_line = false;
           break;
         case 2:
           draw_solid_line = false;
+          draw_gradient_line = true;
           break;
         default:
           draw_solid_line = true;
@@ -103,7 +123,10 @@ export default class Line extends Target {
           color_trajectory_geometry,
           gradient_line_mat
         );
-        color_trajectory_obj.position.z = TARGET_ZINDEX.LANELINE;
+        color_trajectory_obj.position.z =
+          this.trajectory_pos_z +
+          index * DepthContainer.step_z +
+          DepthContainer.step_z;
         this.modelList.set(color_trajectory_obj.uuid, color_trajectory_obj);
         this.scene.add(color_trajectory_obj);
       }
@@ -124,7 +147,10 @@ export default class Line extends Target {
           base_trajectory_geometry,
           line_style.mat
         );
-        solid_trajectory_obj.position.z = TARGET_ZINDEX.LANELINE;
+        solid_trajectory_obj.position.z =
+          this.trajectory_pos_z +
+          index * DepthContainer.step_z +
+          DepthContainer.step_z / 2;
         this.modelList.set(solid_trajectory_obj.uuid, solid_trajectory_obj);
         this.scene.add(solid_trajectory_obj);
       }

@@ -10,9 +10,10 @@ import {
   type Vector2
 } from "three";
 
-import { TARGET_ZINDEX } from "@/constants";
+import { PERCEPTION_RENDER_TOPIC, PILOTHMI_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+import DepthContainer from "@/utils/three/depthTester";
 
 interface DataType {
   color: { r: number; g: number; b: number; a: number };
@@ -33,7 +34,11 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 }
 
 export default class Freespace extends Target {
-  topic: readonly string[] = ["localmap_lane_lane"];
+  topic: readonly (PERCEPTION_RENDER_TOPIC | PILOTHMI_RENDER_TOPIC)[] = [
+    PERCEPTION_RENDER_TOPIC.LOCALMAP_LANE_LANE,
+
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINE
+  ];
 
   update(data: UpdateData) {
     this.clear();
@@ -73,7 +78,7 @@ export default class Freespace extends Target {
         opacity: color.a
       });
       const mesh = new Mesh(shapeGeometry, material);
-      mesh.position.set(x, y, TARGET_ZINDEX.FREESPACE);
+      mesh.position.set(x, y, DepthContainer.base_trajectory_pos_z);
       mesh.rotation.set(
         roll * MathUtils.DEG2RAD,
         pitch * MathUtils.DEG2RAD,

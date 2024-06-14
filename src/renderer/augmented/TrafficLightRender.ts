@@ -8,6 +8,7 @@ import {
   TrafficLight3Horizontal,
   TrafficLight3Vertical
 } from "@/assets/model";
+import { PILOTHMI_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 
 enum TrafficLightTypeEnum {
@@ -40,7 +41,9 @@ const modelFiles: Record<TrafficLightType, string> = {
 const gltfLoader = new GLTFLoader();
 
 export default class TrafficLightRender extends Target {
-  topic = ["pilothmi_traffic_light_local"];
+  topic: readonly PILOTHMI_RENDER_TOPIC[] = [
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_TRAFFIC_LIGHT_LOCAL
+  ];
 
   static preloading() {
     const proms = [];

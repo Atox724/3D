@@ -1,16 +1,18 @@
 import type { Scene } from "three";
 
+import { PERCEPTION_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Box, type BoxUpdateData } from "../public";
 
 const topic = [
-  "dpc_planning_debug_info",
-  "perception_obstacle_fusion",
-  "perception_fusion /perception/fusion/object",
-  "perception_radar_front",
-  "perception_camera_front",
-  "perception_camera_nv"
+  PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO,
+
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT,
+  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV
 ] as const;
 type TopicType = (typeof topic)[number];
 
@@ -19,12 +21,13 @@ type ArrowData2 = { box_target_array: BoxUpdateData };
 type ArrowData = ArrowData1 | ArrowData2;
 
 interface ArrowUpdateDataMap extends Record<TopicType, ArrowData> {
-  dpc_planning_debug_info: ArrowData1;
-  perception_obstacle_fusion: ArrowData2;
-  "perception_fusion /perception/fusion/object": ArrowData2;
-  perception_radar_front: ArrowData2;
-  perception_camera_front: ArrowData2;
-  perception_camera_nv: ArrowData2;
+  [PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO]: ArrowData1;
+
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: ArrowData2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: ArrowData2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: ArrowData2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: ArrowData2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: ArrowData2;
 }
 
 type CreateRenderType1 = { box_array: Box };
@@ -32,12 +35,13 @@ type CreateRenderType2 = { box_target_array: Box };
 type CreateRenderType = CreateRenderType1 | CreateRenderType2;
 
 interface CreateRenderMap extends Record<TopicType, CreateRenderType> {
-  dpc_planning_debug_info: CreateRenderType1;
-  perception_obstacle_fusion: CreateRenderType2;
-  "perception_fusion /perception/fusion/object": CreateRenderType2;
-  perception_radar_front: CreateRenderType2;
-  perception_camera_front: CreateRenderType2;
-  perception_camera_nv: CreateRenderType2;
+  [PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO]: CreateRenderType1;
+
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: CreateRenderType2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: CreateRenderType2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: CreateRenderType2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: CreateRenderType2;
+  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: CreateRenderType2;
 }
 
 export default class BoxRender extends Target {
@@ -49,22 +53,22 @@ export default class BoxRender extends Target {
     super(scene);
 
     this.createRender = {
-      dpc_planning_debug_info: {
+      [PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO]: {
         box_array: new Box(scene)
       },
-      perception_obstacle_fusion: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: {
         box_target_array: new Box(scene)
       },
-      "perception_fusion /perception/fusion/object": {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: {
         box_target_array: new Box(scene)
       },
-      perception_radar_front: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: {
         box_target_array: new Box(scene)
       },
-      perception_camera_front: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: {
         box_target_array: new Box(scene)
       },
-      perception_camera_nv: {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: {
         box_target_array: new Box(scene)
       }
     };

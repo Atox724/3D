@@ -9,7 +9,7 @@ import {
   type Object3D
 } from "three";
 
-import { TARGET_ZINDEX } from "@/constants";
+import { PERCEPTION_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 
@@ -41,13 +41,14 @@ const edgesMesh = new LineSegments(
 );
 
 export default class Box extends Target {
-  topic: readonly string[] = [
-    "dpc_planning_debug_info",
-    "perception_obstacle_fusion",
-    "perception_fusion /perception/fusion/object",
-    "perception_radar_front",
-    "perception_camera_front",
-    "perception_camera_nv"
+  topic: readonly PERCEPTION_RENDER_TOPIC[] = [
+    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO,
+
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION,
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION,
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT,
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT,
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV
   ];
 
   createModel(modelData: DataType) {
@@ -76,7 +77,7 @@ export default class Box extends Target {
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { yaw, x, y, length, width, height, color } = modelData;
     model.rotation.z = yaw;
-    model.position.set(x, y, height / 2 + TARGET_ZINDEX.TARGET);
+    model.position.set(x, y, height / 2);
 
     const boxMeshNew = model.getObjectByName("box");
     if (boxMeshNew instanceof Mesh) {

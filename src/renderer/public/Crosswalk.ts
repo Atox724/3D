@@ -9,9 +9,10 @@ import {
   type Vector3
 } from "three";
 
-import { TARGET_ZINDEX } from "@/constants";
+import { PERCEPTION_RENDER_TOPIC, PILOTHMI_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+import DepthContainer from "@/utils/three/depthTester";
 
 interface CrosswalkData {
   color: { r: number; g: number; b: number };
@@ -29,9 +30,11 @@ export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
 }
 
 export default class Crosswalk extends Target {
-  topic: readonly string[] = [
-    "localmap_crosswalk",
-    "pilothmi_cross_walk_local"
+  topic: readonly (PILOTHMI_RENDER_TOPIC | PERCEPTION_RENDER_TOPIC)[] = [
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK,
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK_LOCAL,
+
+    PERCEPTION_RENDER_TOPIC.LOCALMAP_CROSSWALK
   ];
 
   update(data: UpdateData) {
@@ -81,7 +84,14 @@ export default class Crosswalk extends Target {
         }
       });
       const shapeMesh = new Mesh(shapeGeo, shapeMat);
-      shapeMesh.position.set(position.x, position.y, TARGET_ZINDEX.CROSSWALK);
+      shapeMesh.position.set(
+        position.x,
+        position.y,
+        Math.max(
+          position.z,
+          DepthContainer.base_trajectory_pos_z + DepthContainer.step_z
+        )
+      );
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
       this.modelList.set(id, shapeMesh);
       this.scene.add(shapeMesh);

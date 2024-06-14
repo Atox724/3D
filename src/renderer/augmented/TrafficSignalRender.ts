@@ -77,6 +77,7 @@ import {
   X_weight,
   X_width
 } from "@/assets/model";
+import { PILOTHMI_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 
 enum TrafficSignalTypeEnum {
@@ -325,7 +326,9 @@ const modelFiles: Record<TrafficSignalType, string> = {
 const gltfLoader = new GLTFLoader();
 
 export default class TrafficSignalRender extends Target {
-  topic = ["pilothmi_traffic_sign_local"];
+  topic: readonly PILOTHMI_RENDER_TOPIC[] = [
+    PILOTHMI_RENDER_TOPIC.PILOTHMI_TRAFFIC_SIGN_LOCAL
+  ];
 
   static preloading() {
     const proms = [];

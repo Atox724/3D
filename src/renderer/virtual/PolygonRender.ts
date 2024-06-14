@@ -1,10 +1,11 @@
 import type { Scene } from "three";
 
+import { PERCEPTION_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Polygon, type PolygonUpdateData } from "../public";
 
-const topic = ["perception_fusion /perception/fusion/object"] as const;
+const topic = [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION] as const;
 type TopicType = (typeof topic)[number];
 
 type PolygonData = { polygon_array: PolygonUpdateData };
@@ -22,7 +23,7 @@ export default class PolygonRender extends Target {
     super(scene);
 
     this.createRender = {
-      "perception_fusion /perception/fusion/object": {
+      [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: {
         polygon_array: new Polygon(scene)
       }
     };

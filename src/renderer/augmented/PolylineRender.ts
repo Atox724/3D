@@ -1,14 +1,15 @@
 import type { Scene } from "three";
 
+import { PILOTHMI_RENDER_TOPIC } from "@/constants";
 import { Line, type LineUpdateData } from "@/renderer/public";
 
 import Target from "../target";
 
 const topic = [
-  "pilothmi_lane_lines",
-  "pilothmi_stop_line",
-  "pilothmi_planning_lines_info",
-  "pilothmi_pilot_planning_trajectory"
+  PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINES,
+  PILOTHMI_RENDER_TOPIC.PILOTHMI_STOP_LINE,
+  PILOTHMI_RENDER_TOPIC.PILOTHMI_PLANNING_LINES_INFO,
+  PILOTHMI_RENDER_TOPIC.PILOTHMI_PILOT_PLANNING_TRAJECTORY
 ] as const;
 type TopicType = (typeof topic)[number];
 
@@ -19,7 +20,7 @@ type CreateRenderType = Line;
 type CreateRenderMap = Record<TopicType, CreateRenderType>;
 
 export default class PolylineRender extends Target {
-  topic: readonly string[] = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
@@ -27,10 +28,12 @@ export default class PolylineRender extends Target {
     super(scene);
 
     this.createRender = {
-      pilothmi_lane_lines: new Line(scene),
-      pilothmi_stop_line: new Line(scene),
-      pilothmi_planning_lines_info: new Line(scene),
-      pilothmi_pilot_planning_trajectory: new Line(scene)
+      [PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINES]: new Line(scene),
+      [PILOTHMI_RENDER_TOPIC.PILOTHMI_STOP_LINE]: new Line(scene),
+      [PILOTHMI_RENDER_TOPIC.PILOTHMI_PLANNING_LINES_INFO]: new Line(scene),
+      [PILOTHMI_RENDER_TOPIC.PILOTHMI_PILOT_PLANNING_TRAJECTORY]: new Line(
+        scene
+      )
     };
   }
 

@@ -1,5 +1,6 @@
 import { Group, Mesh, MeshLambertMaterial, type Object3D } from "three";
 
+import { PERCEPTION_RENDER_TOPIC } from "@/constants";
 import Target from "@/renderer/target";
 import { createGeometry } from "@/renderer/utils";
 import type { UpdateDataTool } from "@/typings";
@@ -23,7 +24,9 @@ const polygonMaterial = new MeshLambertMaterial({
 });
 
 export default class Polygon extends Target {
-  topic: readonly string[] = ["perception_fusion /perception/fusion/object"];
+  topic: readonly PERCEPTION_RENDER_TOPIC[] = [
+    PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION
+  ];
 
   createModel(modelData: DataType) {
     const { id, contour, color, height, show_id } = modelData;
