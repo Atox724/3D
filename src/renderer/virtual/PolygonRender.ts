@@ -28,7 +28,7 @@ const polygonMaterial = new MeshLambertMaterial({
 });
 
 export default class PolygonRender extends Target {
-  topic = ["perception_fusion_polygon"];
+  topic: readonly string[] = [];
 
   createModel(modelData: DataType) {
     const { id, contour, color, height, show_id } = modelData;

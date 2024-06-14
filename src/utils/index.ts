@@ -92,10 +92,17 @@ export function formatMsg(msg: string | ArrayBuffer | null) {
       const res = ProtobufElementSchema.decode(uint8Array) as any;
       const element = res.elements[0];
       const type = element.type as keyof typeof ATTRIBUTE_MAP;
-      const data = element[ATTRIBUTE_MAP[type]].data;
       return {
         topic: element.topic,
-        data
+        data: {
+          data: element[ATTRIBUTE_MAP[type]].data,
+          defaultEnable: element.defaultEnable,
+          group: "others",
+          style: {},
+          timestamp_nsec: element.timestampNsec,
+          topic: element.topic,
+          type: type
+        }
       };
     } catch (error) {
       // console.error("protobuf数据处理错误:", error);

@@ -27,14 +27,14 @@
 <script lang="ts" setup>
 import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import { Augmented } from "@/renderer";
+import { AugmentedRender } from "@/renderer";
 import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";
 
 const route = useRoute();
 
-const renderer = new Augmented();
+const renderer = new AugmentedRender();
 
 const { fps, memory, geometries, textures } = useMonitor(renderer);
 

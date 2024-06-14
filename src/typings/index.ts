@@ -136,3 +136,12 @@ export interface Point2 {
   x: number;
   y: number;
 }
+
+export interface UpdateDataTool<T> {
+  data: T;
+  defaultEnable: boolean;
+  group: string;
+  style: Record<string, any>;
+  timestamp_nsec: number;
+  topic: string;
+}

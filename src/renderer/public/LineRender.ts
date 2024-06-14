@@ -2,6 +2,7 @@ import { Mesh, ShaderMaterial } from "three";
 
 import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 import GradientLine from "@/utils/three/gradientLine";
 import Line from "@/utils/three/line";
 import {
@@ -14,29 +15,38 @@ import {
 interface DataType {
   color: { r: number; g: number; b: number };
   lineType: number;
-  polyline: {
-    color: { r: number; g: number; b: number; a: number };
-    colorEnable: boolean;
-    x: number;
-    y: number;
-  }[];
   width: number;
 }
 
-interface UpdateData {
-  data: DataType[];
-  defaultEnable: boolean;
-  group: string;
-  style: Record<string, any>;
-  timestamp_nsec: number;
-  topic: string;
+interface PointData {
+  color: { r: number; g: number; b: number; a: number };
+  colorEnable: boolean;
+  x: number;
+  y: number;
+}
+
+interface JSONDataType extends DataType {
+  polyline: PointData[];
+}
+
+interface BufferDataType extends DataType {
+  point: PointData[];
+}
+
+interface JSONData extends UpdateDataTool<JSONDataType[]> {
   type: "polyline";
 }
 
-export default class LineRender extends Target {
-  topic: string[] = [];
+interface BufferData extends UpdateDataTool<BufferDataType[]> {
+  type: "polyline";
+}
 
-  update(data: UpdateData) {
+export type UpdateData = JSONData | BufferData;
+
+export default abstract class LineRender extends Target {
+  abstract topic: readonly string[];
+
+  update(data: UpdateData, _topic?: string) {
     this.clear();
 
     if (!data.data.length) return;
@@ -59,9 +69,15 @@ export default class LineRender extends Target {
           draw_gradient_line = false;
           break;
       }
+      let point: PointData[] = [];
+      if ("polyline" in item) {
+        point = item.polyline;
+      } else {
+        point = item.point;
+      }
       if (draw_gradient_line) {
         const color_trajectory_geometry = new GradientLine(
-          item.polyline.map((line) => [
+          point.map((line) => [
             line.x,
             line.y,
             line.color.r,
@@ -90,7 +106,7 @@ export default class LineRender extends Target {
           item.width
         );
         const base_trajectory_geometry = new Line(
-          item.polyline.map((line) => [line.x, line.y]),
+          point.map((line) => [line.x, line.y]),
           {
             distances: line_style.distance,
             closed: false

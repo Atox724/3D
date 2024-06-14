@@ -12,9 +12,9 @@
 <script lang="ts" setup>
 import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import { Augmented } from "@/renderer";
+import { AugmentedRender } from "@/renderer";
 
-const renderer = new Augmented();
+const renderer = new AugmentedRender();
 
 const { fps, memory, geometries, textures } = useMonitor(renderer);
 

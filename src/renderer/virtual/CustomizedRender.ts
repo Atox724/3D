@@ -71,7 +71,7 @@ const topic = [
 type TopicType = (typeof topic)[number];
 
 export default class CustomizedRender extends Target {
-  topic = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: Record<TopicType, { [k: string]: Target }>;
 

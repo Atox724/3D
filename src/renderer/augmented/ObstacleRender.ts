@@ -11,6 +11,7 @@ import {
   WaterBarrierYellow
 } from "@/assets/model";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 
 // 障碍物与交通提示物
 enum ObstacleTypeEnum {
@@ -32,13 +33,7 @@ interface ObstacleData {
   rotation: Vector3; // 模型偏转值
 }
 
-interface UpdateData {
-  data: ObstacleData[];
-  defaultEnable: boolean;
-  group: string;
-  style: Record<string, any>;
-  timestamp_nsec: number;
-  topic: string;
+interface UpdateData extends UpdateDataTool<ObstacleData[]> {
   type: "obstacleModel";
 }
 

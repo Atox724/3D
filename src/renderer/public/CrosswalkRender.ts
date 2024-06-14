@@ -11,6 +11,7 @@ import {
 
 import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 
 interface CrosswalkData {
   id: number;
@@ -21,13 +22,7 @@ interface CrosswalkData {
   color: { r: number; g: number; b: number };
 }
 
-interface UpdateData {
-  data: CrosswalkData[];
-  defaultEnable: boolean;
-  group: string;
-  style: Record<string, any>;
-  timestamp_nsec: number;
-  topic: string;
+export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
   type: "crosswalk";
 }
 

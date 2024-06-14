@@ -22,6 +22,7 @@ import {
   Truck
 } from "@/assets/model";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 
 enum ParticipantTypeEnum {
   // 交通参与者
@@ -81,13 +82,7 @@ interface ParticipantData {
   sizeinfo?: Vector3;
 }
 
-interface UpdateData {
-  data: ParticipantData[];
-  defaultEnable: boolean;
-  group: string;
-  style: Record<string, any>;
-  timestamp_nsec: number;
-  topic: string;
+interface UpdateData extends UpdateDataTool<ParticipantData[]> {
   type: "participantModel";
 }
 

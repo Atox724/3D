@@ -2,6 +2,7 @@ import { ArrowHelper, Color, Vector3 } from "three";
 
 import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 
 interface DataType {
   id?: string;
@@ -10,23 +11,12 @@ interface DataType {
   origin: { x: number; y: number; z: number };
 }
 
-interface UpdateData {
-  data: DataType[];
-  defaultEnable: boolean;
-  group: string;
-  style: Record<string, any>;
-  timestamp_nsec: number;
-  topic: string;
+interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "arrow";
 }
 
 export default class ArrowRender extends Target {
-  topic = [
-    "perception_obstacle_fusion_arrow",
-    "perception_fusion_arrow",
-    "perception_radar_front_arrow",
-    "perception_camera_arrow"
-  ];
+  topic: readonly string[] = [];
 
   checkModelByData<D extends Array<any>>(data: D, list = this.modelList) {
     const cacheKeys = [...list.keys()];

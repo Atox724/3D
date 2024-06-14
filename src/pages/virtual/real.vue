@@ -12,9 +12,9 @@
 <script lang="ts" setup>
 import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import { Virtual } from "@/renderer";
+import { VirtualRender } from "@/renderer";
 
-const renderer = new Virtual();
+const renderer = new VirtualRender();
 
 const { fps, memory, geometries, textures } = useMonitor(renderer);
 

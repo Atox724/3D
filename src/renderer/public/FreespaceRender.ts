@@ -13,7 +13,7 @@ import {
 import { TARGET_ZINDEX } from "@/constants";
 import Target from "@/renderer/target";
 
-interface FreespaceData {
+export interface UpdateData {
   id: number;
   contour: Vector2[];
   holes: Vector2[][];
@@ -26,10 +26,10 @@ interface FreespaceData {
   roll?: number;
 }
 
-export default class FreespaceRender extends Target {
-  topic = ["pilothmi_lane_line"];
+export default abstract class FreespaceRender extends Target {
+  abstract topic: readonly string[];
 
-  update(data: FreespaceData[]): void {
+  update(data: UpdateData[]) {
     this.clear();
     if (!data.length) return;
     data.forEach((item) => {

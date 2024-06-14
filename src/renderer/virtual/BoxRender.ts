@@ -46,14 +46,7 @@ const edgesMesh = new LineSegments(
 );
 
 export default class BoxRender extends Target {
-  /** 这里的topic没有实际用处, 已由中间层 CustomizedRender 处理 */
-  topic = [
-    "dpc_stopline",
-    "perception_obstacle_fusion",
-    "perception_fusion",
-    "perception_radar_front",
-    "perception_camera_target"
-  ];
+  topic: readonly string[] = [];
 
   createModel(modelData: DataType) {
     const { color, type } = modelData;
