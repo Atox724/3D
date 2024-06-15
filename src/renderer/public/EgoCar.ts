@@ -1,12 +1,10 @@
 import type { Object3D, Scene } from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
-import { EgoCar } from "@/assets/model";
+import { EgoCar as EgoCarModel } from "@/assets/model";
 import Target from "@/renderer/target";
+import gltfLoader from "@/utils/three/gltfLoader";
 
-const gltfLoader = new GLTFLoader();
-
-export default class EgoCarRender extends Target {
+export default class EgoCar extends Target {
   topic = [];
 
   car?: Object3D;
@@ -17,7 +15,7 @@ export default class EgoCarRender extends Target {
   }
 
   async loadCar() {
-    const gltf = await gltfLoader.loadAsync(EgoCar);
+    const gltf = await gltfLoader.loadAsync(EgoCarModel);
     const model = gltf.scene;
     this.car = model;
     this.scene.add(model);

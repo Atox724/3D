@@ -1,101 +1,36 @@
-import type { Object3D, Vector3 } from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import type { Scene } from "three";
 
-import {
-  TrafficLight1,
-  TrafficLight2Horizontal,
-  TrafficLight2Vertical,
-  TrafficLight3Horizontal,
-  TrafficLight3Vertical
-} from "@/assets/model";
 import { AUGMENTED_RENDER_MAP } from "@/constants";
-import Target from "@/renderer/target";
-import type { UpdateDataTool } from "@/typings";
+import { TrafficLight, type TrafficLightUpdateData } from "@/renderer/public";
 
-enum TrafficLightTypeEnum {
-  TrafficLight1 = 1, // 一灯红绿灯
-  TrafficLight2Vertical = 2, // 二灯红绿灯
-  TrafficLight3Vertical = 3, // 三灯红绿灯
-  TrafficLight2Horizontal = 4, // 二灯横向红绿灯
-  TrafficLight3Horizontal = 5 // 三灯横向红绿灯
-}
+import Target from "../target";
 
-interface TrafficLightData {
-  id: number;
-  type: number; // 元素类型
-  position: Vector3; // 模型中心位置
-  rotation: Vector3; // 模型偏转值
-}
+const topic = AUGMENTED_RENDER_MAP.trafficLightModel;
+type TopicType = (typeof topic)[number];
 
-interface UpdateData extends UpdateDataTool<TrafficLightData[]> {
-  type: "trafficLightModel";
-}
-
-type TrafficLightType = keyof typeof TrafficLightTypeEnum;
-
-const cacheModels = {} as Record<TrafficLightType, Object3D>;
-
-const modelFiles: Record<TrafficLightType, string> = {
-  TrafficLight1: TrafficLight1,
-  TrafficLight2Vertical: TrafficLight2Vertical,
-  TrafficLight3Vertical: TrafficLight3Vertical,
-  TrafficLight2Horizontal: TrafficLight2Horizontal,
-  TrafficLight3Horizontal: TrafficLight3Horizontal
+type TrafficLightUpdateDataMap = {
+  [key in TopicType]: TrafficLightUpdateData;
 };
 
-const gltfLoader = new GLTFLoader();
+type CreateRenderMap = {
+  [key in TopicType]: TrafficLight;
+};
 
 export default class TrafficLightRender extends Target {
-  topic = AUGMENTED_RENDER_MAP.trafficLightModel;
+  topic: readonly TopicType[] = topic;
 
-  static preloading() {
-    const proms = [];
-    let key: keyof typeof modelFiles;
-    for (key in modelFiles) {
-      proms.push(TrafficLightRender.initLoadModel(key));
-    }
-    return Promise.allSettled(proms);
+  createRender: CreateRenderMap;
+
+  constructor(scene: Scene) {
+    super(scene);
+
+    this.createRender = {
+      localmap_other_traffic_light: new TrafficLight(scene),
+      localmap_traffic_light: new TrafficLight(scene)
+    };
   }
 
-  static async initLoadModel(type: TrafficLightType) {
-    try {
-      const modelFile = modelFiles[type];
-      if (modelFile) {
-        const gltf = await gltfLoader.loadAsync(modelFile);
-        const model = gltf.scene;
-        cacheModels[type] = model;
-        return model;
-      }
-      return Promise.reject(`not find type: ${type}`);
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  }
-
-  setModelAttributes(model: Object3D, modelData: TrafficLightData) {
-    const { position, rotation } = modelData;
-    model.position.set(position.x, position.y, position.z);
-    model.rotation.set(rotation.x, rotation.y, rotation.z);
-  }
-
-  update(data: UpdateData) {
-    if (!data.data.length) {
-      this.clear();
-      return;
-    }
-    data.data.forEach((modelData) => {
-      const { id, type } = modelData;
-      const model = this.modelList.get(id);
-      const typeName = TrafficLightTypeEnum[type] as TrafficLightType;
-      if (model) {
-        this.setModelAttributes(model, modelData);
-      } else if (cacheModels[typeName]) {
-        const newModel = cacheModels[typeName].clone();
-        this.setModelAttributes(newModel, modelData);
-        this.scene.add(newModel);
-        this.modelList.set(id, newModel);
-      }
-    });
-    this.checkModelByData(data.data);
+  update<T extends TopicType>(data: TrafficLightUpdateDataMap[T], topic: T) {
+    this.createRender[topic].update(data);
   }
 }

@@ -1,4 +1,4 @@
-class DepthTester {
+export class DepthTester {
   static BASE_DEPTH = 0.01;
   static STEP = 0.01;
   static MIN_INDEX_DEPTH = 0.001;
