@@ -9,9 +9,10 @@ import {
   type Object3D
 } from "three";
 
-import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+import DepthContainer from "@/utils/three/depthTester";
 
 interface DataType {
   color: { r: number; g: number; b: number };
@@ -41,15 +42,7 @@ const edgesMesh = new LineSegments(
 );
 
 export default class Box extends Target {
-  topic: readonly PERCEPTION_RENDER_TOPIC[] = [
-    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO,
-
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV
-  ];
+  topic = [];
 
   createModel(modelData: DataType) {
     const { color, type } = modelData;
@@ -77,7 +70,11 @@ export default class Box extends Target {
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { yaw, x, y, length, width, height, color } = modelData;
     model.rotation.z = yaw;
-    model.position.set(x, y, height / 2);
+    model.position.set(
+      x,
+      y,
+      height / 2 + DepthContainer.getDepth(RENDER_ORDER.BOX)
+    );
 
     const boxMeshNew = model.getObjectByName("box");
     if (boxMeshNew instanceof Mesh) {

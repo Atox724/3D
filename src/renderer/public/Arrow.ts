@@ -1,8 +1,9 @@
 import { ArrowHelper, Color, Vector3 } from "three";
 
-import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+import DepthContainer from "@/utils/three/depthTester";
 
 interface DataType {
   id?: string;
@@ -16,16 +17,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 }
 
 export default class Arrow extends Target {
-  topic: readonly PERCEPTION_RENDER_TOPIC[] = [
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV,
-
-    PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY,
-    PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY
-  ];
+  topic = [];
 
   update(data: UpdateData) {
     this.clear();
@@ -40,7 +32,11 @@ export default class Arrow extends Target {
       const dir = sub.normalize();
       const color = new Color(c.r, c.g, c.b);
       const arrow = new ArrowHelper(dir, origin, length, color);
-      arrow.position.set(origin.x, origin.y, origin.z);
+      arrow.position.set(
+        origin.x,
+        origin.y,
+        Math.max(origin.z, DepthContainer.getDepth(RENDER_ORDER.ARROW))
+      );
       this.modelList.set(arrow.uuid, arrow);
       this.scene.add(arrow);
     });

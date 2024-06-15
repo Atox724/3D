@@ -21,7 +21,7 @@ import {
   Tricycle,
   Truck
 } from "@/assets/model";
-import { PILOTHMI_RENDER_TOPIC } from "@/constants";
+import { AUGMENTED_RENDER_MAP } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 
@@ -122,9 +122,7 @@ const animationsList: Record<string, AnimationClip[]> = {};
 const colorList = ["#a7a7a7", "#13c2c2", "#faad14", "#ff0000"];
 
 export default class ParticipantRender extends Target {
-  topic: readonly PILOTHMI_RENDER_TOPIC[] = [
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_PERCEPTION_TRAFFIC_PARTICIPANT_FUSION_OBJECT
-  ];
+  topic = AUGMENTED_RENDER_MAP.participantModel;
 
   static preloading() {
     const proms = [];
@@ -197,7 +195,6 @@ export default class ParticipantRender extends Target {
   }
 
   update(data: UpdateData) {
-    if (data.type !== "participantModel") return;
     if (!data.data.length) {
       this.clear();
       return;

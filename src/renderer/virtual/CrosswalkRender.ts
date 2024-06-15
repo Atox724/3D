@@ -1,21 +1,23 @@
 import type { Scene } from "three";
 
-import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+import { VIRTUAL_RENDER_MAP } from "@/constants";
 
 import { Crosswalk, type CrosswalkUpdateData } from "../public";
 import Target from "../target";
 
-const topic = [PERCEPTION_RENDER_TOPIC.LOCALMAP_CROSSWALK] as const;
+const topic = VIRTUAL_RENDER_MAP.crosswalk;
 type TopicType = (typeof topic)[number];
 
-type CrosswalkData = CrosswalkUpdateData;
+type CrosswalkUpdateDataMap = {
+  [key in TopicType]: CrosswalkUpdateData;
+};
 
-type CreateRenderType = Crosswalk;
-
-type CreateRenderMap = Record<TopicType, CreateRenderType>;
+type CreateRenderMap = {
+  [key in TopicType]: Crosswalk;
+};
 
 export default class CrosswalkRender extends Target {
-  topic: readonly string[] = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
@@ -23,11 +25,11 @@ export default class CrosswalkRender extends Target {
     super(scene);
 
     this.createRender = {
-      [PERCEPTION_RENDER_TOPIC.LOCALMAP_CROSSWALK]: new Crosswalk(scene)
+      localmap_crosswalk: new Crosswalk(scene)
     };
   }
 
-  update(data: CrosswalkData, topic: TopicType) {
+  update<T extends TopicType>(data: CrosswalkUpdateDataMap[T], topic: T) {
     this.createRender[topic].update(data);
   }
 }

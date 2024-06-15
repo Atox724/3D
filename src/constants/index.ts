@@ -2,56 +2,123 @@ export const CANVAS_ID = "canvas_id";
 
 export const HZ = 60;
 
-export enum PERCEPTION_RENDER_TOPIC {
-  PERCEPTION_OBSTACLE_FUSION = "perception_obstacle_fusion",
-  PERCEPTION_FUSION = "perception_fusion /perception/fusion/object",
-  PERCEPTION_RADAR_FRONT = "perception_radar_front",
-
-  PERCEPTION_CAMERA_FRONT = "perception_camera_front",
-  PERCEPTION_CAMERA_NV = "perception_camera_nv",
-  PERCEPTION_CAMERA_ROADLINES_CENTER_FOV30 = "perception_camera_roadlines center_camera_fov30",
-  PERCEPTION_CAMERA_ROADLINES_CENTER_FOV120 = "perception_camera_roadlines center_camera_fov120",
-  PERCEPTION_CAMERA_ROADLINES_NV = "perception_camera_roadlines nv_cameras",
-
-  LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY = "localization_global_history_trajectory",
-  LOCALIZATION_LOCAL_HISTORY_TRAJECTORY = "localization_local_history_trajectory",
-
-  MEMDRIVE_REF_ROUTE_TRAJECTORY = "memdrive_ref_route_trajectory",
-
-  DPC_LFP_PLANNING_TRAJECTORY = "dpc_lfp_planning_trajectory",
-  DPC_LFP_PLANNING_PLANLINE = "dpc_lfp_planning_planline",
-  DPC_PLANNING_DEBUG_INFO = "dpc_planning_debug_info",
-  DPC_PLANNING_OTHERLINE = "dpc_planning_otherline",
-  DPC_PLANNING_REFERENCE_LINE = "dpc_planning_reference_line",
-  DPC_PLANNING_EDGELINE = "dpc_planning_edgeline",
-
-  LOCALMAP_SPEEDBUMP = "localmap_speedbump",
-  LOCALMAP_CENTER_LINE = "localmap_center_line",
-  LOCALMAP_LANE_LINE = "localmap_lane_line",
-  LOCALMAP_STOP_LINE = "localmap_stop_line",
-  LOCALMAP_MAP_LINE_ID = "localmap_map_line_id",
-  LOCALMAP_MAP_LANE_ID = "localmap_map_lane_id",
-  LOCALMAP_CROSSWALK = "localmap_crosswalk",
-  LOCALMAP_LANE_LANE = "localmap_lane_lane"
+export enum RENDER_ORDER {
+  FREESPACE = 1,
+  CROSSWALK,
+  LINE,
+  TEXT,
+  // POLYGON,
+  ARROW,
+  BOX
 }
 
-export enum PILOTHMI_RENDER_TOPIC {
-  PILOTHMI_CROSS_WALK = "pilothmi_cross_walk",
-  PILOTHMI_CROSS_WALK_LOCAL = "pilothmi_cross_walk_local",
+export const VIRTUAL_RENDER_MAP = {
+  arrow: [
+    "localization_global_history_trajectory",
+    "perception_radar_front",
+    "perception_obstacle_fusion",
+    "perception_fusion /perception/fusion/object",
+    "localization_local_history_trajectory",
+    "perception_camera_front",
+    "perception_camera_nv"
+  ],
+  target: [
+    "perception_radar_front",
+    "dpc_planning_debug_info",
+    "perception_obstacle_fusion",
+    "perception_fusion /perception/fusion/object",
+    "perception_camera_front",
+    "perception_camera_nv"
+  ],
+  crosswalk: ["localmap_crosswalk"],
+  ellipse: ["localization_position"],
+  freespace: ["localmap_lane_lane"],
+  fixedPolygon: [
+    "perception_fusion perception_fusion_car_light",
+    "perception_camera_nv perception_camera_car_light",
+    "perception_camera_front perception_camera_car_light"
+  ],
+  polygon: [
+    "perception_obstacle_fusion",
+    "perception_fusion /perception/fusion/object",
+    "perception_camera_front",
+    "perception_camera_nv"
+  ],
+  polyline: [
+    "dpc_lfp_planning_trajectory",
+    "dpc_lfp_planning_planline",
+    "dpc_planning_otherline",
+    "dpc_planning_reference_line",
+    "dpc_planning_edgeline",
+    "dpc_planning_debug_info",
+    "perception_camera_roadlines center_camera_fov30",
+    "perception_camera_roadlines center_camera_fov120",
+    "perception_camera_roadlines nv_cameras",
+    "localmap_center_line",
+    "localmap_lane_line",
+    "localmap_stop_line",
+    "localmap_speedbump",
+    "memdrive_ref_route_trajectory"
+  ],
+  text_sprite: ["localmap_map_line_id", "localmap_map_lane_id"]
+} as const;
 
-  PILOTHMI_LANE_LINE = "pilothmi_lane_line",
+export const AUGMENTED_RENDER_MAP = {
+  crosswalk: ["pilothmi_cross_walk_local"],
+  freespace: ["pilothmi_lane_line"],
+  obstacleModel: [
+    "pilothmi_perception_obstacle_local",
+    "pilothmi_perception_obstacle_fusion object"
+  ],
+  participantModel: ["pilothmi_perception_traffic_participant_fusion object"],
+  polyline: [
+    "pilothmi_lane_lines",
+    "pilothmi_stop_line",
+    "pilothmi_planning_lines_info",
+    "pilothmi_pilot_planning_trajectory"
+  ],
+  trafficLightModel: ["localmap_other_traffic_light", "localmap_traffic_light"],
+  trafficSignalModel: ["localmap_traffic_sign", "localmap_other_traffic_sign"],
+  roadMarkerModel: ["localmap_road_marker"],
+  poleModel: ["localmap_pole"]
+} as const;
 
-  PILOTHMI_PERCEPTION_OBSTACLE_FUSION_OBJECT = "pilothmi_perception_obstacle_fusion_object",
-  PILOTHMI_PERCEPTION_OBSTACLE_LOCAL = "pilothmi_perception_obstacle_local",
-
-  PILOTHMI_PERCEPTION_TRAFFIC_PARTICIPANT_FUSION_OBJECT = "pilothmi_perception_traffic_participant_fusion object",
-
-  PILOTHMI_LANE_LINES = "pilothmi_lane_lines",
-  PILOTHMI_STOP_LINE = "pilothmi_stop_line",
-  PILOTHMI_PLANNING_LINES_INFO = "pilothmi_planning_lines_info",
-  PILOTHMI_PILOT_PLANNING_TRAJECTORY = "pilothmi_pilot_planning_trajectory",
-
-  PILOTHMI_TRAFFIC_LIGHT_LOCAL = "pilothmi_traffic_light_local",
-
-  PILOTHMI_TRAFFIC_SIGN_LOCAL = "pilothmi_traffic_sign_local"
-}
+export const OTHER_INFO_MAP = {
+  topicInfo: ["/perception/fusion/object", "/perception/front_radar/object"],
+  text: [
+    "dpc_control_debug",
+    "dpc_planning_tag",
+    "odometry_info",
+    "localmap_info"
+  ],
+  image: [
+    "center_camera_fov120_marks",
+    "center_camera_fov30_marks",
+    "left_front_camera_marks",
+    "left_rear_camera_marks",
+    "rear_camera_marks",
+    "right_front_camera_marks",
+    "right_rear_camera_marks"
+  ],
+  TrafficLightGroup: ["localmap_traffic_light_group"],
+  TrafficSignGroup: ["localmap_traffic_sign_group"],
+  vehicle_info: ["sensor_vehicle_info"],
+  vehicle_stat: ["sensor_vehicle_stat"],
+  LaneSignGroup: ["localmap_lane_sign_group"],
+  chart: [
+    "sensor_can_frame_sequence_chart",
+    "sensor_can_vehicle_map_chart",
+    "sensor_imu_frame_sequence_chart",
+    "sensor_imu_accel_chart",
+    "sensor_can_wheel_speed_chart",
+    "sensor_can_timestamp_chart",
+    "sensor_imu_gyro_chart",
+    "sensor_imu_timestamp_chart"
+  ],
+  monitorData: ["monitor_report"],
+  data: ["visualizer_server_fps"],
+  pilot_image_overlay: ["pilothmi_image_overlay"],
+  pilotDrive: ["pilothmi_drive_info"],
+  statusInfo: ["pilothmi_vehicle_report", "pilothmi_envm_info"],
+  Weather: ["pilothmi_perception_envodd"]
+} as const;

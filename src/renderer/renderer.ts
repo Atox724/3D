@@ -3,7 +3,6 @@ import { debounce } from "lodash-es";
 import {
   AmbientLight,
   AnimationMixer,
-  CircleGeometry,
   CylinderGeometry,
   DefaultLoadingManager,
   DoubleSide,
@@ -19,7 +18,6 @@ import {
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
-import { Reflector } from "three/examples/jsm/objects/Reflector";
 
 import { EgoCarRender } from "@/renderer/public";
 import Stats from "@/utils/stats";
@@ -169,18 +167,10 @@ export default abstract class Renderer {
       opacity: 0.5
     });
     const plane = new Mesh(geometry, material);
-    // plane.position.z = 0.005;
-
-    // const reflector = new Reflector(geometry, {
-    //   textureWidth: window.innerWidth * window.devicePixelRatio,
-    //   textureHeight: window.innerHeight * window.devicePixelRatio
-    // });
-
     this.scene.add(plane);
   }
 
   setScene() {
-    // this.scene.fog = new FogExp2(0x525862, 0.02);
     const size = 1000;
     const geometry = new CylinderGeometry(size / 2, size / 2, size);
     const material = new MeshBasicMaterial({
@@ -190,13 +180,6 @@ export default abstract class Renderer {
     const cylinder = new Mesh(geometry, material);
     cylinder.position.z = geometry.parameters.height / 2;
     cylinder.rotation.x = Math.PI / 2;
-
-    const reflector = new Reflector(new CircleGeometry(size / 2), {
-      textureWidth: window.innerWidth * window.devicePixelRatio,
-      textureHeight: window.innerHeight * window.devicePixelRatio
-    });
-
-    // reflector.position.z = 0.005;
 
     this.scene.add(cylinder);
   }

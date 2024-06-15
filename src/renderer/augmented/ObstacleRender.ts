@@ -10,7 +10,7 @@ import {
   WarningSign,
   WaterBarrierYellow
 } from "@/assets/model";
-import { PILOTHMI_RENDER_TOPIC } from "@/constants";
+import { AUGMENTED_RENDER_MAP } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 
@@ -54,10 +54,7 @@ const modelFiles: Record<ObstacleType, string> = {
 const gltfLoader = new GLTFLoader();
 
 export default class ObstacleRender extends Target {
-  topic: readonly PILOTHMI_RENDER_TOPIC[] = [
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_PERCEPTION_OBSTACLE_FUSION_OBJECT,
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_PERCEPTION_OBSTACLE_LOCAL
-  ];
+  topic = AUGMENTED_RENDER_MAP.obstacleModel;
 
   static preloading() {
     const proms = [];
@@ -90,7 +87,6 @@ export default class ObstacleRender extends Target {
   }
 
   update(data: UpdateData) {
-    if (data.type !== "obstacleModel") return;
     if (!data.data.length) {
       this.clear();
       return;

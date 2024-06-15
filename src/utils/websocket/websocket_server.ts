@@ -81,26 +81,11 @@ class WebsocketServer {
     }
   }
 
-  typeList = [
-    "arrow",
-    "target",
-    "crosswalk",
-    "freespace",
-    "polygon",
-    "polyline",
-    "text_sprite"
-  ];
-
-  dispatchTargetMsg<T>(topic: string, data: T) {
+  dispatchTargetMsg<T extends object>(topic: string, data: T) {
     if (this.target_msg_map[topic]) {
       this.target_msg_map[topic].forEach((callback) => {
         callback(data, topic);
       });
-    } else {
-      // @ts-ignore
-      if (this.typeList.indexOf(data.type) > -1 && !topic.startsWith("pilot")) {
-        console.log(topic, data);
-      }
     }
   }
 

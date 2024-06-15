@@ -1,90 +1,50 @@
 import type { Scene } from "three";
 
-import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+import { VIRTUAL_RENDER_MAP } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Arrow, type ArrowUpdateData } from "../public";
 
-const topic = [
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV,
-
-  PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY,
-  PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY
-] as const;
+const topic = VIRTUAL_RENDER_MAP.arrow;
 type TopicType = (typeof topic)[number];
 
-type ArrowData1 = { arrow_array: ArrowUpdateData };
-type ArrowData2 = ArrowUpdateData;
-type ArrowData = ArrowData1 | ArrowData2;
+type ArrowUpdateDataMap = {
+  [key in TopicType]: { arrow_array: ArrowUpdateData } | ArrowUpdateData;
+};
 
-interface ArrowUpdateDataMap extends Record<TopicType, ArrowData> {
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: ArrowData1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: ArrowData1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: ArrowData1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: ArrowData1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: ArrowData1;
-
-  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY]: ArrowData2;
-  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY]: ArrowData2;
-}
-
-type CreateRenderType1 = { arrow_array: Arrow };
-type CreateRenderType2 = Arrow;
-type CreateRenderType = CreateRenderType1 | CreateRenderType2;
-
-interface CreateRenderMap extends Record<TopicType, CreateRenderType> {
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: CreateRenderType1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: CreateRenderType1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: CreateRenderType1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: CreateRenderType1;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: CreateRenderType1;
-
-  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY]: CreateRenderType2;
-  [PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY]: CreateRenderType2;
-}
+type CreateRenderMap = {
+  [key in TopicType]: { arrow_array: Arrow } | Arrow;
+};
 
 export default class ArrowRender extends Target {
-  topic: readonly string[] = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene) {
     super(scene);
 
+    const createArrowArray = () => ({ arrow_array: new Arrow(scene) });
+
     this.createRender = {
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: {
-        arrow_array: new Arrow(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: {
-        arrow_array: new Arrow(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: {
-        arrow_array: new Arrow(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: {
-        arrow_array: new Arrow(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: {
-        arrow_array: new Arrow(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY]:
-        new Arrow(scene),
-      [PERCEPTION_RENDER_TOPIC.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY]:
-        new Arrow(scene)
+      perception_obstacle_fusion: createArrowArray(),
+      "perception_fusion /perception/fusion/object": createArrowArray(),
+      perception_radar_front: createArrowArray(),
+      perception_camera_front: createArrowArray(),
+      perception_camera_nv: createArrowArray(),
+      localization_global_history_trajectory: new Arrow(scene),
+      localization_local_history_trajectory: new Arrow(scene)
     };
   }
 
   update<T extends TopicType>(data: ArrowUpdateDataMap[T], topic: T) {
-    if ("arrow_array" in data) {
-      (this.createRender[topic] as CreateRenderType1).arrow_array.update(
-        data.arrow_array
-      );
+    const renderItem = this.createRender[topic];
+    if ("arrow_array" in renderItem && "arrow_array" in data) {
+      renderItem.arrow_array.update(data.arrow_array);
+    } else if (!("arrow_array" in renderItem) && !("arrow_array" in data)) {
+      renderItem.update(data);
     } else {
-      (this.createRender[topic] as CreateRenderType2).update(data);
+      console.error(`[ArrowRender] topic: ${topic} is not match with data`);
     }
   }
 }

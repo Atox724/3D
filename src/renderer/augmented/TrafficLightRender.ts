@@ -8,8 +8,9 @@ import {
   TrafficLight3Horizontal,
   TrafficLight3Vertical
 } from "@/assets/model";
-import { PILOTHMI_RENDER_TOPIC } from "@/constants";
+import { AUGMENTED_RENDER_MAP } from "@/constants";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 
 enum TrafficLightTypeEnum {
   TrafficLight1 = 1, // 一灯红绿灯
@@ -24,6 +25,10 @@ interface TrafficLightData {
   type: number; // 元素类型
   position: Vector3; // 模型中心位置
   rotation: Vector3; // 模型偏转值
+}
+
+interface UpdateData extends UpdateDataTool<TrafficLightData[]> {
+  type: "trafficLightModel";
 }
 
 type TrafficLightType = keyof typeof TrafficLightTypeEnum;
@@ -41,9 +46,7 @@ const modelFiles: Record<TrafficLightType, string> = {
 const gltfLoader = new GLTFLoader();
 
 export default class TrafficLightRender extends Target {
-  topic: readonly PILOTHMI_RENDER_TOPIC[] = [
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_TRAFFIC_LIGHT_LOCAL
-  ];
+  topic = AUGMENTED_RENDER_MAP.trafficLightModel;
 
   static preloading() {
     const proms = [];
@@ -75,12 +78,12 @@ export default class TrafficLightRender extends Target {
     model.rotation.set(rotation.x, rotation.y, rotation.z);
   }
 
-  update(data: TrafficLightData[]) {
-    if (!data.length) {
+  update(data: UpdateData) {
+    if (!data.data.length) {
       this.clear();
       return;
     }
-    data.forEach((modelData) => {
+    data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList.get(id);
       const typeName = TrafficLightTypeEnum[type] as TrafficLightType;
@@ -93,6 +96,6 @@ export default class TrafficLightRender extends Target {
         this.modelList.set(id, newModel);
       }
     });
-    this.checkModelByData(data);
+    this.checkModelByData(data.data);
   }
 }

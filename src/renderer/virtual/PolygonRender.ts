@@ -1,34 +1,38 @@
 import type { Scene } from "three";
 
-import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+import { VIRTUAL_RENDER_MAP } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Polygon, type PolygonUpdateData } from "../public";
 
-const topic = [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION] as const;
+const topic = VIRTUAL_RENDER_MAP.polygon;
 type TopicType = (typeof topic)[number];
 
-type PolygonData = { polygon_array: PolygonUpdateData };
+type ArrowUpdateDataMap = {
+  [key in TopicType]: { polygon_array: PolygonUpdateData };
+};
 
-type CreateRenderType = { polygon_array: Polygon };
-
-type CreateRenderMap = Record<TopicType, CreateRenderType>;
-
+type CreateRenderMap = {
+  [key in TopicType]: { polygon_array: Polygon };
+};
 export default class PolygonRender extends Target {
-  topic: readonly string[] = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene) {
     super(scene);
 
+    const createPolygonArray = () => ({ polygon_array: new Polygon(scene) });
+
     this.createRender = {
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: {
-        polygon_array: new Polygon(scene)
-      }
+      perception_camera_front: createPolygonArray(),
+      perception_camera_nv: createPolygonArray(),
+      "perception_fusion /perception/fusion/object": createPolygonArray(),
+      perception_obstacle_fusion: createPolygonArray()
     };
   }
-  update(data: PolygonData, topic: TopicType) {
+  update<T extends TopicType>(data: ArrowUpdateDataMap[T], topic: T) {
     this.createRender[topic].polygon_array.update(data.polygon_array);
   }
 }

@@ -9,7 +9,7 @@ import {
   type Vector3
 } from "three";
 
-import { PERCEPTION_RENDER_TOPIC, PILOTHMI_RENDER_TOPIC } from "@/constants";
+import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -30,12 +30,7 @@ export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
 }
 
 export default class Crosswalk extends Target {
-  topic: readonly (PILOTHMI_RENDER_TOPIC | PERCEPTION_RENDER_TOPIC)[] = [
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK,
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_CROSS_WALK_LOCAL,
-
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_CROSSWALK
-  ];
+  topic = [];
 
   update(data: UpdateData) {
     this.clear();
@@ -87,10 +82,7 @@ export default class Crosswalk extends Target {
       shapeMesh.position.set(
         position.x,
         position.y,
-        Math.max(
-          position.z,
-          DepthContainer.base_trajectory_pos_z + DepthContainer.step_z
-        )
+        Math.max(position.z, DepthContainer.getDepth(RENDER_ORDER.CROSSWALK))
       );
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
       this.modelList.set(id, shapeMesh);

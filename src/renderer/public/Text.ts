@@ -3,7 +3,7 @@ import fontJSON from "three/examples/fonts/helvetiker_regular.typeface.json";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
 
-import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -28,10 +28,7 @@ const textMaterial = new MeshBasicMaterial({
 });
 
 export default class Text extends Target {
-  topic: readonly PERCEPTION_RENDER_TOPIC[] = [
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_MAP_LINE_ID,
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_MAP_LANE_ID
-  ];
+  topic = [];
 
   createModel(modelData: DataType) {
     const { fontSize, text } = modelData;
@@ -52,7 +49,7 @@ export default class Text extends Target {
     model.position.set(
       position.x,
       position.y,
-      DepthContainer.base_trajectory_pos_z + DepthContainer.step_z
+      DepthContainer.getDepth(RENDER_ORDER.TEXT)
     );
     model.scale.setScalar(fontSize);
   }

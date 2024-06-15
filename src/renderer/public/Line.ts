@@ -1,6 +1,6 @@
 import { Mesh, ShaderMaterial } from "three";
 
-import { PERCEPTION_RENDER_TOPIC, PILOTHMI_RENDER_TOPIC } from "@/constants";
+import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -45,32 +45,7 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 export type UpdateData = JSONData | BufferData;
 
 export default class Line extends Target {
-  topic: readonly (PILOTHMI_RENDER_TOPIC | PERCEPTION_RENDER_TOPIC)[] = [
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINES,
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_STOP_LINE,
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_PLANNING_LINES_INFO,
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_PILOT_PLANNING_TRAJECTORY,
-
-    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO,
-    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_OTHERLINE,
-    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_REFERENCE_LINE,
-    PERCEPTION_RENDER_TOPIC.DPC_PLANNING_EDGELINE,
-    PERCEPTION_RENDER_TOPIC.DPC_LFP_PLANNING_TRAJECTORY,
-    PERCEPTION_RENDER_TOPIC.DPC_LFP_PLANNING_PLANLINE,
-
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_ROADLINES_CENTER_FOV30,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_ROADLINES_CENTER_FOV120,
-    PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_ROADLINES_NV,
-
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_CENTER_LINE,
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_LANE_LINE,
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_STOP_LINE,
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_SPEEDBUMP,
-
-    PERCEPTION_RENDER_TOPIC.MEMDRIVE_REF_ROUTE_TRAJECTORY
-  ];
-
-  trajectory_pos_z = DepthContainer.queryDepth();
+  topic = [];
 
   update(data: UpdateData) {
     this.clear();
@@ -123,10 +98,13 @@ export default class Line extends Target {
           color_trajectory_geometry,
           gradient_line_mat
         );
-        color_trajectory_obj.position.z =
-          this.trajectory_pos_z +
-          index * DepthContainer.step_z +
-          DepthContainer.step_z;
+        color_trajectory_obj.position.z = DepthContainer.getSubIndexDepth(
+          RENDER_ORDER.LINE,
+          index + 1,
+          data.data.length,
+          1,
+          2
+        );
         this.modelList.set(color_trajectory_obj.uuid, color_trajectory_obj);
         this.scene.add(color_trajectory_obj);
       }
@@ -147,10 +125,13 @@ export default class Line extends Target {
           base_trajectory_geometry,
           line_style.mat
         );
-        solid_trajectory_obj.position.z =
-          this.trajectory_pos_z +
-          index * DepthContainer.step_z +
-          DepthContainer.step_z / 2;
+        solid_trajectory_obj.position.z = DepthContainer.getSubIndexDepth(
+          RENDER_ORDER.LINE,
+          index + 1,
+          data.data.length,
+          2,
+          2
+        );
         this.modelList.set(solid_trajectory_obj.uuid, solid_trajectory_obj);
         this.scene.add(solid_trajectory_obj);
       }

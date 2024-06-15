@@ -10,7 +10,7 @@ import {
   type Vector2
 } from "three";
 
-import { PERCEPTION_RENDER_TOPIC, PILOTHMI_RENDER_TOPIC } from "@/constants";
+import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -34,16 +34,12 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 }
 
 export default class Freespace extends Target {
-  topic: readonly (PERCEPTION_RENDER_TOPIC | PILOTHMI_RENDER_TOPIC)[] = [
-    PERCEPTION_RENDER_TOPIC.LOCALMAP_LANE_LANE,
-
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_LANE_LINE
-  ];
+  topic = [];
 
   update(data: UpdateData) {
     this.clear();
     if (!data.data.length) return;
-    data.data.forEach((item) => {
+    data.data.forEach((item, index) => {
       const {
         id,
         x = 0,
@@ -78,7 +74,15 @@ export default class Freespace extends Target {
         opacity: color.a
       });
       const mesh = new Mesh(shapeGeometry, material);
-      mesh.position.set(x, y, DepthContainer.base_trajectory_pos_z);
+      mesh.position.set(
+        x,
+        y,
+        DepthContainer.getIndexDepth(
+          RENDER_ORDER.FREESPACE,
+          index + 1,
+          data.data.length
+        )
+      );
       mesh.rotation.set(
         roll * MathUtils.DEG2RAD,
         pitch * MathUtils.DEG2RAD,

@@ -77,8 +77,9 @@ import {
   X_weight,
   X_width
 } from "@/assets/model";
-import { PILOTHMI_RENDER_TOPIC } from "@/constants";
+import { AUGMENTED_RENDER_MAP } from "@/constants";
 import Target from "@/renderer/target";
+import type { UpdateDataTool } from "@/typings";
 
 enum TrafficSignalTypeEnum {
   Unknown = 0, //未知
@@ -201,6 +202,10 @@ interface TrafficSignalData {
   type: number; // 元素类型
   position: Vector3; // 模型中心位置
   rotation: Vector3; // 模型偏转值
+}
+
+interface UpdateData extends UpdateDataTool<TrafficSignalData[]> {
+  type: "trafficSignalModel";
 }
 
 type TrafficSignalType = keyof typeof TrafficSignalTypeEnum;
@@ -326,9 +331,7 @@ const modelFiles: Record<TrafficSignalType, string> = {
 const gltfLoader = new GLTFLoader();
 
 export default class TrafficSignalRender extends Target {
-  topic: readonly PILOTHMI_RENDER_TOPIC[] = [
-    PILOTHMI_RENDER_TOPIC.PILOTHMI_TRAFFIC_SIGN_LOCAL
-  ];
+  topic = AUGMENTED_RENDER_MAP.trafficSignalModel;
 
   static preloading() {
     const proms = [];
@@ -360,12 +363,12 @@ export default class TrafficSignalRender extends Target {
     model.rotation.set(rotation.x, rotation.y, rotation.z);
   }
 
-  update(data: TrafficSignalData[]) {
-    if (!data.length) {
+  update(data: UpdateData) {
+    if (!data.data.length) {
       this.clear();
       return;
     }
-    data.forEach((modelData) => {
+    data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList.get(id);
       const typeName = TrafficSignalTypeEnum[type] as TrafficSignalType;
@@ -378,6 +381,6 @@ export default class TrafficSignalRender extends Target {
         this.modelList.set(id, newModel);
       }
     });
-    this.checkModelByData(data);
+    this.checkModelByData(data.data);
   }
 }

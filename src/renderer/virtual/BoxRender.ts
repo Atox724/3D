@@ -1,88 +1,53 @@
 import type { Scene } from "three";
 
-import { PERCEPTION_RENDER_TOPIC } from "@/constants";
+import { VIRTUAL_RENDER_MAP } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Box, type BoxUpdateData } from "../public";
 
-const topic = [
-  PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO,
-
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT,
-  PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV
-] as const;
+const topic = VIRTUAL_RENDER_MAP.target;
 type TopicType = (typeof topic)[number];
 
-type ArrowData1 = { box_array: BoxUpdateData };
-type ArrowData2 = { box_target_array: BoxUpdateData };
-type ArrowData = ArrowData1 | ArrowData2;
+type BoxData = {
+  [key in TopicType]:
+    | { box_array: BoxUpdateData }
+    | { box_target_array: BoxUpdateData };
+};
 
-interface ArrowUpdateDataMap extends Record<TopicType, ArrowData> {
-  [PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO]: ArrowData1;
-
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: ArrowData2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: ArrowData2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: ArrowData2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: ArrowData2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: ArrowData2;
-}
-
-type CreateRenderType1 = { box_array: Box };
-type CreateRenderType2 = { box_target_array: Box };
-type CreateRenderType = CreateRenderType1 | CreateRenderType2;
-
-interface CreateRenderMap extends Record<TopicType, CreateRenderType> {
-  [PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO]: CreateRenderType1;
-
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: CreateRenderType2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: CreateRenderType2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: CreateRenderType2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: CreateRenderType2;
-  [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: CreateRenderType2;
-}
+type CreateRenderMap = {
+  [key in TopicType]: { box_array: Box } | { box_target_array: Box };
+};
 
 export default class BoxRender extends Target {
-  topic: readonly string[] = topic;
+  topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene) {
     super(scene);
 
+    const createBoxArray = () => ({ box_array: new Box(scene) });
+    const createBoxTargetArray = () => ({ box_target_array: new Box(scene) });
+
     this.createRender = {
-      [PERCEPTION_RENDER_TOPIC.DPC_PLANNING_DEBUG_INFO]: {
-        box_array: new Box(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_OBSTACLE_FUSION]: {
-        box_target_array: new Box(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_FUSION]: {
-        box_target_array: new Box(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_RADAR_FRONT]: {
-        box_target_array: new Box(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_FRONT]: {
-        box_target_array: new Box(scene)
-      },
-      [PERCEPTION_RENDER_TOPIC.PERCEPTION_CAMERA_NV]: {
-        box_target_array: new Box(scene)
-      }
+      dpc_planning_debug_info: createBoxArray(),
+      perception_obstacle_fusion: createBoxTargetArray(),
+      "perception_fusion /perception/fusion/object": createBoxTargetArray(),
+      perception_radar_front: createBoxTargetArray(),
+      perception_camera_front: createBoxTargetArray(),
+      perception_camera_nv: createBoxTargetArray()
     };
   }
 
-  update<T extends TopicType>(data: ArrowUpdateDataMap[T], topic: T) {
-    if ("box_array" in data) {
-      (this.createRender[topic] as CreateRenderType1).box_array.update(
-        data.box_array
-      );
+  update<T extends TopicType>(data: BoxData[T], topic: T) {
+    const renderItem = this.createRender[topic];
+
+    if ("box_array" in renderItem && "box_array" in data) {
+      renderItem.box_array.update(data.box_array);
+    } else if ("box_target_array" in renderItem && "box_target_array" in data) {
+      renderItem.box_target_array.update(data.box_target_array);
     } else {
-      (this.createRender[topic] as CreateRenderType2).box_target_array.update(
-        data.box_target_array
-      );
+      console.error(`[BoxRender] topic: ${topic} is not match with data`);
     }
   }
 }

@@ -31,6 +31,7 @@ import { AugmentedRender } from "@/renderer";
 import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";
+import { RemotePlay } from "@/utils/replay/remote";
 
 const route = useRoute();
 
@@ -38,7 +39,13 @@ const renderer = new AugmentedRender();
 
 const { fps, memory, geometries, textures } = useMonitor(renderer);
 
-const player = new LocalPlay();
+let player: LocalPlay | RemotePlay | null = null;
+if (route.query.path) {
+  player = new RemotePlay();
+  player.init("/api", route.query);
+} else {
+  player = new LocalPlay();
+}
 
 const currentDuration = ref(0);
 const totalDuration = ref(0);
@@ -48,22 +55,22 @@ const playState = ref<PlayState>("pause");
 const upload = async () => {
   const fileList = await chooseFile({ directory: true });
   if (!fileList) return;
-  player.init(Array.from(fileList));
+  (player as LocalPlay).init(Array.from(fileList));
 };
 
-const onPlayStateChange = (val: PlayState) => {
+const onPlayStateChange = (val: PlayState, current = 0) => {
   playState.value = val;
-  player.postMessage({
+  player?.postMessage({
     type: "playstate",
     data: {
       state: val,
-      currentDuration: currentDuration.value
+      currentDuration: current
     }
   });
 };
 
 const onPlayRateChange = (speed: number) => {
-  player.postMessage({
+  player?.postMessage({
     type: "playrate",
     data: speed
   });
@@ -72,7 +79,7 @@ const onPlayRateChange = (speed: number) => {
 const onDurationChange = (current: number) => {
   playState.value = "pause";
   currentDuration.value = current;
-  player.postMessage({
+  player?.postMessage({
     type: "timeupdate",
     data: current
   });
@@ -80,17 +87,17 @@ const onDurationChange = (current: number) => {
 
 onMounted(() => {
   renderer.initialize(CANVAS_ID);
-
-  player.on("durationchange", (data) => {
+  player?.on("durationchange", (data) => {
     totalDuration.value = data.endTime - data.startTime;
   });
-  player.on("timeupdate", (data) => {
+  player?.on("timeupdate", (data) => {
+    if (playState.value !== "play") return;
     currentDuration.value = data;
   });
-  player.on("playstatechange", (data) => {
+  player?.on("playstatechange", (data) => {
     playState.value = data;
   });
-  player.on("loadstate", (data) => {
+  player?.on("loadstate", (data) => {
     loadProgress.value =
       Math.round((data.current / data.total) * 100 * 1e4) / 1e4;
   });
@@ -98,7 +105,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   renderer.dispose();
-  player.dispose();
+  player?.dispose();
+  player = null;
 });
 </script>
 <style lang="less" scoped>
