@@ -40,6 +40,7 @@ export default class Text extends Target {
     geometry.center();
     const material = textMaterial.clone();
     const model = new Mesh(geometry, material);
+    model.renderOrder = RENDER_ORDER.TEXT;
     model.rotation.z = -Math.PI / 2;
     return model;
   }

@@ -26,7 +26,7 @@ export default class Polygon extends Target {
   topic = [];
 
   createModel(modelData: DataType) {
-    const { id, contour, color, height, show_id } = modelData;
+    const { contour, color, height } = modelData;
     const geometry = createGeometry(contour, height);
     const material = polygonMaterial.clone() as MeshLambertMaterial;
     material.color.setRGB(color.r, color.g, color.b);
@@ -42,7 +42,7 @@ export default class Polygon extends Target {
   }
 
   setModelAttributes(model: Object3D, modelData: DataType) {
-    const { id, contour, color, height, show_id } = modelData;
+    const { contour, color, height } = modelData;
     const polygonMesh = model.children[0] as Mesh;
     const geometry = createGeometry(contour, height);
     polygonMesh.geometry.dispose();

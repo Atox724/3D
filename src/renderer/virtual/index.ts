@@ -4,11 +4,7 @@ import {
   GridHelper,
   Mesh,
   MeshBasicMaterial,
-  PerspectiveCamera,
-  Plane,
-  PlaneGeometry,
-  PlaneHelper,
-  Vector3
+  PlaneGeometry
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {

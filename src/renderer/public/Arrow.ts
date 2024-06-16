@@ -32,6 +32,7 @@ export default class Arrow extends Target {
       const dir = sub.normalize();
       const color = new Color(c.r, c.g, c.b);
       const arrow = new ArrowHelper(dir, origin, length, color);
+      arrow.renderOrder = RENDER_ORDER.ARROW;
       arrow.position.set(
         origin.x,
         origin.y,

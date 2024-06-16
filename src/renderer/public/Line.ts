@@ -98,6 +98,7 @@ export default class Line extends Target {
           color_trajectory_geometry,
           gradient_line_mat
         );
+        color_trajectory_obj.renderOrder = RENDER_ORDER.LINE;
         color_trajectory_obj.position.z = DepthContainer.getSubIndexDepth(
           RENDER_ORDER.LINE,
           index + 1,
@@ -125,6 +126,7 @@ export default class Line extends Target {
           base_trajectory_geometry,
           line_style.mat
         );
+        solid_trajectory_obj.renderOrder = RENDER_ORDER.LINE;
         solid_trajectory_obj.position.z = DepthContainer.getSubIndexDepth(
           RENDER_ORDER.LINE,
           index + 1,

@@ -47,7 +47,7 @@ export default class Box extends Target {
   createModel(modelData: DataType) {
     const { color, type } = modelData;
     const group = new Group();
-
+    group.renderOrder = RENDER_ORDER.BOX;
     const boxMeshMaterial = boxMaterial.clone();
     boxMeshMaterial.transparent = true;
     boxMeshMaterial.opacity = !type ? 0.8 : 0.15;

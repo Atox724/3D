@@ -74,6 +74,7 @@ export default class Freespace extends Target {
         opacity: color.a
       });
       const mesh = new Mesh(shapeGeometry, material);
+      mesh.renderOrder = RENDER_ORDER.FREESPACE;
       mesh.position.set(
         x,
         y,

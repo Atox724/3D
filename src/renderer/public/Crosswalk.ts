@@ -79,6 +79,7 @@ export default class Crosswalk extends Target {
         }
       });
       const shapeMesh = new Mesh(shapeGeo, shapeMat);
+      shapeMesh.renderOrder = RENDER_ORDER.CROSSWALK;
       shapeMesh.position.set(
         position.x,
         position.y,
