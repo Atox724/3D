@@ -1,6 +1,5 @@
-import { Mesh, ShaderMaterial } from "three";
+import { Color, Group, Mesh, ShaderMaterial } from "three";
 
-import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -49,8 +48,8 @@ export default class Line extends Target {
 
   update(data: UpdateData) {
     this.clear();
-
-    if (!data.data.length) return;
+    const length = data.data.length;
+    if (!length) return;
     data.data.forEach((item, index) => {
       let draw_solid_line = true;
       let draw_gradient_line = true;
@@ -78,36 +77,34 @@ export default class Line extends Target {
       } else {
         point = item.point;
       }
+      const group = new Group();
+      group.renderOrder = this.renderOrder;
       if (draw_gradient_line) {
-        const color_trajectory_geometry = new GradientLine(
-          point.map((line) => [
-            line.x,
-            line.y,
-            line.color.r,
-            line.color.g,
-            line.color.b,
-            line.color.a
-          ]),
+        const geometry = new GradientLine(
+          point
+            .filter((line) => line.color.a)
+            .map((line) => [
+              line.x,
+              line.y,
+              line.color.r,
+              line.color.g,
+              line.color.b,
+              line.color.a
+            ]),
           { distances: false, closed: false, ratio: true }
         );
-        const gradient_line_mat = CustomizedShader({
-          thickness: item.width,
-          vertexColors: 2
+        const material = CustomizedShader({
+          thickness: item.width
         });
-        const color_trajectory_obj = new Mesh(
-          color_trajectory_geometry,
-          gradient_line_mat
-        );
-        color_trajectory_obj.renderOrder = RENDER_ORDER.LINE;
-        color_trajectory_obj.position.z = DepthContainer.getSubIndexDepth(
-          RENDER_ORDER.LINE,
-          index + 1,
-          data.data.length,
-          1,
+        const mesh = new Mesh(geometry, material);
+        mesh.position.z = DepthContainer.getSubIndexDepth(
+          this.renderOrder,
+          index,
+          length,
+          0,
           2
         );
-        this.modelList.set(color_trajectory_obj.uuid, color_trajectory_obj);
-        this.scene.add(color_trajectory_obj);
+        group.add(mesh);
       }
       if (draw_solid_line) {
         const line_style = getPolylineStyle(
@@ -115,28 +112,25 @@ export default class Line extends Target {
           item.color,
           item.width
         );
-        const base_trajectory_geometry = new Line2D(
+        const geometry = new Line2D(
           point.map((line) => [line.x, line.y]),
           {
             distances: line_style.distance,
             closed: false
           }
         );
-        const solid_trajectory_obj = new Mesh(
-          base_trajectory_geometry,
-          line_style.mat
-        );
-        solid_trajectory_obj.renderOrder = RENDER_ORDER.LINE;
-        solid_trajectory_obj.position.z = DepthContainer.getSubIndexDepth(
-          RENDER_ORDER.LINE,
-          index + 1,
-          data.data.length,
-          2,
+        const mesh = new Mesh(geometry, line_style.mat);
+        mesh.position.z = DepthContainer.getSubIndexDepth(
+          this.renderOrder,
+          index,
+          length,
+          1,
           2
         );
-        this.modelList.set(solid_trajectory_obj.uuid, solid_trajectory_obj);
-        this.scene.add(solid_trajectory_obj);
+        group.add(mesh);
       }
+      this.modelList.set(group.uuid, group);
+      this.scene.add(group);
     });
   }
 }
@@ -157,7 +151,7 @@ function getPolylineStyle(type: number, color: ColorType, width: number) {
   // 默认均为实线
   let left_dash = 1,
     right_dash = 1;
-  const default_color = 0x39ebeb;
+  const default_color = new Color(color.r, color.g, color.b);
   if (type === 5 || type === 7) {
     left_dash = 0; // 左线为虚线
   }
@@ -192,16 +186,12 @@ function getPolylineStyle(type: number, color: ColorType, width: number) {
     default:
       style.mat = DoubleShader({
         diffuse: default_color,
-        thickness: 0.15,
+        thickness: width,
         leftDashed: left_dash,
         rightDashed: right_dash,
         opacity: 0.8
       });
       style.distance = true;
   }
-
-  style.mat.uniforms.diffuse.value.r = color.r;
-  style.mat.uniforms.diffuse.value.g = color.g;
-  style.mat.uniforms.diffuse.value.b = color.b;
   return style;
 }

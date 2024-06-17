@@ -2,7 +2,7 @@ export const CANVAS_ID = "canvas_id";
 
 export const HZ = 60;
 
-export enum RENDER_ORDER {
+export enum VIRTUAL_RENDER_ORDER {
   FREESPACE = 1,
   CROSSWALK,
   LINE,
@@ -10,6 +10,16 @@ export enum RENDER_ORDER {
   // POLYGON,
   ARROW,
   BOX
+}
+
+export enum AUGMENTED_RENDER_ORDER {
+  FREESPACE = 1,
+  CROSSWALK,
+  LINE,
+  OBSTACLE,
+  PARTICIPANT,
+  TRAFFICLIGHT,
+  TRAFFICSIGNAL
 }
 
 export const VIRTUAL_RENDER_MAP = {

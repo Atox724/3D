@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
+import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
 import { Freespace, type FreespaceUpdateData } from "@/renderer/public";
 
 import Target from "../target";
@@ -22,11 +22,11 @@ export default class FreespaceRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.FREESPACE) {
+    super(scene, renderOrder);
 
     this.createRender = {
-      localmap_lane_lane: new Freespace(scene)
+      localmap_lane_lane: new Freespace(scene, renderOrder)
     };
   }
 

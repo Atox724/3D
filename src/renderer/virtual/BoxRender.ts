@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
+import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Box, type BoxUpdateData } from "../public";
@@ -23,11 +23,13 @@ export default class BoxRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.BOX) {
+    super(scene, renderOrder);
 
-    const createBoxArray = () => ({ box_array: new Box(scene) });
-    const createBoxTargetArray = () => ({ box_target_array: new Box(scene) });
+    const createBoxArray = () => ({ box_array: new Box(scene, renderOrder) });
+    const createBoxTargetArray = () => ({
+      box_target_array: new Box(scene, renderOrder)
+    });
 
     this.createRender = {
       dpc_planning_debug_info: createBoxArray(),

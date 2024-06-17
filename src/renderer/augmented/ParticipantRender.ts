@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { Participant, type ParticipantUpdateData } from "@/renderer/public";
 
 import Target from "../target";
@@ -21,12 +21,13 @@ export default class ParticipantRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = AUGMENTED_RENDER_ORDER.PARTICIPANT) {
+    super(scene, renderOrder);
 
     this.createRender = {
       "pilothmi_perception_traffic_participant_fusion object": new Participant(
-        scene
+        scene,
+        renderOrder
       )
     };
   }

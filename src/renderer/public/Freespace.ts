@@ -10,7 +10,6 @@ import {
   type Vector2
 } from "three";
 
-import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -38,7 +37,8 @@ export default class Freespace extends Target {
 
   update(data: UpdateData) {
     this.clear();
-    if (!data.data.length) return;
+    const length = data.data.length;
+    if (!length) return;
     data.data.forEach((item, index) => {
       const {
         id,
@@ -74,15 +74,11 @@ export default class Freespace extends Target {
         opacity: color.a
       });
       const mesh = new Mesh(shapeGeometry, material);
-      mesh.renderOrder = RENDER_ORDER.FREESPACE;
+      mesh.renderOrder = this.renderOrder;
       mesh.position.set(
         x,
         y,
-        DepthContainer.getIndexDepth(
-          RENDER_ORDER.FREESPACE,
-          index + 1,
-          data.data.length
-        )
+        DepthContainer.getIndexDepth(this.renderOrder, index, length)
       );
       mesh.rotation.set(
         roll * MathUtils.DEG2RAD,

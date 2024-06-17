@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { Obstacle, type ObstacleUpdateData } from "@/renderer/public";
 
 import Target from "../target";
@@ -21,12 +21,14 @@ export default class ObstacleRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = AUGMENTED_RENDER_ORDER.OBSTACLE) {
+    super(scene, renderOrder);
+
+    const createObstacle = () => new Obstacle(scene, renderOrder);
 
     this.createRender = {
-      "pilothmi_perception_obstacle_fusion object": new Obstacle(scene),
-      pilothmi_perception_obstacle_local: new Obstacle(scene)
+      "pilothmi_perception_obstacle_fusion object": createObstacle(),
+      pilothmi_perception_obstacle_local: createObstacle()
     };
   }
 

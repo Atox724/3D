@@ -9,8 +9,8 @@ export default class EgoCar extends Target {
 
   car?: Object3D;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = 0) {
+    super(scene, renderOrder);
     this.loadCar();
   }
 

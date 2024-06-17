@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { TrafficLight, type TrafficLightUpdateData } from "@/renderer/public";
 
 import Target from "../target";
@@ -21,12 +21,14 @@ export default class TrafficLightRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = AUGMENTED_RENDER_ORDER.TRAFFICLIGHT) {
+    super(scene, renderOrder);
+
+    const createTrafficLight = () => new TrafficLight(scene, renderOrder);
 
     this.createRender = {
-      localmap_other_traffic_light: new TrafficLight(scene),
-      localmap_traffic_light: new TrafficLight(scene)
+      localmap_other_traffic_light: createTrafficLight(),
+      localmap_traffic_light: createTrafficLight()
     };
   }
 

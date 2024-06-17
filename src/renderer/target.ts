@@ -9,12 +9,15 @@ import {
 export default abstract class Target {
   scene: Scene;
 
+  renderOrder: number;
+
   modelList: Map<string | number, Object3D>;
 
   abstract topic: readonly string[];
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, renderOrder: number) {
     this.scene = scene;
+    this.renderOrder = renderOrder;
 
     this.modelList = new Map();
   }

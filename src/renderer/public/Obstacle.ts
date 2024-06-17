@@ -95,6 +95,7 @@ export default class Obstacle extends Target {
         this.setModelAttributes(model, modelData);
       } else if (Obstacle.cacheModels[typeName]) {
         const newModel = Obstacle.cacheModels[typeName].clone();
+        newModel.renderOrder = this.renderOrder;
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
         this.modelList.set(id, newModel);

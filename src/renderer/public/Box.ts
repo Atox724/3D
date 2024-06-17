@@ -9,7 +9,6 @@ import {
   type Object3D
 } from "three";
 
-import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -47,7 +46,7 @@ export default class Box extends Target {
   createModel(modelData: DataType) {
     const { color, type } = modelData;
     const group = new Group();
-    group.renderOrder = RENDER_ORDER.BOX;
+    group.renderOrder = this.renderOrder;
     const boxMeshMaterial = boxMaterial.clone();
     boxMeshMaterial.transparent = true;
     boxMeshMaterial.opacity = !type ? 0.8 : 0.15;
@@ -73,7 +72,7 @@ export default class Box extends Target {
     model.position.set(
       x,
       y,
-      height / 2 + DepthContainer.getDepth(RENDER_ORDER.BOX)
+      height / 2 + DepthContainer.getDepth(this.renderOrder)
     );
 
     const boxMeshNew = model.getObjectByName("box");

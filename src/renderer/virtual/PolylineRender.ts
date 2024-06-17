@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
+import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
 import { Line, type LineUpdateData } from "@/renderer/public";
 
 import Target from "../target";
@@ -23,27 +23,30 @@ export default class PolylineRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.LINE) {
+    super(scene, renderOrder);
 
-    const createPolyLine = () => ({ polyline: new Line(scene) });
-    const createPolyLineArray = () => ({ polyline_array: new Line(scene) });
+    const createLine = () => new Line(scene, renderOrder);
+    const createPolyLine = () => ({ polyline: new Line(scene, renderOrder) });
+    const createPolyLineArray = () => ({
+      polyline_array: new Line(scene, renderOrder)
+    });
 
     this.createRender = {
       "perception_camera_roadlines center_camera_fov30": createPolyLine(),
       "perception_camera_roadlines center_camera_fov120": createPolyLine(),
       "perception_camera_roadlines nv_cameras": createPolyLine(),
       dpc_planning_debug_info: createPolyLineArray(),
-      dpc_planning_otherline: new Line(scene),
-      dpc_planning_reference_line: new Line(scene),
-      dpc_planning_edgeline: new Line(scene),
-      dpc_lfp_planning_trajectory: new Line(scene),
-      dpc_lfp_planning_planline: new Line(scene),
-      localmap_center_line: new Line(scene),
-      localmap_lane_line: new Line(scene),
-      localmap_stop_line: new Line(scene),
-      localmap_speedbump: new Line(scene),
-      memdrive_ref_route_trajectory: new Line(scene)
+      dpc_planning_otherline: createLine(),
+      dpc_planning_reference_line: createLine(),
+      dpc_planning_edgeline: createLine(),
+      dpc_lfp_planning_trajectory: createLine(),
+      dpc_lfp_planning_planline: createLine(),
+      localmap_center_line: createLine(),
+      localmap_lane_line: createLine(),
+      localmap_stop_line: createLine(),
+      localmap_speedbump: createLine(),
+      memdrive_ref_route_trajectory: createLine()
     };
   }
 

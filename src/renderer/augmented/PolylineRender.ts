@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { Line, type LineUpdateData } from "@/renderer/public";
 
 import Target from "../target";
@@ -21,14 +21,16 @@ export default class PolylineRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = AUGMENTED_RENDER_ORDER.LINE) {
+    super(scene, renderOrder);
+
+    const createLine = () => new Line(scene, renderOrder);
 
     this.createRender = {
-      pilothmi_lane_lines: new Line(scene),
-      pilothmi_stop_line: new Line(scene),
-      pilothmi_planning_lines_info: new Line(scene),
-      pilothmi_pilot_planning_trajectory: new Line(scene)
+      pilothmi_lane_lines: createLine(),
+      pilothmi_stop_line: createLine(),
+      pilothmi_planning_lines_info: createLine(),
+      pilothmi_pilot_planning_trajectory: createLine()
     };
   }
 

@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { TrafficSignal, type TrafficSignalUpdateData } from "@/renderer/public";
 
 import Target from "../target";
@@ -21,12 +21,17 @@ export default class TrafficSignalRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(
+    scene: Scene,
+    renderOrder = AUGMENTED_RENDER_ORDER.TRAFFICSIGNAL
+  ) {
+    super(scene, renderOrder);
+
+    const createTrafficSignal = () => new TrafficSignal(scene, renderOrder);
 
     this.createRender = {
-      localmap_other_traffic_sign: new TrafficSignal(scene),
-      localmap_traffic_sign: new TrafficSignal(scene)
+      localmap_other_traffic_sign: createTrafficSignal(),
+      localmap_traffic_sign: createTrafficSignal()
     };
   }
 

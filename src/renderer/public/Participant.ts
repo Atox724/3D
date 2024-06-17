@@ -167,6 +167,7 @@ export default class Participant extends Target {
       model = Participant.cacheModels[typeName].clone();
     }
 
+    model.renderOrder = this.renderOrder;
     model.userData.type = typeName;
     model.userData.id = id;
 

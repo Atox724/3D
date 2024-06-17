@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
+import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 
 import { Arrow, type ArrowUpdateData } from "../public";
@@ -21,10 +21,13 @@ export default class ArrowRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.ARROW) {
+    super(scene, renderOrder);
 
-    const createArrowArray = () => ({ arrow_array: new Arrow(scene) });
+    const createArrow = () => new Arrow(scene, renderOrder);
+    const createArrowArray = () => ({
+      arrow_array: new Arrow(scene, renderOrder)
+    });
 
     this.createRender = {
       perception_obstacle_fusion: createArrowArray(),
@@ -32,8 +35,8 @@ export default class ArrowRender extends Target {
       perception_radar_front: createArrowArray(),
       perception_camera_front: createArrowArray(),
       perception_camera_nv: createArrowArray(),
-      localization_global_history_trajectory: new Arrow(scene),
-      localization_local_history_trajectory: new Arrow(scene)
+      localization_global_history_trajectory: createArrow(),
+      localization_local_history_trajectory: createArrow()
     };
   }
 

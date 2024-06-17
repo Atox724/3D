@@ -3,7 +3,6 @@ import fontJSON from "three/examples/fonts/helvetiker_regular.typeface.json";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
 
-import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -40,7 +39,7 @@ export default class Text extends Target {
     geometry.center();
     const material = textMaterial.clone();
     const model = new Mesh(geometry, material);
-    model.renderOrder = RENDER_ORDER.TEXT;
+    model.renderOrder = this.renderOrder;
     model.rotation.z = -Math.PI / 2;
     return model;
   }
@@ -50,7 +49,7 @@ export default class Text extends Target {
     model.position.set(
       position.x,
       position.y,
-      DepthContainer.getDepth(RENDER_ORDER.TEXT)
+      DepthContainer.getDepth(this.renderOrder)
     );
     model.scale.setScalar(fontSize);
   }

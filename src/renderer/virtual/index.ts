@@ -119,7 +119,7 @@ export default class Virtual extends Renderer {
   }
 
   setScene() {
-    const size = 600;
+    const size = 1000;
     const gridHelper = new GridHelper(size / 2, size / 20, 0x888888, 0x888888);
     gridHelper.rotation.x = Math.PI / 2;
 

@@ -1,6 +1,6 @@
 import { BackSide, Color, ShaderMaterial, UniformsUtils } from "three";
 
-function asNumber(num: number, defaultNum: number) {
+function asNumber(num?: number, defaultNum?: number) {
   return typeof num === "number"
     ? num
     : typeof defaultNum === "number"
@@ -9,12 +9,18 @@ function asNumber(num: number, defaultNum: number) {
 }
 
 // 用于画单色实线
-export function SolidShader(option: any = {}) {
-  const material = new ShaderMaterial({
+export const SolidShader = (option: {
+  diffuse: Color;
+  thickness?: number;
+  opacity?: number;
+}) =>
+  new ShaderMaterial({
+    side: BackSide,
+    transparent: true,
     uniforms: UniformsUtils.clone({
       thickness: { value: asNumber(option.thickness, 0.1) },
       opacity: { value: asNumber(option.opacity, 1.0) },
-      diffuse: { value: new Color(option.diffuse) }
+      diffuse: { value: option.diffuse || new Color(0xffffff) }
     }),
     vertexShader: `
       uniform float thickness;
@@ -34,18 +40,22 @@ export function SolidShader(option: any = {}) {
       }
     `
   });
-  material.side = BackSide;
-  material.transparent = true;
-  return material;
-}
 
 // 用于画单色虚线
-export function DashedShader(option: any = {}) {
-  const material = new ShaderMaterial({
+export const DashedShader = (option: {
+  diffuse: Color;
+  thickness?: number;
+  opacity?: number;
+  dashSteps?: number;
+  dashDistance?: number;
+}) =>
+  new ShaderMaterial({
+    side: BackSide,
+    transparent: true,
     uniforms: UniformsUtils.clone({
       thickness: { value: asNumber(option.thickness, 0.1) },
       opacity: { value: asNumber(option.opacity, 1.0) },
-      diffuse: { value: new Color(option.diffuse) },
+      diffuse: { value: option.diffuse || new Color(0xffffff) },
       dashSteps: { value: asNumber(option.dashSteps, 4) },
       dashDistance: { value: asNumber(option.dashDistance, 2) }
     }),
@@ -78,18 +88,24 @@ export function DashedShader(option: any = {}) {
       }
     `
   });
-  material.side = BackSide;
-  material.transparent = true;
-  return material;
-}
 
 // 用于画纯色双线
-export function DoubleShader(option: any = {}) {
-  const material = new ShaderMaterial({
+export const DoubleShader = (option: {
+  diffuse?: Color;
+  thickness?: number;
+  leftDashed?: number;
+  rightDashed?: number;
+  opacity?: number;
+  dashSteps?: number;
+  dashDistance?: number;
+}) =>
+  new ShaderMaterial({
+    side: BackSide,
+    transparent: true,
     uniforms: UniformsUtils.clone({
-      thickness: { value: asNumber(option.thickness * 3, 0.3) },
+      thickness: { value: asNumber(option.thickness, 0.3) },
       opacity: { value: asNumber(option.opacity, 1.0) },
-      diffuse: { value: new Color(option.diffuse) },
+      diffuse: { value: option.diffuse || new Color(0xffffff) },
       dashSteps: { value: asNumber(option.dashSteps, 3) },
       dashDistance: { value: asNumber(option.dashDistance, 2) },
       leftDashed: { value: asNumber(option.leftDashed, 0) },
@@ -133,51 +149,34 @@ export function DoubleShader(option: any = {}) {
       }
     `
   });
-  material.side = BackSide;
-  material.transparent = true;
-  return material;
-}
 
 // 自定义着色器材质, 目前用于画渐变实线
-export function CustomizedShader(option: any = {}) {
-  const material = new ShaderMaterial({
+export const CustomizedShader = (option: { thickness?: number } = {}) =>
+  new ShaderMaterial({
     uniforms: UniformsUtils.clone({
-      thickness: { value: asNumber(option.thickness, 0.1) },
-      opacity: { value: asNumber(option.opacity, 1.0) },
-      diffuse: { value: new Color(option.diffuse) }
+      thickness: { value: asNumber(option.thickness, 0.1) }
     }),
+    side: BackSide,
+    transparent: true,
     vertexShader: `
       uniform float thickness;
       attribute float lineMiter;
       attribute vec2 lineNormal;
       attribute float lineRatio;
       attribute vec4 customColor;
-      varying float lineU;
       varying vec4 vColor;
 
       void main() { 
         vColor = vec4(customColor.r, customColor.g, customColor.b, customColor.a);
-        lineU = lineRatio;
         vec3 pointPos = position.xyz + vec3(lineNormal * thickness / 2.0 * lineMiter, 0.0);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(pointPos, 1.0);
       }
     `,
     fragmentShader: `
-      varying float lineU;
       varying vec4 vColor;
 
-      uniform vec3 diffuse;
-      uniform float opacity;
-      uniform float time;
-
       void main() {
-        // radial, lineU, lineRatio并未起作用
-        float radial = 1.0 - lineU;
         gl_FragColor = vec4(vColor.xyz, vColor.a);
       }
     `
   });
-  material.side = BackSide;
-  material.transparent = true;
-  return material;
-}

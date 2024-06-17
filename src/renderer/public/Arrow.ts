@@ -1,6 +1,5 @@
 import { ArrowHelper, Color, Vector3 } from "three";
 
-import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -21,8 +20,9 @@ export default class Arrow extends Target {
 
   update(data: UpdateData) {
     this.clear();
-    if (!data.data.length) return;
-    data.data.forEach((modelData) => {
+    const length = data.data.length;
+    if (!length) return;
+    data.data.forEach((modelData, index) => {
       const { origin: o, end_point, color: c } = modelData;
       const origin = new Vector3(o.x, o.y, o.z);
       const end = new Vector3(end_point.x, end_point.y, end_point.z);
@@ -32,11 +32,14 @@ export default class Arrow extends Target {
       const dir = sub.normalize();
       const color = new Color(c.r, c.g, c.b);
       const arrow = new ArrowHelper(dir, origin, length, color);
-      arrow.renderOrder = RENDER_ORDER.ARROW;
+      arrow.renderOrder = this.renderOrder;
       arrow.position.set(
         origin.x,
         origin.y,
-        Math.max(origin.z, DepthContainer.getDepth(RENDER_ORDER.ARROW))
+        Math.max(
+          origin.z,
+          DepthContainer.getIndexDepth(this.renderOrder, index, length)
+        )
       );
       this.modelList.set(arrow.uuid, arrow);
       this.scene.add(arrow);

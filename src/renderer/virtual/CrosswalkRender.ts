@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
+import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
 
 import { Crosswalk, type CrosswalkUpdateData } from "../public";
 import Target from "../target";
@@ -21,11 +21,11 @@ export default class CrosswalkRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.CROSSWALK) {
+    super(scene, renderOrder);
 
     this.createRender = {
-      localmap_crosswalk: new Crosswalk(scene)
+      localmap_crosswalk: new Crosswalk(scene, renderOrder)
     };
   }
 

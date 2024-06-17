@@ -20,10 +20,12 @@ export default class PolygonRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = 0) {
+    super(scene, renderOrder);
 
-    const createPolygonArray = () => ({ polygon_array: new Polygon(scene) });
+    const createPolygonArray = () => ({
+      polygon_array: new Polygon(scene, renderOrder)
+    });
 
     this.createRender = {
       perception_camera_front: createPolygonArray(),

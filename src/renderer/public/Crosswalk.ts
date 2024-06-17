@@ -9,7 +9,6 @@ import {
   type Vector3
 } from "three";
 
-import { RENDER_ORDER } from "@/constants";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
@@ -34,8 +33,9 @@ export default class Crosswalk extends Target {
 
   update(data: UpdateData) {
     this.clear();
-    if (!data.data.length) return;
-    data.data.forEach((item) => {
+    const length = data.data.length;
+    if (!length) return;
+    data.data.forEach((item, index) => {
       const { id, shape, position, rotation, color } = item;
       const points = shape.map((point) => new Vector2(point.x, point.y));
       const side1 = new Vector2().subVectors(points[0], points[1]);
@@ -79,11 +79,14 @@ export default class Crosswalk extends Target {
         }
       });
       const shapeMesh = new Mesh(shapeGeo, shapeMat);
-      shapeMesh.renderOrder = RENDER_ORDER.CROSSWALK;
+      shapeMesh.renderOrder = this.renderOrder;
       shapeMesh.position.set(
         position.x,
         position.y,
-        Math.max(position.z, DepthContainer.getDepth(RENDER_ORDER.CROSSWALK))
+        Math.max(
+          position.z,
+          DepthContainer.getIndexDepth(this.renderOrder, index, length)
+        )
       );
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
       this.modelList.set(id, shapeMesh);

@@ -1,6 +1,6 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
+import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
 
 import { Text, type TextUpdateData } from "../public";
 import Target from "../target";
@@ -21,12 +21,12 @@ export default class TextRender extends Target {
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene) {
-    super(scene);
+  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.TEXT) {
+    super(scene, renderOrder);
 
     this.createRender = {
-      localmap_map_line_id: new Text(scene),
-      localmap_map_lane_id: new Text(scene)
+      localmap_map_line_id: new Text(scene, renderOrder),
+      localmap_map_lane_id: new Text(scene, renderOrder)
     };
   }
 
