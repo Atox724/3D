@@ -1,40 +1,39 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { Crosswalk, type CrosswalkUpdateData } from "../public";
+import { EgoCar, type EgoCarUpdateData } from "../public";
 import Render from "../render";
 
-const topic = AUGMENTED_RENDER_MAP.crosswalk;
+const topic = ["car_pose"] as const;
 type TopicType = (typeof topic)[number];
 
-type CrosswalkUpdateDataMap = {
+type EgoCarUpdateDataMap = {
   [key in TopicType]: {
     topic: TopicType;
-    data: CrosswalkUpdateData;
+    data: EgoCarUpdateData;
   };
 };
 
 type CreateRenderMap = {
-  [key in TopicType]: Crosswalk;
+  [key in TopicType]: EgoCar;
 };
 
-export default class CrosswalkRender extends Render {
+export default class EgoCarRender extends Render {
   topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
-  constructor(scene: Scene, renderOrder = AUGMENTED_RENDER_ORDER.CROSSWALK) {
+  constructor(scene: Scene, renderOrder = 0) {
     super();
 
     this.createRender = {
-      pilothmi_cross_walk_local: new Crosswalk(scene, renderOrder)
+      car_pose: new EgoCar(scene, renderOrder)
     };
 
     let topic: TopicType;
     for (topic in this.createRender) {
-      VIEW_WS.on(topic, (data: CrosswalkUpdateDataMap[TopicType]) => {
+      VIEW_WS.on(topic, (data: EgoCarUpdateDataMap[TopicType]) => {
         this.createRender[data.topic].update(data.data);
       });
     }

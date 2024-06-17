@@ -27,7 +27,7 @@
 <script lang="ts" setup>
 import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import { VirtualRender } from "@/renderer";
+import VirtualRender from "@/renderer/virtual";
 import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";

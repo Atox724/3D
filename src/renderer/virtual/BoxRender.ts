@@ -1,7 +1,8 @@
 import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
-import Target from "@/renderer/target";
+import Render from "@/renderer/render";
+import { VIEW_WS } from "@/utils/websocket";
 
 import { Box, type BoxUpdateData } from "../public";
 
@@ -10,21 +11,27 @@ type TopicType = (typeof topic)[number];
 
 type BoxData = {
   [key in TopicType]:
-    | { box_array: BoxUpdateData }
-    | { box_target_array: BoxUpdateData };
+    | {
+        topic: TopicType;
+        data: { box_array: BoxUpdateData };
+      }
+    | {
+        topic: TopicType;
+        data: { box_target_array: BoxUpdateData };
+      };
 };
 
 type CreateRenderMap = {
   [key in TopicType]: { box_array: Box } | { box_target_array: Box };
 };
 
-export default class BoxRender extends Target {
+export default class BoxRender extends Render {
   topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.BOX) {
-    super(scene, renderOrder);
+    super();
 
     const createBoxArray = () => ({ box_array: new Box(scene, renderOrder) });
     const createBoxTargetArray = () => ({
@@ -39,17 +46,31 @@ export default class BoxRender extends Target {
       perception_camera_front: createBoxTargetArray(),
       perception_camera_nv: createBoxTargetArray()
     };
+
+    let topic: TopicType;
+    for (topic in this.createRender) {
+      VIEW_WS.on(topic, (data: BoxData[TopicType]) => {
+        const renderItem = this.createRender[data.topic];
+        if ("box_array" in renderItem && "box_array" in data.data) {
+          renderItem.box_array.update(data.data.box_array);
+        } else if (
+          "box_target_array" in renderItem &&
+          "box_target_array" in data.data
+        ) {
+          renderItem.box_target_array.update(data.data.box_target_array);
+        } else {
+          console.error(
+            `[BoxRender] topic: ${data.topic} is not match with data`
+          );
+        }
+      });
+    }
   }
 
-  update<T extends TopicType>(data: BoxData[T], topic: T) {
-    const renderItem = this.createRender[topic];
-
-    if ("box_array" in renderItem && "box_array" in data) {
-      renderItem.box_array.update(data.box_array);
-    } else if ("box_target_array" in renderItem && "box_target_array" in data) {
-      renderItem.box_target_array.update(data.box_target_array);
-    } else {
-      console.error(`[BoxRender] topic: ${topic} is not match with data`);
+  dispose(): void {
+    for (const topic in this.createRender) {
+      VIEW_WS.off(topic);
     }
+    super.dispose();
   }
 }

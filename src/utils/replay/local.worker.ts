@@ -64,8 +64,6 @@ class Player {
     let accumulatedTime = 0;
 
     this.#playTimer = setInterval(() => {
-      accumulatedTime += DUMP_MS * this.#speed;
-
       if (playIndex === -1) {
         this.playState = "loading";
         const key = getKeyByTime(this.currentTime || this.startTime);
@@ -81,6 +79,8 @@ class Player {
         this.playState = "loading";
         return;
       }
+      accumulatedTime += DUMP_MS * this.#speed;
+
       this.playState = "play";
       const datas = [...this.#cacheData.entries()];
       while (accumulatedTime >= DUMP_MS) {
@@ -98,27 +98,37 @@ class Player {
           const colonIndex = line.indexOf(":");
           if (colonIndex === -1) return;
           const data = line.slice(colonIndex + 1);
-          const jsonData = atob(data);
-          try {
-            let data;
-            if (jsonData[0] === "{") {
-              data = jsonData;
-            } else {
-              const uint8buffer = new Uint8Array(jsonData.length);
-              for (let i = 0; i < jsonData.length; i++) {
-                uint8buffer[i] = jsonData.charCodeAt(i);
-              }
-              data = uint8buffer.buffer;
-            }
-            data = formatMsg(data);
-            if (data) {
+          if (data[0] === "{") {
+            const res = formatMsg(data);
+            if (res) {
               postMsg({
                 type: "data",
-                data
+                data: res
               });
             }
-          } catch (error) {
-            // console.log(error);
+          } else {
+            const jsonData = atob(data);
+            try {
+              let data;
+              if (jsonData[0] === "{") {
+                data = jsonData;
+              } else {
+                const uint8buffer = new Uint8Array(jsonData.length);
+                for (let i = 0; i < jsonData.length; i++) {
+                  uint8buffer[i] = jsonData.charCodeAt(i);
+                }
+                data = uint8buffer.buffer;
+              }
+              data = formatMsg(data);
+              if (data) {
+                postMsg({
+                  type: "data",
+                  data
+                });
+              }
+            } catch (error) {
+              // console.log(error);
+            }
           }
         });
         const lastLine = lines[lines.length - 1];

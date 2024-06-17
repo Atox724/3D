@@ -88,8 +88,6 @@ export interface UpdateData extends UpdateDataTool<ParticipantData[]> {
 }
 
 export default class Participant extends Target {
-  topic = [];
-
   static cacheModels = {} as Record<ParticipantType, Object3D>;
   static modelFiles: Record<ParticipantType, string> = {
     PEDESTRIAN: Man,

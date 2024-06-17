@@ -29,8 +29,6 @@ export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
 }
 
 export default class Crosswalk extends Target {
-  topic = [];
-
   update(data: UpdateData) {
     this.clear();
     const length = data.data.length;

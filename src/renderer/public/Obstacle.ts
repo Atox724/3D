@@ -38,8 +38,6 @@ export interface UpdateData extends UpdateDataTool<ObstacleData[]> {
 }
 
 export default class Obstacle extends Target {
-  topic = [];
-
   static cacheModels = {} as Record<ObstacleType, Object3D>;
   static modelFiles: Record<ObstacleType, string> = {
     OBSTACLE_ISOLATION_BARREL: AntiCollisionBarrel, // 防撞桶 隔离桶

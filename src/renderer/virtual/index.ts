@@ -2,9 +2,11 @@ import { debounce } from "lodash-es";
 import {
   DoubleSide,
   GridHelper,
+  Group,
   Mesh,
   MeshBasicMaterial,
-  PlaneGeometry
+  PlaneGeometry,
+  Vector3
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
@@ -15,32 +17,32 @@ import {
 
 import { VIEW_WS } from "@/utils/websocket";
 
-import { EgoCar } from "../public";
-import Renderer from "../renderer";
-import type Target from "../target";
+import Renderer from "..";
+import { EgoCar, type EgoCarUpdateData } from "../public";
+import type Render from "../render";
 import ArrowRender from "./ArrowRender";
 import BoxRender from "./BoxRender";
 import CrosswalkRender from "./CrosswalkRender";
+import EgoCarRender from "./EgoCarRender";
 import FreespaceRender from "./FreespaceRender";
 import PolygonRender from "./PolygonRender";
 import PolylineRender from "./PolylineRender";
 import TextRender from "./TextRender";
 
 export default class Virtual extends Renderer {
-  createRender: Target[];
+  createRender: Render[];
 
   ips: string[] = [];
 
-  egoCar: EgoCar;
-
   controls?: OrbitControls;
+
+  ground = new Group();
 
   constructor() {
     super();
 
-    this.egoCar = new EgoCar(this.scene);
-
     this.createRender = [
+      new EgoCarRender(this.scene),
       new FreespaceRender(this.scene),
       new CrosswalkRender(this.scene),
       new ArrowRender(this.scene),
@@ -50,19 +52,37 @@ export default class Virtual extends Renderer {
       new TextRender(this.scene)
     ];
 
-    this.registerModelRender();
+    let updatedPos = false;
+    VIEW_WS.on(
+      "car_pose",
+      (data: { topic: "car_pose"; data: EgoCarUpdateData }) => {
+        const [{ position, rotation }] = data.data.data;
+        if (!updatedPos) {
+          this.ground.position.copy(position);
+          this.ground.rotation.z = rotation.z;
+          updatedPos = true;
+        }
+        this.position.copy(position);
+        this.rotation.set(rotation.x, rotation.y, rotation.z);
+      }
+    );
+
+    VIEW_WS.on("conn_list", (data: { conn_list?: string[] }) => {
+      this.ips = data.conn_list || [];
+    });
 
     window.addEventListener("keydown", this.onKeyDown);
+
+    this.preload();
   }
 
-  registerModelRender() {
-    for (const instance of this.createRender) {
-      instance.topic.forEach((topic) => {
-        VIEW_WS.registerTargetMsg(topic, instance.update.bind(instance));
+  preload() {
+    EgoCar.preloading().then((res) => {
+      res.forEach((item) => {
+        if (item.status === "fulfilled") {
+          this.scene.add(item.value);
+        }
       });
-    }
-    VIEW_WS.registerTargetMsg("conn_list", (data: { conn_list?: string[] }) => {
-      this.ips = data.conn_list || [];
     });
   }
 
@@ -113,7 +133,10 @@ export default class Virtual extends Renderer {
   };
 
   createControler() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls = new OrbitControls(
+      this.camera.clone(),
+      this.renderer.domElement
+    );
     this.controls.target.set(3, 0, 6);
     this.controls.saveState();
   }
@@ -130,11 +153,16 @@ export default class Virtual extends Renderer {
     });
     const ground = new Mesh(geometry, material);
     ground.position.z = -0.01;
-
-    this.scene.add(ground, gridHelper);
+    this.ground.add(ground, gridHelper);
+    this.scene.add(this.ground);
   }
 
   dispose(): void {
+    this.createRender.forEach((target) => {
+      target.dispose();
+    });
+    this.createRender = [];
+    VIEW_WS.off("conn_list");
     window.removeEventListener("keydown", this.onKeyDown);
     super.dispose();
   }

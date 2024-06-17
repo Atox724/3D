@@ -1,27 +1,31 @@
 import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP } from "@/constants";
-import Target from "@/renderer/target";
+import { VIEW_WS } from "@/utils/websocket";
 
 import { Polygon, type PolygonUpdateData } from "../public";
+import Render from "../render";
 
 const topic = VIRTUAL_RENDER_MAP.polygon;
 type TopicType = (typeof topic)[number];
 
 type ArrowUpdateDataMap = {
-  [key in TopicType]: { polygon_array: PolygonUpdateData };
+  [key in TopicType]: {
+    topic: TopicType;
+    data: { polygon_array: PolygonUpdateData };
+  };
 };
 
 type CreateRenderMap = {
   [key in TopicType]: { polygon_array: Polygon };
 };
-export default class PolygonRender extends Target {
+export default class PolygonRender extends Render {
   topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene, renderOrder = 0) {
-    super(scene, renderOrder);
+    super();
 
     const createPolygonArray = () => ({
       polygon_array: new Polygon(scene, renderOrder)
@@ -33,8 +37,20 @@ export default class PolygonRender extends Target {
       "perception_fusion /perception/fusion/object": createPolygonArray(),
       perception_obstacle_fusion: createPolygonArray()
     };
+
+    let topic: TopicType;
+    for (topic in this.createRender) {
+      VIEW_WS.on(topic, (data: ArrowUpdateDataMap[TopicType]) => {
+        this.createRender[data.topic].polygon_array.update(
+          data.data.polygon_array
+        );
+      });
+    }
   }
-  update<T extends TopicType>(data: ArrowUpdateDataMap[T], topic: T) {
-    this.createRender[topic].polygon_array.update(data.polygon_array);
+  dispose(): void {
+    for (const topic in this.createRender) {
+      VIEW_WS.off(topic);
+    }
+    super.dispose();
   }
 }

@@ -81,6 +81,21 @@ export function formatMsg(msg: string | ArrayBuffer | null) {
         topic: data.topic,
         data: data.value.value0
       };
+    } else if (data.elements) {
+      const element = data.elements[0];
+      const type = element.type as keyof typeof ATTRIBUTE_MAP;
+      return {
+        topic: element.topic,
+        data: {
+          data: element[ATTRIBUTE_MAP[type]].data,
+          defaultEnable: element.defaultEnable,
+          group: "others",
+          style: {},
+          timestamp_nsec: element.timestampNsec,
+          topic: element.topic,
+          type: type
+        }
+      };
     }
     return {
       topic: data.topic,

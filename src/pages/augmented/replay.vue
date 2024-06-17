@@ -27,7 +27,7 @@
 <script lang="ts" setup>
 import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import { AugmentedRender } from "@/renderer";
+import AugmentedRender from "@/renderer/augmented";
 import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";

@@ -11,15 +11,34 @@ export default abstract class Target {
 
   renderOrder: number;
 
-  modelList: Map<string | number, Object3D>;
+  #enable = true;
+  get enable() {
+    return this.#enable;
+  }
+  set enable(enable: boolean) {
+    if (enable === this.#enable) return;
+    this.#enable = enable;
+    this.modelList.forEach((model) => {
+      model.visible = enable;
+    });
+  }
 
-  abstract topic: readonly string[];
+  modelList: Map<string | number, Object3D>;
 
   constructor(scene: Scene, renderOrder: number) {
     this.scene = scene;
     this.renderOrder = renderOrder;
+    this.enable = true;
 
     this.modelList = new Map();
+  }
+
+  setEnable(enable: boolean) {
+    this.enable = enable;
+  }
+
+  toggleEnable() {
+    this.enable = !this.enable;
   }
 
   disposeObject(obj: Object3D) {
@@ -64,6 +83,11 @@ export default abstract class Target {
         list.delete(id);
       }
     });
+  }
+
+  dispose() {
+    this.modelList.forEach(this.disposeObject.bind(this));
+    this.modelList.clear();
   }
 
   abstract update(data: any, topic?: string): void;

@@ -12,7 +12,7 @@
 <script lang="ts" setup>
 import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import { AugmentedRender } from "@/renderer";
+import AugmentedRender from "@/renderer/augmented";
 
 const renderer = new AugmentedRender();
 

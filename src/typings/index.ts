@@ -132,6 +132,13 @@ export namespace RequestWorker {
   export type PostMessage = Request.OnMessage;
 }
 
+export enum CameraMode {
+  FOLLOW_EGOCAR,
+  USER_CONTROL,
+  BV_VERTICAL,
+  BV_HORIZONTAL
+}
+
 export interface Point2 {
   x: number;
   y: number;

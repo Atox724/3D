@@ -33,8 +33,6 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 }
 
 export default class Freespace extends Target {
-  topic = [];
-
   update(data: UpdateData) {
     this.clear();
     const length = data.data.length;

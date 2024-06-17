@@ -4,6 +4,7 @@ export type { UpdateData as BoxUpdateData } from "./Box";
 export { default as Box } from "./Box";
 export type { UpdateData as CrosswalkUpdateData } from "./Crosswalk";
 export { default as Crosswalk } from "./Crosswalk";
+export type { UpdateData as EgoCarUpdateData } from "./EgoCar";
 export { default as EgoCar } from "./EgoCar";
 export type { UpdateData as FreespaceUpdateData } from "./Freespace";
 export { default as Freespace } from "./Freespace";

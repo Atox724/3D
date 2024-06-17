@@ -47,7 +47,7 @@ export class LocalPlay extends EventEmitter<Events> {
         this.endTime = data.endTime;
         break;
       case "data":
-        VIEW_WS.dispatchTargetMsg(data.topic, data.data);
+        VIEW_WS.emit(data.topic, data);
         break;
     }
   };

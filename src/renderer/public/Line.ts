@@ -44,8 +44,6 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 export type UpdateData = JSONData | BufferData;
 
 export default class Line extends Target {
-  topic = [];
-
   update(data: UpdateData) {
     this.clear();
     const length = data.data.length;

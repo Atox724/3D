@@ -41,8 +41,6 @@ const edgesMesh = new LineSegments(
 );
 
 export default class Box extends Target {
-  topic = [];
-
   createModel(modelData: DataType) {
     const { color, type } = modelData;
     const group = new Group();

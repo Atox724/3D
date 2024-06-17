@@ -2,21 +2,25 @@ import type { Scene } from "three";
 
 import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { TrafficSignal, type TrafficSignalUpdateData } from "@/renderer/public";
+import { VIEW_WS } from "@/utils/websocket";
 
-import Target from "../target";
+import Render from "../render";
 
 const topic = AUGMENTED_RENDER_MAP.trafficSignalModel;
 type TopicType = (typeof topic)[number];
 
 type TrafficSignalUpdateDataMap = {
-  [key in TopicType]: TrafficSignalUpdateData;
+  [key in TopicType]: {
+    topic: TopicType;
+    data: TrafficSignalUpdateData;
+  };
 };
 
 type CreateRenderMap = {
   [key in TopicType]: TrafficSignal;
 };
 
-export default class TrafficSignalRender extends Target {
+export default class TrafficSignalRender extends Render {
   topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
@@ -25,7 +29,7 @@ export default class TrafficSignalRender extends Target {
     scene: Scene,
     renderOrder = AUGMENTED_RENDER_ORDER.TRAFFICSIGNAL
   ) {
-    super(scene, renderOrder);
+    super();
 
     const createTrafficSignal = () => new TrafficSignal(scene, renderOrder);
 
@@ -33,9 +37,19 @@ export default class TrafficSignalRender extends Target {
       localmap_other_traffic_sign: createTrafficSignal(),
       localmap_traffic_sign: createTrafficSignal()
     };
+
+    let topic: TopicType;
+    for (topic in this.createRender) {
+      VIEW_WS.on(topic, (data: TrafficSignalUpdateDataMap[TopicType]) => {
+        this.createRender[data.topic].update(data.data);
+      });
+    }
   }
 
-  update<T extends TopicType>(data: TrafficSignalUpdateDataMap[T], topic: T) {
-    this.createRender[topic].update(data);
+  dispose(): void {
+    for (const topic in this.createRender) {
+      VIEW_WS.off(topic);
+    }
+    super.dispose();
   }
 }

@@ -15,11 +15,12 @@ import { Reflector } from "three/examples/jsm/objects/Reflector";
 import { DepthTester } from "@/utils/three/depthTester";
 import { VIEW_WS } from "@/utils/websocket";
 
+import Renderer from "..";
 import { EgoCar, Obstacle, Participant, TrafficSignal } from "../public";
 import TrafficLight from "../public/TrafficLight";
-import Renderer from "../renderer";
-import type Target from "../target";
+import type Render from "../render";
 import CrosswalkRender from "./CrosswalkRender";
+import EgoCarRender from "./EgoCarRender";
 import FreespaceRender from "./FreespaceRender";
 import ObstacleRender from "./ObstacleRender";
 import ParticipantRender from "./ParticipantRender";
@@ -28,20 +29,17 @@ import TrafficLightRender from "./TrafficLightRender";
 import TrafficSignalRender from "./TrafficSignalRender";
 
 export default class Augmented extends Renderer {
-  createRender: Target[];
+  createRender: Render[];
 
   ips: string[] = [];
-
-  egoCar: EgoCar;
 
   controls?: OrbitControls;
 
   constructor() {
     super();
 
-    this.egoCar = new EgoCar(this.scene);
-
     this.createRender = [
+      new EgoCarRender(this.scene),
       new ObstacleRender(this.scene),
       new ParticipantRender(this.scene),
       new FreespaceRender(this.scene),
@@ -51,26 +49,30 @@ export default class Augmented extends Renderer {
       new PolylineRender(this.scene)
     ];
 
-    this.preload().then(() => {
-      this.registerModelRender();
+    VIEW_WS.on("conn_list", (data: { conn_list?: string[] }) => {
+      this.ips = data.conn_list || [];
     });
+
+    this.preload();
   }
   preload() {
-    const preloadArray = [Obstacle, Participant, TrafficLight, TrafficSignal];
+    EgoCar.preloading().then((res) => {
+      res.forEach((item) => {
+        if (item.status === "fulfilled") {
+          this.scene.add(item.value);
+        }
+      });
+    });
+    const preloadArray = [
+      EgoCar,
+      Obstacle,
+      Participant,
+      TrafficLight,
+      TrafficSignal
+    ];
     return Promise.allSettled(
       preloadArray.map((modelRender) => modelRender.preloading())
     );
-  }
-
-  registerModelRender() {
-    for (const instance of this.createRender) {
-      instance.topic.forEach((topic) => {
-        VIEW_WS.registerTargetMsg(topic, instance.update.bind(instance));
-      });
-    }
-    VIEW_WS.registerTargetMsg("conn_list", (data: { conn_list?: string[] }) => {
-      this.ips = data.conn_list || [];
-    });
   }
 
   initialize(canvasId: string) {
@@ -158,6 +160,11 @@ export default class Augmented extends Renderer {
   }
 
   dispose() {
+    this.createRender.forEach((target) => {
+      target.dispose();
+    });
+    this.createRender = [];
+    VIEW_WS.off("conn_list");
     this.controls?.removeEventListener("end", this.resetCamera);
     super.dispose();
   }

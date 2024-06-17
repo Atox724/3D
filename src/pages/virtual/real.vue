@@ -12,7 +12,7 @@
 <script lang="ts" setup>
 import { CANVAS_ID } from "@/constants";
 import { useMonitor } from "@/hooks/useMonitor";
-import { VirtualRender } from "@/renderer";
+import VirtualRender from "@/renderer/virtual";
 
 const renderer = new VirtualRender();
 

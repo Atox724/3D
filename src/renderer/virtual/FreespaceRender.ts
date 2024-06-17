@@ -2,14 +2,18 @@ import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
 import { Freespace, type FreespaceUpdateData } from "@/renderer/public";
+import { VIEW_WS } from "@/utils/websocket";
 
-import Target from "../target";
+import Render from "../render";
 
 const topic = VIRTUAL_RENDER_MAP.freespace;
 type TopicType = (typeof topic)[number];
 
 type FreespaceUpdateDataMap = {
-  [key in TopicType]: FreespaceUpdateData;
+  [key in TopicType]: {
+    topic: TopicType;
+    data: FreespaceUpdateData;
+  };
 };
 
 type CreateRenderMap = {
@@ -17,20 +21,30 @@ type CreateRenderMap = {
 };
 
 /** 车道 */
-export default class FreespaceRender extends Target {
+export default class FreespaceRender extends Render {
   topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.FREESPACE) {
-    super(scene, renderOrder);
+    super();
 
     this.createRender = {
       localmap_lane_lane: new Freespace(scene, renderOrder)
     };
+
+    let topic: TopicType;
+    for (topic in this.createRender) {
+      VIEW_WS.on(topic, (data: FreespaceUpdateDataMap[TopicType]) => {
+        this.createRender[data.topic].update(data.data);
+      });
+    }
   }
 
-  update<T extends TopicType>(data: FreespaceUpdateDataMap[T], topic: T) {
-    this.createRender[topic].update(data);
+  dispose(): void {
+    for (const topic in this.createRender) {
+      VIEW_WS.off(topic);
+    }
+    super.dispose();
   }
 }

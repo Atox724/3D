@@ -1,6 +1,8 @@
+import EventEmitter from "eventemitter3";
+
 import { formatMsg } from "@/utils";
 
-class WebsocketServer {
+class WebsocketServer extends EventEmitter {
   url: string;
   websocket: WebSocket | null;
   reconnectInterval?: number;
@@ -10,6 +12,8 @@ class WebsocketServer {
   target_msg_map: Record<string, Set<(data: any, topic: string) => void>>;
 
   constructor(url: string) {
+    super();
+
     this.url = url;
 
     this.websocket = null;
@@ -36,9 +40,7 @@ class WebsocketServer {
 
   onMessage: WebSocket["onmessage"] = (event) => {
     const data = formatMsg(event.data);
-    if (data) {
-      this.dispatchTargetMsg(data.topic, data.data);
-    }
+    if (data) this.emit(data.topic, data);
   };
 
   onOpen: WebSocket["onopen"] = () => {
@@ -73,23 +75,8 @@ class WebsocketServer {
     }, 1000);
   }
 
-  registerTargetMsg<T>(topic: string, callback: (data: T) => void) {
-    if (!this.target_msg_map[topic]) {
-      this.target_msg_map[topic] = new Set([callback]);
-    } else {
-      this.target_msg_map[topic].add(callback);
-    }
-  }
-
-  dispatchTargetMsg<T extends object>(topic: string, data: T) {
-    if (this.target_msg_map[topic]) {
-      this.target_msg_map[topic].forEach((callback) => {
-        callback(data, topic);
-      });
-    }
-  }
-
   dispose() {
+    this.removeAllListeners();
     this.isConnection = false;
     this.allow_reconnect = false;
     clearTimeout(this.reconnectInterval);

@@ -32,8 +32,6 @@ export interface UpdateData extends UpdateDataTool<TrafficLightData[]> {
 }
 
 export default class TrafficLight extends Target {
-  topic = [];
-
   static modelFiles: Record<TrafficLightType, string> = {
     TrafficLight1: TrafficLight1,
     TrafficLight2Vertical: TrafficLight2Vertical,

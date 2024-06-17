@@ -23,8 +23,6 @@ const polygonMaterial = new MeshLambertMaterial({
 });
 
 export default class Polygon extends Target {
-  topic = [];
-
   createModel(modelData: DataType) {
     const { contour, color, height } = modelData;
     const geometry = createGeometry(contour, height);

@@ -27,8 +27,6 @@ const textMaterial = new MeshBasicMaterial({
 });
 
 export default class Text extends Target {
-  topic = [];
-
   createModel(modelData: DataType) {
     const { fontSize, text } = modelData;
     const geometry = new TextGeometry(text, {

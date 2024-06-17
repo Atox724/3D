@@ -2,27 +2,31 @@ import type { Scene } from "three";
 
 import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
 import { Participant, type ParticipantUpdateData } from "@/renderer/public";
+import { VIEW_WS } from "@/utils/websocket";
 
-import Target from "../target";
+import Render from "../render";
 
 const topic = AUGMENTED_RENDER_MAP.participantModel;
 type TopicType = (typeof topic)[number];
 
 type ParticipantUpdateDataMap = {
-  [key in TopicType]: ParticipantUpdateData;
+  [key in TopicType]: {
+    topic: TopicType;
+    data: ParticipantUpdateData;
+  };
 };
 
 type CreateRenderMap = {
   [key in TopicType]: Participant;
 };
 
-export default class ParticipantRender extends Target {
+export default class ParticipantRender extends Render {
   topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene, renderOrder = AUGMENTED_RENDER_ORDER.PARTICIPANT) {
-    super(scene, renderOrder);
+    super();
 
     this.createRender = {
       "pilothmi_perception_traffic_participant_fusion object": new Participant(
@@ -30,9 +34,19 @@ export default class ParticipantRender extends Target {
         renderOrder
       )
     };
+
+    let topic: TopicType;
+    for (topic in this.createRender) {
+      VIEW_WS.on(topic, (data: ParticipantUpdateDataMap[TopicType]) => {
+        this.createRender[data.topic].update(data.data);
+      });
+    }
   }
 
-  update<T extends TopicType>(data: ParticipantUpdateDataMap[T], topic: T) {
-    this.createRender[topic].update(data);
+  dispose(): void {
+    for (const topic in this.createRender) {
+      VIEW_WS.off(topic);
+    }
+    super.dispose();
   }
 }

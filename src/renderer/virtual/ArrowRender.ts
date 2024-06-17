@@ -1,7 +1,8 @@
 import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
-import Target from "@/renderer/target";
+import Render from "@/renderer/render";
+import { VIEW_WS } from "@/utils/websocket";
 
 import { Arrow, type ArrowUpdateData } from "../public";
 
@@ -9,20 +10,28 @@ const topic = VIRTUAL_RENDER_MAP.arrow;
 type TopicType = (typeof topic)[number];
 
 type ArrowUpdateDataMap = {
-  [key in TopicType]: { arrow_array: ArrowUpdateData } | ArrowUpdateData;
+  [key in TopicType]:
+    | {
+        topic: TopicType;
+        data: { arrow_array: ArrowUpdateData };
+      }
+    | {
+        topic: TopicType;
+        data: ArrowUpdateData;
+      };
 };
 
 type CreateRenderMap = {
   [key in TopicType]: { arrow_array: Arrow } | Arrow;
 };
 
-export default class ArrowRender extends Target {
+export default class ArrowRender extends Render {
   topic: readonly TopicType[] = topic;
 
   createRender: CreateRenderMap;
 
   constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.ARROW) {
-    super(scene, renderOrder);
+    super();
 
     const createArrow = () => new Arrow(scene, renderOrder);
     const createArrowArray = () => ({
@@ -38,16 +47,31 @@ export default class ArrowRender extends Target {
       localization_global_history_trajectory: createArrow(),
       localization_local_history_trajectory: createArrow()
     };
+
+    let topic: TopicType;
+    for (topic in this.createRender) {
+      VIEW_WS.on(topic, (data: ArrowUpdateDataMap[TopicType]) => {
+        const renderItem = this.createRender[data.topic];
+        if ("arrow_array" in renderItem && "arrow_array" in data.data) {
+          renderItem.arrow_array.update(data.data.arrow_array);
+        } else if (
+          !("arrow_array" in renderItem) &&
+          !("arrow_array" in data.data)
+        ) {
+          renderItem.update(data.data);
+        } else {
+          console.error(
+            `[ArrowRender] topic: ${data.topic} is not match with data`
+          );
+        }
+      });
+    }
   }
 
-  update<T extends TopicType>(data: ArrowUpdateDataMap[T], topic: T) {
-    const renderItem = this.createRender[topic];
-    if ("arrow_array" in renderItem && "arrow_array" in data) {
-      renderItem.arrow_array.update(data.arrow_array);
-    } else if (!("arrow_array" in renderItem) && !("arrow_array" in data)) {
-      renderItem.update(data);
-    } else {
-      console.error(`[ArrowRender] topic: ${topic} is not match with data`);
+  dispose(): void {
+    for (const topic in this.createRender) {
+      VIEW_WS.off(topic);
     }
+    super.dispose();
   }
 }

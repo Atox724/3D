@@ -209,8 +209,6 @@ export interface UpdateData extends UpdateDataTool<TrafficSignalData[]> {
 }
 
 export default class TrafficSignal extends Target {
-  topic = [];
-
   static cacheModels = {} as Record<TrafficSignalType, Object3D>;
   static modelFiles: Record<TrafficSignalType, string> = {
     OvertakingProhibited: OvertakingProhibited,
