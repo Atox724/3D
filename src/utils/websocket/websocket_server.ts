@@ -9,7 +9,7 @@ class WebsocketServer extends EventEmitter {
   isConnection: boolean;
   allow_reconnect?: boolean;
 
-  target_msg_map: Record<string, Set<(data: any, topic: string) => void>>;
+  noSubscriptions = new Set<string | symbol>();
 
   constructor(url: string) {
     super();
@@ -18,8 +18,6 @@ class WebsocketServer extends EventEmitter {
 
     this.websocket = null;
     this.isConnection = false;
-
-    this.target_msg_map = {};
   }
 
   initialize() {
@@ -42,6 +40,18 @@ class WebsocketServer extends EventEmitter {
     const data = formatMsg(event.data);
     if (data) this.emit(data.topic, data);
   };
+
+  emit<T extends string | symbol>(event: T, ...args: any[]): boolean {
+    if (this.eventNames().indexOf(event) === -1) {
+      if (this.noSubscriptions.has(event)) return false;
+      this.noSubscriptions.add(event);
+      console.log(
+        `[WebsocketServer] topic: ${String(event)} is not subscribed`
+      );
+    }
+
+    return super.emit(event, ...args);
+  }
 
   onOpen: WebSocket["onopen"] = () => {
     clearTimeout(this.reconnectInterval);

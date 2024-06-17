@@ -56,7 +56,9 @@ export default class PolylineRender extends Render {
       localmap_lane_line: createLine(),
       localmap_stop_line: createLine(),
       localmap_speedbump: createLine(),
-      memdrive_ref_route_trajectory: createLine()
+      memdrive_ref_route_trajectory: createLine(),
+      // 旧接口
+      "hdmap Lane Lines": createLine()
     };
 
     let topic: TopicType;

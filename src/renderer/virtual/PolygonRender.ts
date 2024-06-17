@@ -35,7 +35,9 @@ export default class PolygonRender extends Render {
       perception_camera_front: createPolygonArray(),
       perception_camera_nv: createPolygonArray(),
       "perception_fusion /perception/fusion/object": createPolygonArray(),
-      perception_obstacle_fusion: createPolygonArray()
+      perception_obstacle_fusion: createPolygonArray(),
+      // 旧接口
+      perception_fusion_object: createPolygonArray()
     };
 
     let topic: TopicType;

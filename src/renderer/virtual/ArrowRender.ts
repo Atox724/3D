@@ -45,7 +45,9 @@ export default class ArrowRender extends Render {
       perception_camera_front: createArrowArray(),
       perception_camera_nv: createArrowArray(),
       localization_global_history_trajectory: createArrow(),
-      localization_local_history_trajectory: createArrow()
+      localization_local_history_trajectory: createArrow(),
+      // 旧接口
+      perception_fusion_object: createArrowArray()
     };
 
     let topic: TopicType;

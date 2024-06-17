@@ -30,7 +30,9 @@ export const VIRTUAL_RENDER_MAP = {
     "perception_fusion /perception/fusion/object",
     "localization_local_history_trajectory",
     "perception_camera_front",
-    "perception_camera_nv"
+    "perception_camera_nv",
+    // 旧接口
+    "perception_fusion_object"
   ],
   target: [
     "perception_radar_front",
@@ -38,11 +40,17 @@ export const VIRTUAL_RENDER_MAP = {
     "perception_obstacle_fusion",
     "perception_fusion /perception/fusion/object",
     "perception_camera_front",
-    "perception_camera_nv"
+    "perception_camera_nv",
+    // 旧接口
+    "perception_fusion_object"
   ],
   crosswalk: ["localmap_crosswalk"],
   ellipse: ["localization_position"],
-  freespace: ["localmap_lane_lane"],
+  freespace: [
+    "localmap_lane_lane",
+    // 旧接口
+    "hdmap Free Space"
+  ],
   fixedPolygon: [
     "perception_fusion perception_fusion_car_light",
     "perception_camera_nv perception_camera_car_light",
@@ -52,7 +60,9 @@ export const VIRTUAL_RENDER_MAP = {
     "perception_obstacle_fusion",
     "perception_fusion /perception/fusion/object",
     "perception_camera_front",
-    "perception_camera_nv"
+    "perception_camera_nv",
+    // 旧接口
+    "perception_fusion_object"
   ],
   polyline: [
     "dpc_lfp_planning_trajectory",
@@ -68,14 +78,20 @@ export const VIRTUAL_RENDER_MAP = {
     "localmap_lane_line",
     "localmap_stop_line",
     "localmap_speedbump",
-    "memdrive_ref_route_trajectory"
+    "memdrive_ref_route_trajectory",
+    // 旧接口
+    "hdmap Lane Lines"
   ],
   text_sprite: ["localmap_map_line_id", "localmap_map_lane_id"]
 } as const;
 
 export const AUGMENTED_RENDER_MAP = {
   crosswalk: ["pilothmi_cross_walk_local"],
-  freespace: ["pilothmi_lane_line"],
+  freespace: [
+    "pilothmi_lane_line",
+    // 旧接口
+    "hdmap Free Space"
+  ],
   obstacleModel: [
     "pilothmi_perception_obstacle_local",
     "pilothmi_perception_obstacle_fusion object"

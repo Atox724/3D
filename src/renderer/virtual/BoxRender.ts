@@ -44,7 +44,9 @@ export default class BoxRender extends Render {
       "perception_fusion /perception/fusion/object": createBoxTargetArray(),
       perception_radar_front: createBoxTargetArray(),
       perception_camera_front: createBoxTargetArray(),
-      perception_camera_nv: createBoxTargetArray()
+      perception_camera_nv: createBoxTargetArray(),
+      // 旧接口
+      perception_fusion_object: createBoxTargetArray()
     };
 
     let topic: TopicType;

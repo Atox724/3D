@@ -30,7 +30,9 @@ export default class FreespaceRender extends Render {
     super();
 
     this.createRender = {
-      localmap_lane_lane: new Freespace(scene, renderOrder)
+      localmap_lane_lane: new Freespace(scene, renderOrder),
+      // 旧接口
+      "hdmap Free Space": new Freespace(scene, renderOrder)
     };
 
     let topic: TopicType;

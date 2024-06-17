@@ -61,6 +61,7 @@ class Player {
     this.currentTime = timestamp;
 
     let playIndex = -1;
+    let playKey = 0;
     let accumulatedTime = 0;
 
     this.#playTimer = setInterval(() => {
@@ -68,7 +69,7 @@ class Player {
         this.playState = "loading";
         const key = getKeyByTime(this.currentTime || this.startTime);
         playIndex = [...this.#cacheData.keys()].indexOf(key);
-        return;
+        playKey = key;
       }
       if (this.endTime && this.currentTime >= this.endTime) {
         this.playState = "end";
@@ -82,7 +83,6 @@ class Player {
       accumulatedTime += DUMP_MS * this.#speed;
 
       this.playState = "play";
-      const datas = [...this.#cacheData.entries()];
       while (accumulatedTime >= DUMP_MS) {
         if (this.currentTime >= this.endTime) {
           this.playState = "end";
@@ -93,53 +93,57 @@ class Player {
           this.playState = "loading";
           return;
         }
-        const lines = datas[playIndex][1];
-        lines.forEach((line) => {
-          const colonIndex = line.indexOf(":");
-          if (colonIndex === -1) return;
-          const data = line.slice(colonIndex + 1);
-          if (data[0] === "{") {
-            const res = formatMsg(data);
-            if (res) {
-              postMsg({
-                type: "data",
-                data: res
-              });
-            }
-          } else {
-            const jsonData = atob(data);
-            try {
-              let data;
-              if (jsonData[0] === "{") {
-                data = jsonData;
-              } else {
-                const uint8buffer = new Uint8Array(jsonData.length);
-                for (let i = 0; i < jsonData.length; i++) {
-                  uint8buffer[i] = jsonData.charCodeAt(i);
-                }
-                data = uint8buffer.buffer;
-              }
-              data = formatMsg(data);
-              if (data) {
+        const lines = this.#cacheData.get(playKey);
+        if (lines) {
+          lines.forEach((line) => {
+            const colonIndex = line.indexOf(":");
+            if (colonIndex === -1) return;
+            const data = line.slice(colonIndex + 1);
+            if (data[0] === "{") {
+              const res = formatMsg(data);
+              if (res) {
                 postMsg({
                   type: "data",
-                  data
+                  data: res
                 });
               }
-            } catch (error) {
-              // console.log(error);
+            } else {
+              const jsonData = atob(data);
+              try {
+                let data;
+                if (jsonData[0] === "{") {
+                  data = jsonData;
+                } else {
+                  const uint8buffer = new Uint8Array(jsonData.length);
+                  for (let i = 0; i < jsonData.length; i++) {
+                    uint8buffer[i] = jsonData.charCodeAt(i);
+                  }
+                  data = uint8buffer.buffer;
+                }
+                data = formatMsg(data);
+                if (data) {
+                  postMsg({
+                    type: "data",
+                    data
+                  });
+                }
+              } catch (error) {
+                // console.log(error);
+              }
             }
-          }
-        });
-        const lastLine = lines[lines.length - 1];
-        const colonIndex = lastLine.indexOf(":");
-        const timestamp = +lastLine.slice(0, colonIndex);
-        this.currentTime = transform_MS(timestamp);
-        postMsg({
-          type: "timeupdate",
-          data: this.currentTime - this.startTime
-        });
-        playIndex++;
+          });
+          const lastLine = lines[lines.length - 1];
+          const colonIndex = lastLine.indexOf(":");
+          const timestamp = +lastLine.slice(0, colonIndex);
+          this.currentTime = transform_MS(timestamp);
+          postMsg({
+            type: "timeupdate",
+            data: this.currentTime - this.startTime
+          });
+          playIndex++;
+        }
+
+        playKey++;
         accumulatedTime -= DUMP_MS;
       }
     }, DUMP_MS);
