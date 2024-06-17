@@ -8,7 +8,7 @@
     </span>
     <el-slider
       v-model="progress"
-      :show-tooltip="false"
+      :format-tooltip="(val) => formatTime((val / 100) * total)"
       :style="{ '--loaded-width': `${loadProgress}%` }"
       class="progress-bar"
       @change="progressChange($event as number)"
@@ -111,12 +111,12 @@ watchEffect(() => {
 
 const progressInput = (val: number) => {
   progressChanging.value = true;
-  progress.value = val;
+  progress.value = Number.isNaN(val) ? 0 : val;
 };
 
 const progressChange = (val: number) => {
   progressChanging.value = false;
-  emits("durationChange", (val / 100) * props.total);
+  emits("durationChange", Number.isNaN(val) ? 0 : (val / 100) * props.total);
 };
 
 const playStateChange = () => {

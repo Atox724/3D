@@ -97,13 +97,12 @@ export default class Line extends Target {
           thickness: item.width
         });
         const mesh = new Mesh(geometry, material);
-        mesh.position.z = DepthContainer.getSubIndexDepth(
+        mesh.position.z = DepthContainer.getIndexDepth(
           this.renderOrder,
           index,
-          length,
-          0,
-          2
+          length
         );
+        mesh.position.z *= 1.1;
         group.add(mesh);
       }
       if (draw_solid_line) {
@@ -120,12 +119,10 @@ export default class Line extends Target {
           }
         );
         const mesh = new Mesh(geometry, line_style.mat);
-        mesh.position.z = DepthContainer.getSubIndexDepth(
+        mesh.position.z = DepthContainer.getIndexDepth(
           this.renderOrder,
           index,
-          length,
-          1,
-          2
+          length
         );
         group.add(mesh);
       }

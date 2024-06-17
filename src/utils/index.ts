@@ -8,7 +8,7 @@ const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 
 export function formatTime(ms: number): string {
-  if (ms <= 0) {
+  if (typeof ms !== "number" || Number.isNaN(ms) || ms <= 0) {
     return "00:00";
   }
   const hour = Math.floor(ms / HOUR);
