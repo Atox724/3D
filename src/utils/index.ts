@@ -1,3 +1,5 @@
+import type { TopicEvent } from "@/typings";
+
 import {
   ATTRIBUTE_MAP,
   ProtobufElementSchema
@@ -73,7 +75,9 @@ export function binarySearch<T>(arr: T[], comparator: (item: T) => number) {
   return start;
 }
 
-export function formatMsg(msg: string | ArrayBuffer | null) {
+export function formatMsg(
+  msg: string | ArrayBuffer | null
+): Parameters<TopicEvent[keyof TopicEvent]>[number] | undefined {
   if (typeof msg === "string") {
     const data = JSON.parse(msg);
     if (data.value?.value0) {

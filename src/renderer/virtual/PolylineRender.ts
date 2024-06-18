@@ -2,6 +2,7 @@ import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP } from "@/constants";
 import { Line, type LineUpdateData } from "@/renderer/public";
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Render from "../render";
@@ -25,6 +26,8 @@ type CreateRenderMap = {
 };
 
 export default class PolylineRender extends Render {
+  type: ALLRenderType = "polyline";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -56,7 +59,8 @@ export default class PolylineRender extends Render {
   }
 
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

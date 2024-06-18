@@ -30,6 +30,8 @@ export default class Arrow extends Target {
       const color = new Color(c.r, c.g, c.b);
       const arrow = new ArrowHelper(dir, origin, length, color);
       arrow.position.set(origin.x, origin.y, origin.z);
+      arrow.visible = this.enable;
+
       this.modelList.set(arrow.uuid, arrow);
       this.scene.add(arrow);
     });

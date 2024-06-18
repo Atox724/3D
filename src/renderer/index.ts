@@ -1,4 +1,5 @@
 import { ElMessage, type MessageHandler } from "element-plus";
+import EventEmitter from "eventemitter3";
 import { debounce } from "lodash-es";
 import {
   AmbientLight,
@@ -32,7 +33,10 @@ DefaultLoadingManager.onLoad = () => {
   }
 };
 
-export default abstract class Renderer {
+export default abstract class Renderer<
+  EventTypes extends EventEmitter.ValidEventTypes = string | symbol,
+  Context extends any = any
+> extends EventEmitter<EventTypes, Context> {
   initialized: boolean;
 
   renderer: WebGLRenderer;
@@ -47,6 +51,8 @@ export default abstract class Renderer {
   stats: Stats;
 
   constructor() {
+    super();
+
     this.initialized = false;
 
     this.renderer = new WebGLRenderer({

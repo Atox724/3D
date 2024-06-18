@@ -184,6 +184,7 @@ export default class Participant extends Target {
 
     model.position.set(position.x, position.y, position.z);
     model.rotation.set(rotation.x, rotation.y, rotation.z);
+    model.visible = this.enable;
   }
 
   update(data: UpdateData) {

@@ -44,7 +44,7 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 export type UpdateData = JSONData | BufferData;
 
 export default class Line extends Target {
-  trajectory_pos_z = DepthContainer.getDepth();
+  depth = DepthContainer.getDepth();
 
   update(data: UpdateData) {
     this.clear();
@@ -93,8 +93,9 @@ export default class Line extends Target {
           thickness: item.width
         });
         const mesh = new Mesh(geometry, material);
-        mesh.position.z = this.trajectory_pos_z + index * 0.005 + 0.03;
+        mesh.position.z = this.depth + index * 0.005 + 0.03;
         mesh.renderOrder = mesh.position.z;
+        mesh.visible = this.enable;
         this.modelList.set(mesh.uuid, mesh);
         this.scene.add(mesh);
       }
@@ -112,8 +113,9 @@ export default class Line extends Target {
           }
         );
         const mesh = new Mesh(geometry, line_style.mat);
-        mesh.position.z = this.trajectory_pos_z + index * 0.0005 - 0.001;
+        mesh.position.z = this.depth + index * 0.0005 - 0.001;
         mesh.renderOrder = mesh.position.z;
+        mesh.visible = this.enable;
         this.modelList.set(mesh.uuid, mesh);
         this.scene.add(mesh);
       }

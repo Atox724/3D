@@ -1,6 +1,7 @@
 import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP } from "@/constants";
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Polygon, type PolygonUpdateData } from "../public";
@@ -21,6 +22,8 @@ type CreateRenderMap = {
 };
 
 export default class PolygonRender extends Render {
+  type: ALLRenderType = "polygon";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -34,7 +37,8 @@ export default class PolygonRender extends Render {
     });
   }
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

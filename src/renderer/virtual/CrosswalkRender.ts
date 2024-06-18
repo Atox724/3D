@@ -1,6 +1,7 @@
 import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP } from "@/constants";
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Crosswalk, type CrosswalkUpdateData } from "../public";
@@ -21,6 +22,8 @@ type CreateRenderMap = {
 };
 
 export default class CrosswalkRender extends Render {
+  type: ALLRenderType = "crosswalk";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -35,7 +38,8 @@ export default class CrosswalkRender extends Render {
   }
 
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

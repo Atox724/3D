@@ -1,3 +1,5 @@
+import { mergeWith, uniq } from "lodash-es";
+
 export const CANVAS_ID = "canvas_id";
 
 export const HZ = 60;
@@ -62,8 +64,11 @@ export const VIRTUAL_RENDER_MAP = {
     // 旧接口
     "hdmap Lane Lines"
   ],
-  text_sprite: ["localmap_map_line_id", "localmap_map_lane_id"]
+  text_sprite: ["localmap_map_line_id", "localmap_map_lane_id"],
+  car_pose: ["car_pose"]
 } as const;
+
+export const VIRTUAL_RENDER_TOPICS = Object.values(VIRTUAL_RENDER_MAP).flat();
 
 export const AUGMENTED_RENDER_MAP = {
   crosswalk: ["pilothmi_cross_walk_local"],
@@ -88,6 +93,9 @@ export const AUGMENTED_RENDER_MAP = {
   roadMarkerModel: ["localmap_road_marker"],
   poleModel: ["localmap_pole"]
 } as const;
+
+export const AUGMENTED_RENDER_TOPICS =
+  Object.values(AUGMENTED_RENDER_MAP).flat();
 
 export const OTHER_INFO_MAP = {
   topicInfo: ["/perception/fusion/object", "/perception/front_radar/object"],
@@ -126,5 +134,29 @@ export const OTHER_INFO_MAP = {
   pilot_image_overlay: ["pilothmi_image_overlay"],
   pilotDrive: ["pilothmi_drive_info"],
   statusInfo: ["pilothmi_vehicle_report", "pilothmi_envm_info"],
-  Weather: ["pilothmi_perception_envodd"]
+  Weather: ["pilothmi_perception_envodd"],
+  conn_list: ["conn_list"]
 } as const;
+
+export const OTHER_INFO_TOPICS = Object.values(OTHER_INFO_MAP).flat();
+
+// FIXME: mergeWith会改变原对象, 导致VIRTUAL_RENDER_MAP会包含其他topic
+export const ALL_RENDER_MAP = mergeWith(
+  VIRTUAL_RENDER_MAP,
+  AUGMENTED_RENDER_MAP,
+  OTHER_INFO_MAP,
+  (obj, src) => {
+    if (!Array.isArray(src)) return;
+    if (Array.isArray(obj)) {
+      return uniq([...obj, ...src]);
+    } else if (obj === undefined) {
+      return src;
+    }
+  }
+);
+
+export const ALL_TOPICS = uniq([
+  ...VIRTUAL_RENDER_TOPICS,
+  ...AUGMENTED_RENDER_TOPICS,
+  ...OTHER_INFO_TOPICS
+]);

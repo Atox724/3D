@@ -66,6 +66,7 @@ export default class Box extends Target {
     const { yaw, x, y, length, width, height, color } = modelData;
     model.rotation.z = yaw;
     model.position.set(x, y, height / 2);
+    model.visible = this.enable;
 
     const boxMeshNew = model.getObjectByName("box");
     if (boxMeshNew instanceof Mesh) {

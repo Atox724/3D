@@ -44,6 +44,7 @@ export default class Text extends Target {
     const { position, fontSize } = modelData;
     model.position.set(position.x, position.y, 0);
     model.scale.setScalar(fontSize);
+    model.visible = this.enable;
   }
 
   update(data: UpdateData) {

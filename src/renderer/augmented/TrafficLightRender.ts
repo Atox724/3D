@@ -2,6 +2,7 @@ import type { Scene } from "three";
 
 import { AUGMENTED_RENDER_MAP } from "@/constants";
 import { TrafficLight, type TrafficLightUpdateData } from "@/renderer/public";
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Render from "../render";
@@ -21,6 +22,8 @@ type CreateRenderMap = {
 };
 
 export default class TrafficLightRender extends Render {
+  type: ALLRenderType = "trafficLightModel";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -35,7 +38,8 @@ export default class TrafficLightRender extends Render {
   }
 
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

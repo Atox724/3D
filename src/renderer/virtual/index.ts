@@ -8,6 +8,7 @@ import {
   Vector3
 } from "three";
 
+import type { EnableEvent } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Renderer from "..";
@@ -22,7 +23,7 @@ import PolygonRender from "./PolygonRender";
 import PolylineRender from "./PolylineRender";
 import TextRender from "./TextRender";
 
-export default class Virtual extends Renderer {
+export default class Virtual extends Renderer<EnableEvent> {
   createRender: Render[];
 
   ips: string[] = [];
@@ -36,11 +37,11 @@ export default class Virtual extends Renderer {
       new EgoCarRender(this.scene),
       new FreespaceRender(this.scene),
       new CrosswalkRender(this.scene),
+      new PolylineRender(this.scene),
+      new TextRender(this.scene),
       new ArrowRender(this.scene),
       new BoxRender(this.scene),
-      new PolylineRender(this.scene),
-      new PolygonRender(this.scene),
-      new TextRender(this.scene)
+      new PolygonRender(this.scene)
     ];
 
     let updatedPos = false;
@@ -64,8 +65,16 @@ export default class Virtual extends Renderer {
       }
     );
 
-    VIEW_WS.on("conn_list", (data: { conn_list?: string[] }) => {
-      this.ips = data.conn_list || [];
+    VIEW_WS.on("conn_list", (data) => {
+      this.ips = (data as unknown as { conn_list?: string[] }).conn_list || [];
+    });
+
+    this.createRender.forEach((render) => {
+      this.on("enable", (data) => {
+        if (render.type === data.type) {
+          render.createRender[data.topic]?.setEnable(data.enable);
+        }
+      });
     });
 
     window.addEventListener("keydown", this.onKeyDown);

@@ -55,6 +55,7 @@ export default class Polygon extends Target {
     //   const textmaterial = textMesh.material as THREE.MeshBasicMaterial;
     //   textmaterial.color.setRGB(color.r, color.g, color.b);
     // }
+    model.visible = this.enable;
   }
 
   update(data: UpdateData) {

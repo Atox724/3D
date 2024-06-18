@@ -354,6 +354,7 @@ export default class TrafficSignal extends Target {
     const { position, rotation } = modelData;
     model.position.set(position.x, position.y, position.z);
     model.rotation.set(rotation.x, rotation.y, rotation.z);
+    model.visible = this.enable;
   }
 
   update(data: UpdateData) {

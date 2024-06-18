@@ -1,22 +1,18 @@
+import type { ALLRenderType, ALLTopicType } from "@/typings";
+
 import Target from "./target";
 
 export default abstract class Render {
-  abstract createRender: Record<string, Record<string, Target> | Target>;
+  abstract type: ALLRenderType;
+
+  abstract createRender: {
+    [key in ALLTopicType]?: Target;
+  };
 
   dispose() {
-    for (const topic in this.createRender) {
-      const renderItem = this.createRender[topic];
-
-      if (renderItem instanceof Target) {
-        renderItem.dispose();
-      } else {
-        for (const key in renderItem) {
-          const target = renderItem[key];
-          if (target instanceof Target) {
-            target.dispose();
-          }
-        }
-      }
+    let topic: keyof typeof this.createRender;
+    for (topic in this.createRender) {
+      this.createRender[topic]?.dispose();
     }
     this.createRender = {};
   }

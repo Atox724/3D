@@ -1,3 +1,5 @@
+import type { ALL_RENDER_MAP, ALL_TOPICS } from "@/constants";
+
 export type MaybeArray<T> = T | T[];
 export type PlayState = "loading" | "play" | "pause" | "end";
 
@@ -45,8 +47,8 @@ export namespace EventType {
   export interface DataType {
     type: "data";
     data: {
-      topic: string;
-      data: any[];
+      topic: ALLTopicType;
+      data: any;
     };
   }
 
@@ -152,3 +154,19 @@ export interface UpdateDataTool<T> {
   timestamp_nsec: number;
   topic: string;
 }
+
+export type ALLRenderType = keyof typeof ALL_RENDER_MAP;
+
+export type ALLTopicType = (typeof ALL_TOPICS)[number];
+
+export type TopicEvent = {
+  [E in ALLTopicType]: (data: { topic: E; data: any }) => void;
+};
+
+export type EnableEvent = {
+  enable: (data: {
+    type: ALLRenderType;
+    topic: ALLTopicType;
+    enable: boolean;
+  }) => void;
+};

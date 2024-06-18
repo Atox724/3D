@@ -2,6 +2,7 @@ import type { Scene } from "three";
 
 import { AUGMENTED_RENDER_MAP } from "@/constants";
 import { Obstacle, type ObstacleUpdateData } from "@/renderer/public";
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Render from "../render";
@@ -21,6 +22,8 @@ type CreateRenderMap = {
 };
 
 export default class ObstacleRender extends Render {
+  type: ALLRenderType = "obstacleModel";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -35,7 +38,8 @@ export default class ObstacleRender extends Render {
   }
 
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

@@ -2,6 +2,7 @@ import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP } from "@/constants";
 import Render from "@/renderer/render";
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Box, type BoxUpdateData } from "../public";
@@ -20,6 +21,8 @@ type CreateRenderMap = {
 };
 
 export default class BoxRender extends Render {
+  type: ALLRenderType = "target";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -42,7 +45,8 @@ export default class BoxRender extends Render {
   }
 
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

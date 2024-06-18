@@ -1,5 +1,4 @@
 import {
-  CircleGeometry,
   CylinderGeometry,
   DoubleSide,
   Mesh,
@@ -9,7 +8,6 @@ import {
 } from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
-import { DepthTester } from "@/utils/three/depthTester";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Renderer from "..";
@@ -35,17 +33,17 @@ export default class Augmented extends Renderer {
 
     this.createRender = [
       new EgoCarRender(this.scene),
+      new FreespaceRender(this.scene),
+      new CrosswalkRender(this.scene),
+      new PolylineRender(this.scene),
       new ObstacleRender(this.scene),
       new ParticipantRender(this.scene),
-      new FreespaceRender(this.scene),
       new TrafficLightRender(this.scene),
-      new TrafficSignalRender(this.scene),
-      new CrosswalkRender(this.scene),
-      new PolylineRender(this.scene)
+      new TrafficSignalRender(this.scene)
     ];
 
-    VIEW_WS.on("conn_list", (data: { conn_list?: string[] }) => {
-      this.ips = data.conn_list || [];
+    VIEW_WS.on("conn_list", (data) => {
+      this.ips = (data as unknown as { conn_list?: string[] }).conn_list || [];
     });
 
     this.preload();
@@ -93,12 +91,10 @@ export default class Augmented extends Renderer {
     const geometry = new PlaneGeometry(500, 500);
     const material = new MeshPhongMaterial({
       color: 0x525862,
-      side: DoubleSide,
-      transparent: true,
-      opacity: 0.5
+      side: DoubleSide
     });
     const plane = new Mesh(geometry, material);
-    plane.position.z = Math.min(DepthTester.BASE_DEPTH * 0.8, 0.005);
+    plane.position.z = -0.01;
 
     const reflector = new Reflector(geometry, {
       textureWidth: window.innerWidth * window.devicePixelRatio,
@@ -116,17 +112,10 @@ export default class Augmented extends Renderer {
       side: DoubleSide
     });
     const cylinder = new Mesh(geometry, material);
-    cylinder.position.z = geometry.parameters.height / 2;
+    cylinder.position.z = geometry.parameters.height / 2 - 0.01;
     cylinder.rotation.x = Math.PI / 2;
 
-    const reflector = new Reflector(new CircleGeometry(size / 2), {
-      textureWidth: window.innerWidth * window.devicePixelRatio,
-      textureHeight: window.innerHeight * window.devicePixelRatio
-    });
-
-    reflector.position.z = Math.min(DepthTester.BASE_DEPTH * 0.8, 0.005);
-
-    this.scene.add(cylinder, reflector);
+    this.scene.add(cylinder);
   }
 
   dispose() {

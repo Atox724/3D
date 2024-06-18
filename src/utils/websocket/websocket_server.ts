@@ -1,8 +1,9 @@
 import EventEmitter from "eventemitter3";
 
+import type { TopicEvent } from "@/typings";
 import { formatMsg } from "@/utils";
 
-class WebsocketServer extends EventEmitter {
+class WebsocketServer extends EventEmitter<TopicEvent> {
   url: string;
   websocket: WebSocket | null;
   reconnectInterval?: number;
@@ -41,16 +42,16 @@ class WebsocketServer extends EventEmitter {
     if (data) this.emit(data.topic, data);
   };
 
-  emit<T extends string | symbol>(event: T, ...args: any[]): boolean {
+  emit(event: keyof TopicEvent, data: any): boolean {
     if (this.eventNames().indexOf(event) === -1) {
       if (this.noSubscriptions.has(event)) return false;
       this.noSubscriptions.add(event);
       console.log(
-        `[WebsocketServer] topic: ${String(event)} is not subscribed`
+        `[WebsocketServer] topic: \x1b[1;33m${String(event)}\x1b[0m is not subscribed`
       );
     }
 
-    return super.emit(event, ...args);
+    return super.emit(event, data);
   }
 
   onOpen: WebSocket["onopen"] = () => {

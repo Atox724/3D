@@ -2,6 +2,7 @@ import type { Scene } from "three";
 
 import { VIRTUAL_RENDER_MAP } from "@/constants";
 import Render from "@/renderer/render";
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Arrow, type ArrowUpdateData } from "../public";
@@ -22,6 +23,8 @@ type CreateRenderMap = {
 };
 
 export default class ArrowRender extends Render {
+  type: ALLRenderType = "arrow";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -47,7 +50,8 @@ export default class ArrowRender extends Render {
   }
 
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

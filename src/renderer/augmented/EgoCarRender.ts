@@ -1,5 +1,6 @@
 import type { Scene } from "three";
 
+import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { EgoCar, type EgoCarUpdateData } from "../public";
@@ -20,6 +21,8 @@ type CreateRenderMap = {
 };
 
 export default class EgoCarRender extends Render {
+  type: ALLRenderType = "car_pose";
+
   createRender = {} as CreateRenderMap;
 
   constructor(scene: Scene) {
@@ -34,7 +37,8 @@ export default class EgoCarRender extends Render {
   }
 
   dispose(): void {
-    for (const topic in this.createRender) {
+    let topic: TopicType;
+    for (topic in this.createRender) {
       VIEW_WS.off(topic);
     }
     super.dispose();

@@ -12,6 +12,7 @@ import {
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+import DepthContainer from "@/utils/three/depthTester";
 
 interface CrosswalkData {
   color: { r: number; g: number; b: number };
@@ -29,6 +30,8 @@ export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
 }
 
 export default class Crosswalk extends Target {
+  depth = DepthContainer.getDepth();
+
   update(data: UpdateData) {
     this.clear();
     const length = data.data.length;
@@ -78,8 +81,10 @@ export default class Crosswalk extends Target {
         }
       });
       const shapeMesh = new Mesh(shapeGeo, shapeMat);
-      shapeMesh.position.set(position.x, position.y, position.z);
+      shapeMesh.position.set(position.x, position.y, this.depth);
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
+      shapeMesh.renderOrder = this.depth;
+      shapeMesh.visible = this.enable;
       this.modelList.set(id, shapeMesh);
       this.scene.add(shapeMesh);
     });
