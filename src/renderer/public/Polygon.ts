@@ -30,7 +30,6 @@ export default class Polygon extends Target {
     material.color.setRGB(color.r, color.g, color.b);
     const polygonMesh = new Mesh(geometry, material);
     const group = new Group();
-    group.renderOrder = this.renderOrder;
     group.add(polygonMesh);
 
     // if (show_id) {

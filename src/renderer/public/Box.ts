@@ -11,7 +11,6 @@ import {
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 
 interface DataType {
   color: { r: number; g: number; b: number };
@@ -44,7 +43,6 @@ export default class Box extends Target {
   createModel(modelData: DataType) {
     const { color, type } = modelData;
     const group = new Group();
-    group.renderOrder = this.renderOrder;
     const boxMeshMaterial = boxMaterial.clone();
     boxMeshMaterial.transparent = true;
     boxMeshMaterial.opacity = !type ? 0.8 : 0.15;
@@ -67,11 +65,7 @@ export default class Box extends Target {
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { yaw, x, y, length, width, height, color } = modelData;
     model.rotation.z = yaw;
-    model.position.set(
-      x,
-      y,
-      height / 2 + DepthContainer.getDepth(this.renderOrder)
-    );
+    model.position.set(x, y, height / 2);
 
     const boxMeshNew = model.getObjectByName("box");
     if (boxMeshNew instanceof Mesh) {

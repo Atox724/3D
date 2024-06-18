@@ -1,4 +1,4 @@
-import type Renderer from "@/renderer/renderer";
+import type Renderer from "@/renderer";
 
 export const useMonitor = (renderer: Renderer) => {
   const fps = ref(0);

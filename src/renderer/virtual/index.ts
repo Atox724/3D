@@ -1,4 +1,3 @@
-import { debounce } from "lodash-es";
 import {
   DoubleSide,
   GridHelper,
@@ -8,12 +7,6 @@ import {
   PlaneGeometry,
   Vector3
 } from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import {
-  Easing,
-  Group as TweenGroup,
-  Tween
-} from "three/examples/jsm/libs/tween.module";
 
 import { VIEW_WS } from "@/utils/websocket";
 
@@ -34,8 +27,6 @@ export default class Virtual extends Renderer {
 
   ips: string[] = [];
 
-  controls?: OrbitControls;
-
   ground = new Group();
 
   constructor() {
@@ -53,6 +44,7 @@ export default class Virtual extends Renderer {
     ];
 
     let updatedPos = false;
+
     VIEW_WS.on(
       "car_pose",
       (data: { topic: "car_pose"; data: EgoCarUpdateData }) => {
@@ -62,8 +54,13 @@ export default class Virtual extends Renderer {
           this.ground.rotation.z = rotation.z;
           updatedPos = true;
         }
-        this.position.copy(position);
-        this.rotation.set(rotation.x, rotation.y, rotation.z);
+        const newTarget = new Vector3().copy(position);
+        const offset = newTarget.clone().sub(this.controls.target);
+        this.controls.target.copy(newTarget);
+        this.camera.position.add(offset);
+        this.camera.quaternion.set(rotation.x, rotation.y, rotation.z, 1);
+
+        this.updateControls();
       }
     );
 
@@ -88,41 +85,9 @@ export default class Virtual extends Renderer {
 
   initialize(canvasId: string) {
     super.initialize(canvasId);
-    this.createControler();
+    this.updateControler();
     this.setScene();
   }
-
-  resetCamera = debounce(() => {
-    if (!this.controls) return;
-    const group = new TweenGroup();
-    const tween1 = new Tween(this.controls.object.position);
-    tween1.to(this.controls.position0).easing(Easing.Quadratic.InOut).start();
-
-    const tween2 = new Tween(this.controls.target);
-    tween2
-      .to(this.controls.target0)
-      .easing(Easing.Quadratic.InOut)
-      .onStart(() => {
-        if (!this.controls) return;
-        this.controls.enabled = false;
-      })
-      .onComplete(() => {
-        if (!this.controls) return;
-        this.controls.enabled = true;
-      })
-      .start();
-    group.add(tween1);
-    group.add(tween2);
-    let rafId: number;
-    const tweenAnimate = () => {
-      rafId = requestAnimationFrame(() => {
-        const playing = group.update();
-        if (playing) tweenAnimate();
-        else cancelAnimationFrame(rafId);
-      });
-    };
-    tweenAnimate();
-  }, 2500);
 
   onKeyDown = (e: KeyboardEvent) => {
     if (!e.ctrlKey) return;
@@ -132,13 +97,9 @@ export default class Virtual extends Renderer {
     }
   };
 
-  createControler() {
-    this.controls = new OrbitControls(
-      this.camera.clone(),
-      this.renderer.domElement
-    );
+  updateControler() {
     this.controls.target.set(3, 0, 6);
-    this.controls.saveState();
+    this.updateControls();
   }
 
   setScene() {
@@ -152,7 +113,7 @@ export default class Virtual extends Renderer {
       side: DoubleSide
     });
     const ground = new Mesh(geometry, material);
-    ground.position.z = -0.01;
+    ground.position.z = -0.3;
     this.ground.add(ground, gridHelper);
     this.scene.add(this.ground);
   }

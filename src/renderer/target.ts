@@ -9,8 +9,6 @@ import {
 export default abstract class Target {
   scene: Scene;
 
-  renderOrder: number;
-
   #enable = true;
   get enable() {
     return this.#enable;
@@ -25,9 +23,8 @@ export default abstract class Target {
 
   modelList: Map<string | number, Object3D>;
 
-  constructor(scene: Scene, renderOrder: number) {
+  constructor(scene: Scene) {
     this.scene = scene;
-    this.renderOrder = renderOrder;
     this.enable = true;
 
     this.modelList = new Map();

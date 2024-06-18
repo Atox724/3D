@@ -369,7 +369,6 @@ export default class TrafficSignal extends Target {
         this.setModelAttributes(model, modelData);
       } else if (TrafficSignal.cacheModels[typeName]) {
         const newModel = TrafficSignal.cacheModels[typeName].clone();
-        newModel.renderOrder = this.renderOrder;
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
         this.modelList.set(id, newModel);

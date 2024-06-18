@@ -1,73 +1,49 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
+import { VIRTUAL_RENDER_MAP } from "@/constants";
 import Render from "@/renderer/render";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Arrow, type ArrowUpdateData } from "../public";
 
-const topic = VIRTUAL_RENDER_MAP.arrow;
-type TopicType = (typeof topic)[number];
+const topics = VIRTUAL_RENDER_MAP.arrow;
+type TopicType = (typeof topics)[number];
 
 type ArrowUpdateDataMap = {
-  [key in TopicType]:
-    | {
-        topic: TopicType;
-        data: { arrow_array: ArrowUpdateData };
-      }
-    | {
-        topic: TopicType;
-        data: ArrowUpdateData;
-      };
+  [key in TopicType]: key extends
+    | "localization_global_history_trajectory"
+    | "localization_local_history_trajectory"
+    ? { topic: key; data: ArrowUpdateData }
+    : { topic: key; data: { arrow_array: ArrowUpdateData } };
 };
 
 type CreateRenderMap = {
-  [key in TopicType]: { arrow_array: Arrow } | Arrow;
+  [key in TopicType]: Arrow;
 };
 
 export default class ArrowRender extends Render {
-  topic: readonly TopicType[] = topic;
+  createRender = {} as CreateRenderMap;
 
-  createRender: CreateRenderMap;
-
-  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.ARROW) {
+  constructor(scene: Scene) {
     super();
 
-    const createArrow = () => new Arrow(scene, renderOrder);
-    const createArrowArray = () => ({
-      arrow_array: new Arrow(scene, renderOrder)
-    });
-
-    this.createRender = {
-      perception_obstacle_fusion: createArrowArray(),
-      "perception_fusion /perception/fusion/object": createArrowArray(),
-      perception_radar_front: createArrowArray(),
-      perception_camera_front: createArrowArray(),
-      perception_camera_nv: createArrowArray(),
-      localization_global_history_trajectory: createArrow(),
-      localization_local_history_trajectory: createArrow(),
-      // 旧接口
-      perception_fusion_object: createArrowArray()
-    };
-
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.on(topic, (data: ArrowUpdateDataMap[TopicType]) => {
-        const renderItem = this.createRender[data.topic];
-        if ("arrow_array" in renderItem && "arrow_array" in data.data) {
-          renderItem.arrow_array.update(data.data.arrow_array);
-        } else if (
-          !("arrow_array" in renderItem) &&
-          !("arrow_array" in data.data)
-        ) {
+    topics.forEach((topic) => {
+      this.createRender[topic] = new Arrow(scene);
+      if (
+        topic === "localization_global_history_trajectory" ||
+        topic === "localization_local_history_trajectory"
+      ) {
+        VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {
+          const renderItem = this.createRender[data.topic];
           renderItem.update(data.data);
-        } else {
-          console.error(
-            `[ArrowRender] topic: ${data.topic} is not match with data`
-          );
-        }
-      });
-    }
+        });
+      } else {
+        VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {
+          const renderItem = this.createRender[data.topic];
+          renderItem.update(data.data.arrow_array);
+        });
+      }
+    });
   }
 
   dispose(): void {

@@ -5,7 +5,6 @@ import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 
 interface DataType {
   fontSize: number;
@@ -37,18 +36,13 @@ export default class Text extends Target {
     geometry.center();
     const material = textMaterial.clone();
     const model = new Mesh(geometry, material);
-    model.renderOrder = this.renderOrder;
     model.rotation.z = -Math.PI / 2;
     return model;
   }
 
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, fontSize } = modelData;
-    model.position.set(
-      position.x,
-      position.y,
-      DepthContainer.getDepth(this.renderOrder)
-    );
+    model.position.set(position.x, position.y, 0);
     model.scale.setScalar(fontSize);
   }
 

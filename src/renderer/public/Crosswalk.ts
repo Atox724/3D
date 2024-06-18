@@ -1,6 +1,7 @@
 import {
   BufferAttribute,
   Color,
+  DoubleSide,
   Mesh,
   ShaderMaterial,
   Shape,
@@ -11,7 +12,6 @@ import {
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 
 interface CrosswalkData {
   color: { r: number; g: number; b: number };
@@ -33,7 +33,7 @@ export default class Crosswalk extends Target {
     this.clear();
     const length = data.data.length;
     if (!length) return;
-    data.data.forEach((item, index) => {
+    data.data.forEach((item) => {
       const { id, shape, position, rotation, color } = item;
       const points = shape.map((point) => new Vector2(point.x, point.y));
       const side1 = new Vector2().subVectors(points[0], points[1]);
@@ -71,21 +71,14 @@ export default class Crosswalk extends Target {
             gl_FragColor = vec4(customColor, strength); // 使用自定义颜色和透明度
           }
         `,
+        side: DoubleSide,
         transparent: true,
         uniforms: {
           customColor: { value: new Color(color.r, color.g, color.b) } // 设置默认自定义颜色
         }
       });
       const shapeMesh = new Mesh(shapeGeo, shapeMat);
-      shapeMesh.renderOrder = this.renderOrder;
-      shapeMesh.position.set(
-        position.x,
-        position.y,
-        Math.max(
-          position.z,
-          DepthContainer.getIndexDepth(this.renderOrder, index, length)
-        )
-      );
+      shapeMesh.position.set(position.x, position.y, position.z);
       shapeMesh.rotation.set(rotation.x, rotation.y, rotation.z);
       this.modelList.set(id, shapeMesh);
       this.scene.add(shapeMesh);

@@ -1,4 +1,4 @@
-import type { Object3D, Scene } from "three";
+import type { Object3D } from "three";
 
 import { EgoCar as EgoCarModel } from "@/assets/model";
 import Target from "@/renderer/target";
@@ -50,10 +50,6 @@ export default class EgoCar extends Target {
     }
   }
 
-  constructor(scene: Scene, renderOrder = 0) {
-    super(scene, renderOrder);
-  }
-
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation } = modelData;
     model.position.set(position.x, position.y, position.z);
@@ -68,7 +64,6 @@ export default class EgoCar extends Target {
         this.setModelAttributes(model, item);
       } else if (EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR]) {
         const newModel = EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR];
-        newModel.renderOrder = this.renderOrder;
         this.setModelAttributes(newModel, item);
         // this.scene.add(newModel);
         this.modelList.set(EgoCarTypeEnum.EGO_CAR, newModel);

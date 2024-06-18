@@ -2,7 +2,6 @@ import { ArrowHelper, Color, Vector3 } from "three";
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 
 interface DataType {
   id?: string;
@@ -20,7 +19,7 @@ export default class Arrow extends Target {
     this.clear();
     const length = data.data.length;
     if (!length) return;
-    data.data.forEach((modelData, index) => {
+    data.data.forEach((modelData) => {
       const { origin: o, end_point, color: c } = modelData;
       const origin = new Vector3(o.x, o.y, o.z);
       const end = new Vector3(end_point.x, end_point.y, end_point.z);
@@ -30,15 +29,7 @@ export default class Arrow extends Target {
       const dir = sub.normalize();
       const color = new Color(c.r, c.g, c.b);
       const arrow = new ArrowHelper(dir, origin, length, color);
-      arrow.renderOrder = this.renderOrder;
-      arrow.position.set(
-        origin.x,
-        origin.y,
-        Math.max(
-          origin.z,
-          DepthContainer.getIndexDepth(this.renderOrder, index, length)
-        )
-      );
+      arrow.position.set(origin.x, origin.y, origin.z);
       this.modelList.set(arrow.uuid, arrow);
       this.scene.add(arrow);
     });

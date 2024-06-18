@@ -1,7 +1,6 @@
 import Target from "./target";
 
 export default abstract class Render {
-  abstract topic: readonly string[];
   abstract createRender: Record<string, Record<string, Target> | Target>;
 
   dispose() {

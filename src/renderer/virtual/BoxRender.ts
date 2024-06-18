@@ -1,72 +1,44 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP, VIRTUAL_RENDER_ORDER } from "@/constants";
+import { VIRTUAL_RENDER_MAP } from "@/constants";
 import Render from "@/renderer/render";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Box, type BoxUpdateData } from "../public";
 
-const topic = VIRTUAL_RENDER_MAP.target;
-type TopicType = (typeof topic)[number];
+const topics = VIRTUAL_RENDER_MAP.target;
+type TopicType = (typeof topics)[number];
 
-type BoxData = {
-  [key in TopicType]:
-    | {
-        topic: TopicType;
-        data: { box_array: BoxUpdateData };
-      }
-    | {
-        topic: TopicType;
-        data: { box_target_array: BoxUpdateData };
-      };
+type BoxUpdateDataMap = {
+  [key in TopicType]: key extends "dpc_planning_debug_info"
+    ? { topic: key; data: { box_array: BoxUpdateData } }
+    : { topic: key; data: { box_target_array: BoxUpdateData } };
 };
 
 type CreateRenderMap = {
-  [key in TopicType]: { box_array: Box } | { box_target_array: Box };
+  [key in TopicType]: Box;
 };
 
 export default class BoxRender extends Render {
-  topic: readonly TopicType[] = topic;
+  createRender = {} as CreateRenderMap;
 
-  createRender: CreateRenderMap;
-
-  constructor(scene: Scene, renderOrder = VIRTUAL_RENDER_ORDER.BOX) {
+  constructor(scene: Scene) {
     super();
 
-    const createBoxArray = () => ({ box_array: new Box(scene, renderOrder) });
-    const createBoxTargetArray = () => ({
-      box_target_array: new Box(scene, renderOrder)
+    topics.forEach((topic) => {
+      this.createRender[topic] = new Box(scene);
+      if (topic === "dpc_planning_debug_info") {
+        VIEW_WS.on(topic, (data: BoxUpdateDataMap[typeof topic]) => {
+          const renderItem = this.createRender[data.topic];
+          renderItem.update(data.data.box_array);
+        });
+      } else {
+        VIEW_WS.on(topic, (data: BoxUpdateDataMap[typeof topic]) => {
+          const renderItem = this.createRender[data.topic];
+          renderItem.update(data.data.box_target_array);
+        });
+      }
     });
-
-    this.createRender = {
-      dpc_planning_debug_info: createBoxArray(),
-      perception_obstacle_fusion: createBoxTargetArray(),
-      "perception_fusion /perception/fusion/object": createBoxTargetArray(),
-      perception_radar_front: createBoxTargetArray(),
-      perception_camera_front: createBoxTargetArray(),
-      perception_camera_nv: createBoxTargetArray(),
-      // 旧接口
-      perception_fusion_object: createBoxTargetArray()
-    };
-
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.on(topic, (data: BoxData[TopicType]) => {
-        const renderItem = this.createRender[data.topic];
-        if ("box_array" in renderItem && "box_array" in data.data) {
-          renderItem.box_array.update(data.data.box_array);
-        } else if (
-          "box_target_array" in renderItem &&
-          "box_target_array" in data.data
-        ) {
-          renderItem.box_target_array.update(data.data.box_target_array);
-        } else {
-          console.error(
-            `[BoxRender] topic: ${data.topic} is not match with data`
-          );
-        }
-      });
-    }
   }
 
   dispose(): void {

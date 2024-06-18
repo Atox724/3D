@@ -1,4 +1,4 @@
-import { Color, Group, Mesh, ShaderMaterial } from "three";
+import { Color, Mesh, ShaderMaterial } from "three";
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
@@ -44,6 +44,8 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 export type UpdateData = JSONData | BufferData;
 
 export default class Line extends Target {
+  trajectory_pos_z = DepthContainer.getDepth();
+
   update(data: UpdateData) {
     this.clear();
     const length = data.data.length;
@@ -75,33 +77,26 @@ export default class Line extends Target {
       } else {
         point = item.point;
       }
-      const group = new Group();
-      group.renderOrder = this.renderOrder;
       if (draw_gradient_line) {
         const geometry = new GradientLine(
-          point
-            .filter((line) => line.color.a)
-            .map((line) => [
-              line.x,
-              line.y,
-              line.color.r,
-              line.color.g,
-              line.color.b,
-              line.color.a
-            ]),
+          point.map((line) => [
+            line.x,
+            line.y,
+            line.color.r,
+            line.color.g,
+            line.color.b,
+            line.color.a
+          ]),
           { distances: false, closed: false, ratio: true }
         );
         const material = CustomizedShader({
           thickness: item.width
         });
         const mesh = new Mesh(geometry, material);
-        mesh.position.z = DepthContainer.getIndexDepth(
-          this.renderOrder,
-          index,
-          length
-        );
-        mesh.position.z *= 1.1;
-        group.add(mesh);
+        mesh.position.z = this.trajectory_pos_z + index * 0.005 + 0.03;
+        mesh.renderOrder = mesh.position.z;
+        this.modelList.set(mesh.uuid, mesh);
+        this.scene.add(mesh);
       }
       if (draw_solid_line) {
         const line_style = getPolylineStyle(
@@ -117,15 +112,11 @@ export default class Line extends Target {
           }
         );
         const mesh = new Mesh(geometry, line_style.mat);
-        mesh.position.z = DepthContainer.getIndexDepth(
-          this.renderOrder,
-          index,
-          length
-        );
-        group.add(mesh);
+        mesh.position.z = this.trajectory_pos_z + index * 0.0005 - 0.001;
+        mesh.renderOrder = mesh.position.z;
+        this.modelList.set(mesh.uuid, mesh);
+        this.scene.add(mesh);
       }
-      this.modelList.set(group.uuid, group);
-      this.scene.add(group);
     });
   }
 }

@@ -1,4 +1,3 @@
-import { debounce } from "lodash-es";
 import {
   CircleGeometry,
   CylinderGeometry,
@@ -8,8 +7,6 @@ import {
   MeshPhongMaterial,
   PlaneGeometry
 } from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
 import { DepthTester } from "@/utils/three/depthTester";
@@ -32,8 +29,6 @@ export default class Augmented extends Renderer {
   createRender: Render[];
 
   ips: string[] = [];
-
-  controls?: OrbitControls;
 
   constructor() {
     super();
@@ -77,45 +72,20 @@ export default class Augmented extends Renderer {
 
   initialize(canvasId: string) {
     super.initialize(canvasId);
-    this.createControler();
+    this.updateControler();
     this.setScene();
   }
 
-  resetCamera = debounce(() => {
-    if (!this.controls) return;
-    const tween = new Tween(this.controls.target);
-    tween
-      .to(this.controls.position0)
-      .easing(Easing.Quadratic.InOut)
-      .onStart(() => {
-        if (!this.controls) return;
-        this.controls.enabled = false;
-      })
-      .onComplete(() => {
-        if (!this.controls) return;
-        this.controls.enabled = true;
-      })
-      .start();
-    let rafId: number;
-    const tweenAnimate = () => {
-      rafId = requestAnimationFrame(() => {
-        const playing = tween.update();
-        if (playing) tweenAnimate();
-        else cancelAnimationFrame(rafId);
-      });
-    };
-    tweenAnimate();
-  }, 2500);
-
-  createControler() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+  updateControler() {
     this.controls.target.set(3, 0, 6);
     this.controls.enablePan = false;
     this.controls.enableDamping = true;
     this.controls.minDistance = 20;
     this.controls.maxDistance = 50;
     this.controls.maxPolarAngle = Math.PI / 2;
-    this.controls.saveState();
+
+    this.updateControls();
+
     this.controls.addEventListener("end", this.resetCamera);
   }
 

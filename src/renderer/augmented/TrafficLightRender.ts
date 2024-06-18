@@ -1,13 +1,13 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP, AUGMENTED_RENDER_ORDER } from "@/constants";
+import { AUGMENTED_RENDER_MAP } from "@/constants";
 import { TrafficLight, type TrafficLightUpdateData } from "@/renderer/public";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Render from "../render";
 
-const topic = AUGMENTED_RENDER_MAP.trafficLightModel;
-type TopicType = (typeof topic)[number];
+const topics = AUGMENTED_RENDER_MAP.trafficLightModel;
+type TopicType = (typeof topics)[number];
 
 type TrafficLightUpdateDataMap = {
   [key in TopicType]: {
@@ -21,26 +21,17 @@ type CreateRenderMap = {
 };
 
 export default class TrafficLightRender extends Render {
-  topic: readonly TopicType[] = topic;
+  createRender = {} as CreateRenderMap;
 
-  createRender: CreateRenderMap;
-
-  constructor(scene: Scene, renderOrder = AUGMENTED_RENDER_ORDER.TRAFFICLIGHT) {
+  constructor(scene: Scene) {
     super();
 
-    const createTrafficLight = () => new TrafficLight(scene, renderOrder);
-
-    this.createRender = {
-      localmap_other_traffic_light: createTrafficLight(),
-      localmap_traffic_light: createTrafficLight()
-    };
-
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.on(topic, (data: TrafficLightUpdateDataMap[TopicType]) => {
+    topics.forEach((topic) => {
+      this.createRender[topic] = new TrafficLight(scene);
+      VIEW_WS.on(topic, (data: TrafficLightUpdateDataMap[typeof topic]) => {
         this.createRender[data.topic].update(data.data);
       });
-    }
+    });
   }
 
   dispose(): void {

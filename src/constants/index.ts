@@ -2,26 +2,6 @@ export const CANVAS_ID = "canvas_id";
 
 export const HZ = 60;
 
-export enum VIRTUAL_RENDER_ORDER {
-  FREESPACE = 1,
-  CROSSWALK,
-  LINE,
-  TEXT,
-  // POLYGON,
-  ARROW,
-  BOX
-}
-
-export enum AUGMENTED_RENDER_ORDER {
-  FREESPACE = 1,
-  CROSSWALK,
-  LINE,
-  OBSTACLE,
-  PARTICIPANT,
-  TRAFFICLIGHT,
-  TRAFFICSIGNAL
-}
-
 export const VIRTUAL_RENDER_MAP = {
   arrow: [
     "localization_global_history_trajectory",

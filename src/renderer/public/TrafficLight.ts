@@ -84,7 +84,6 @@ export default class TrafficLight extends Target {
         this.setModelAttributes(model, modelData);
       } else if (TrafficLight.cacheModels[typeName]) {
         const newModel = TrafficLight.cacheModels[typeName].clone();
-        newModel.renderOrder = this.renderOrder;
         this.setModelAttributes(newModel, modelData);
         this.scene.add(newModel);
         this.modelList.set(id, newModel);

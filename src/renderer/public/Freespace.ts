@@ -12,7 +12,6 @@ import {
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 
 interface DataType {
   color: { r: number; g: number; b: number; a: number };
@@ -37,11 +36,12 @@ export default class Freespace extends Target {
     this.clear();
     const length = data.data.length;
     if (!length) return;
-    data.data.forEach((item, index) => {
+    data.data.forEach((item) => {
       const {
         id,
         x = 0,
         y = 0,
+        z = 0.001,
         color,
         yaw = 0,
         pitch = 0,
@@ -72,12 +72,7 @@ export default class Freespace extends Target {
         opacity: color.a
       });
       const mesh = new Mesh(shapeGeometry, material);
-      mesh.renderOrder = this.renderOrder;
-      mesh.position.set(
-        x,
-        y,
-        DepthContainer.getIndexDepth(this.renderOrder, index, length)
-      );
+      mesh.position.set(x, y, z);
       mesh.rotation.set(
         roll * MathUtils.DEG2RAD,
         pitch * MathUtils.DEG2RAD,
