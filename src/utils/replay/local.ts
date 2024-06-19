@@ -29,6 +29,9 @@ export class LocalPlay extends EventEmitter<Events> {
 
   init(files: File[]) {
     this.postMessage({
+      type: "reset"
+    });
+    this.postMessage({
       type: "files",
       data: files
     });

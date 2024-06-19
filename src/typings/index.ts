@@ -26,6 +26,10 @@ export namespace MessageType {
     type: "playrate";
     data: number;
   }
+  export interface ResetType {
+    type: "reset";
+    data?: null;
+  }
 }
 
 export namespace EventType {
@@ -80,6 +84,7 @@ export namespace Local {
     | MessageType.FileType
     | MessageType.PlayStateType
     | MessageType.PlayRateType
+    | MessageType.ResetType
     | EventType.TimeUpdateType;
 }
 
@@ -126,7 +131,7 @@ export namespace Request {
     | EventType.DurationType
     | ResponseType
     | ResponseFinishType;
-  export type PostMessage = MessageType.RequestType;
+  export type PostMessage = MessageType.FileType | MessageType.RequestType;
 }
 
 export namespace RequestWorker {

@@ -1,9 +1,6 @@
 import { HZ } from "@/constants";
-import type { LocalWorker, MaybeArray, PlayState } from "@/typings";
+import type { LocalWorker, MaybeArray, PlayState, Request } from "@/typings";
 import { formatMsg, transform_MS } from "@/utils";
-import { readFileAsText } from "@/utils/file";
-
-import { getDuration } from "./utils";
 
 const DUMP_MS = 1000 / HZ;
 const postMsg = (msg: MaybeArray<LocalWorker.PostMessage>) => {
@@ -45,14 +42,42 @@ class Player {
     }
   }
 
-  async init(files: File[]) {
+  init(files: File[]) {
     if (this.#initialized) return;
     this.#initialized = true;
-    const duration = await getDuration(files[0], files[files.length - 1]);
-    if (!duration) return;
-    this.startTime = duration.startTime;
-    this.endTime = duration.endTime;
-    this.#loadData(files);
+    let requestWorker: Worker | null = new Worker(
+      new URL("./request.worker.ts", import.meta.url),
+      {
+        type: "module"
+      }
+    );
+    requestWorker.onmessage = (ev: MessageEvent<Request.OnMessage>) => {
+      const { type, data } = ev.data;
+      if (type === "durationchange") {
+        this.startTime = data.startTime;
+        this.endTime = data.endTime;
+        postMsg({ type, data });
+      } else if (type === "response") {
+        const lines = data.text.split("\n");
+        this.#mergeFrames(lines);
+        postMsg({
+          type: "loadstate",
+          data: {
+            state: "loading",
+            current: data.current,
+            total: data.total
+          }
+        });
+      } else if (type === "finish") {
+        requestWorker?.terminate();
+        requestWorker = null;
+      }
+    };
+    requestWorker.postMessage({
+      type: "files",
+      data: files
+    });
+    this.start();
   }
 
   start(timestamp = this.startTime) {
@@ -170,7 +195,10 @@ class Player {
     } else {
       this.playState = needTimer ? "play" : "pause";
     }
-    const playKey = getKeyByTime(this.currentTime);
+    let playKey = getKeyByTime(this.currentTime);
+    while (!this.#cacheData.has(playKey)) {
+      playKey++;
+    }
     const lines = this.#cacheData.get(playKey);
     if (lines) this.play(lines);
 
@@ -188,22 +216,6 @@ class Player {
     }
   }
 
-  async #loadData(files: File[]) {
-    for (const file of files) {
-      const text = await readFileAsText(file);
-      const lines = text.split("\n");
-      this.#mergeFrames(lines);
-      postMsg({
-        type: "loadstate",
-        data: {
-          state: "loading",
-          current: files.indexOf(file) + 1,
-          total: files.length
-        }
-      });
-    }
-  }
-
   #mergeFrames(lines: string[]) {
     lines.forEach((line) => {
       const colonIndex = line.indexOf(":");
@@ -218,6 +230,42 @@ class Player {
       }
     });
   }
+
+  reset() {
+    postMsg([
+      {
+        type: "timeupdate",
+        data: 0
+      },
+      {
+        type: "durationchange",
+        data: {
+          startTime: 0,
+          endTime: 0
+        }
+      },
+      {
+        type: "loadstate",
+        data: {
+          state: "loadend",
+          current: 0,
+          total: 0
+        }
+      }
+    ]);
+
+    this.pause();
+    this.#speed = 1;
+    this.#cacheData.clear();
+
+    this.startTime = 0;
+    this.endTime = 0;
+    this.currentTime = 0;
+
+    this.#playTimer = 0;
+
+    this.#initialized = false;
+  }
 }
 
 const player = new Player();
@@ -225,15 +273,7 @@ const player = new Player();
 onmessage = async (ev: MessageEvent<LocalWorker.OnMessage>) => {
   const { type, data } = ev.data;
   if (type === "files") {
-    await player.init(data);
-    postMsg({
-      type: "durationchange",
-      data: {
-        startTime: player.startTime,
-        endTime: player.endTime
-      }
-    });
-    player.start();
+    player.init(data);
   } else if (type === "playstate") {
     if (data.state === "play") {
       player.start(data.currentDuration + player.startTime);
@@ -244,5 +284,7 @@ onmessage = async (ev: MessageEvent<LocalWorker.OnMessage>) => {
     player.jump(data + player.startTime);
   } else if (type === "playrate") {
     player.setSpeed(data);
+  } else if (type === "reset") {
+    player.reset();
   }
 };

@@ -10,6 +10,7 @@
       v-model="progress"
       :format-tooltip="(val) => formatTime((val / 100) * total)"
       :style="{ '--loaded-width': `${loadProgress}%` }"
+      :step="0.001"
       class="progress-bar"
       @change="progressChange($event as number)"
       @input="progressInput($event as number)"
@@ -56,7 +57,8 @@ import {
   Loading,
   RefreshLeft,
   VideoPause,
-  VideoPlay} from "@element-plus/icons-vue";
+  VideoPlay
+} from "@element-plus/icons-vue";
 
 import { HZ } from "@/constants";
 import type { PlayState } from "@/typings";
@@ -112,10 +114,13 @@ const progress = ref(0);
 
 const progressChanging = ref(false);
 
-watchEffect(() => {
-  if (progressChanging.value) return;
-  progress.value = (props.current / props.total) * 100;
-});
+watch(
+  () => [props.current, props.total],
+  () => {
+    if (progressChanging.value) return;
+    progress.value = (props.current / props.total) * 100;
+  }
+);
 
 const progressInput = (val: number) => {
   progressChanging.value = true;

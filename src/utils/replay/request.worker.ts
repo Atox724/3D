@@ -2,6 +2,7 @@ import pLimit from "p-limit";
 
 import type { MaybeArray, RequestWorker } from "@/typings";
 
+import { readFileAsText, readFileBothRowByText } from "../file";
 import { getDuration } from "./utils";
 
 interface HMIFileType {
@@ -40,25 +41,17 @@ const requestHMIFile = async (hmi_file: HMIFileType) => {
   return res;
 };
 
-const postMsg = (msg: MaybeArray<RequestWorker.PostMessage>) => {
-  if (Array.isArray(msg)) {
-    msg.forEach(postMsg);
-  } else {
-    postMessage(msg);
-  }
-};
-
-onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
-  const { type, data } = ev.data;
-  if (type === "request") {
-    const { url, params } = data;
-    const hmi_files = await requestFiles(url, params);
-    const totalLength = hmi_files.length;
-    const firstFile = hmi_files.shift()!;
-    const lastFile = hmi_files.pop()!;
+const processFiles = async <T extends HMIFileType | File>(
+  files: T[],
+  readFunc: (file: T) => Promise<string>
+) => {
+  const totalLength = files.length;
+  if (totalLength > 1) {
+    const firstFile = files.shift()!;
+    const lastFile = files.pop()!;
     const [firstResult, lastResult] = await Promise.all([
-      requestHMIFile(firstFile),
-      requestHMIFile(lastFile)
+      readFunc(firstFile),
+      readFunc(lastFile)
     ]);
     const duration = await getDuration(firstResult, lastResult);
     if (!duration) return;
@@ -81,19 +74,20 @@ onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
         }
       }
     ]);
-    const queue = Array(hmi_files.length).fill(null);
+
+    const queue = Array(totalLength - 2).fill(null);
     let processIndex = 0;
+
     await Promise.all(
-      hmi_files.map((file, i) =>
+      files.map((file, i) =>
         limit(async () => {
-          const res = await requestHMIFile(file);
+          const res = await readFunc(file);
           queue[i] = res;
           while (queue[processIndex]) {
-            const res = queue[processIndex];
             postMsg({
               type: "response",
               data: {
-                text: res,
+                text: queue[processIndex],
                 current: processIndex + 2,
                 total: totalLength
               }
@@ -103,6 +97,7 @@ onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
         })
       )
     );
+
     postMsg([
       {
         type: "response",
@@ -116,5 +111,51 @@ onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
         type: "finish"
       }
     ]);
+  } else if (totalLength === 1) {
+    const text = await readFunc(files[0]);
+    const { firstRow, lastRow } = readFileBothRowByText(text);
+    const duration = await getDuration(firstRow, lastRow);
+    if (!duration) return;
+    const { startTime, endTime } = duration;
+
+    postMsg([
+      {
+        type: "durationchange",
+        data: {
+          startTime,
+          endTime
+        }
+      },
+      {
+        type: "response",
+        data: {
+          text,
+          current: 1,
+          total: 1
+        }
+      },
+      {
+        type: "finish"
+      }
+    ]);
+  }
+};
+
+const postMsg = (msg: MaybeArray<RequestWorker.PostMessage>) => {
+  if (Array.isArray(msg)) {
+    msg.forEach(postMsg);
+  } else {
+    postMessage(msg);
+  }
+};
+
+onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
+  const { type, data } = ev.data;
+  if (type === "request") {
+    const { url, params } = data;
+    const hmi_files = await requestFiles(url, params);
+    await processFiles(hmi_files, requestHMIFile);
+  } else if (type === "files") {
+    await processFiles(data, readFileAsText);
   }
 };

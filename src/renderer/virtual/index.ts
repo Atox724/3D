@@ -59,7 +59,7 @@ export default class Virtual extends Renderer<EnableEvent> {
         const offset = newTarget.clone().sub(this.controls.target);
         this.controls.target.copy(newTarget);
         this.camera.position.add(offset);
-        this.camera.quaternion.set(rotation.x, rotation.y, rotation.z, 1);
+        this.camera.rotation.set(rotation.x, rotation.y, rotation.z);
 
         this.updateControls();
       }

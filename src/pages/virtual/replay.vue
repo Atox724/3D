@@ -32,6 +32,7 @@ import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
 import { LocalPlay } from "@/utils/replay/local";
 import { RemotePlay } from "@/utils/replay/remote";
+import { VIEW_WS } from "@/utils/websocket";
 
 const route = useRoute();
 
@@ -55,6 +56,20 @@ const playState = ref<PlayState>("pause");
 const upload = async () => {
   const fileList = await chooseFile({ directory: true });
   if (!fileList) return;
+  const carPoseData = {
+    topic: "car_pose",
+    data: {
+      data: [
+        {
+          position: { x: 0, y: 0, z: 0 },
+          rotation: { x: 0, y: 0, z: 0 }
+        }
+      ]
+    }
+  };
+  VIEW_WS.emit("car_pose", carPoseData);
+  renderer.ground.position.set(0, 0, 0);
+  renderer.ground.rotation.z = 0;
   (player as LocalPlay).init(Array.from(fileList));
 };
 
