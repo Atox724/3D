@@ -1,4 +1,4 @@
-import { mergeWith, uniq } from "lodash-es";
+import { cloneDeep, mergeWith, uniq } from "lodash-es";
 
 export const CANVAS_ID = "canvas_id";
 
@@ -140,9 +140,8 @@ export const OTHER_INFO_MAP = {
 
 export const OTHER_INFO_TOPICS = Object.values(OTHER_INFO_MAP).flat();
 
-// FIXME: mergeWith会改变原对象, 导致VIRTUAL_RENDER_MAP会包含其他topic
 export const ALL_RENDER_MAP = mergeWith(
-  VIRTUAL_RENDER_MAP,
+  cloneDeep(VIRTUAL_RENDER_MAP),
   AUGMENTED_RENDER_MAP,
   OTHER_INFO_MAP,
   (obj, src) => {
