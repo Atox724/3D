@@ -30,9 +30,7 @@ import { useMonitor } from "@/hooks/useMonitor";
 import VirtualRender from "@/renderer/virtual";
 import type { PlayState } from "@/typings";
 import { chooseFile } from "@/utils/file";
-import { LocalPlay } from "@/utils/replay/local";
-import { RemotePlay } from "@/utils/replay/remote";
-import { VIEW_WS } from "@/utils/websocket";
+import { ReplayerStore } from "@/utils/replay";
 
 const route = useRoute();
 
@@ -40,13 +38,8 @@ const renderer = new VirtualRender();
 
 const { fps, memory, geometries, textures } = useMonitor(renderer);
 
-let player: LocalPlay | RemotePlay | null = null;
-if (route.query.path) {
-  player = new RemotePlay();
-  player.init("/api", route.query);
-} else {
-  player = new LocalPlay();
-}
+const player = new ReplayerStore();
+if (route.query.path) player.init("/api", route.query);
 
 const currentDuration = ref(0);
 const totalDuration = ref(0);
@@ -56,26 +49,12 @@ const playState = ref<PlayState>("pause");
 const upload = async () => {
   const fileList = await chooseFile({ directory: true });
   if (!fileList) return;
-  const carPoseData = {
-    topic: "car_pose",
-    data: {
-      data: [
-        {
-          position: { x: 0, y: 0, z: 0 },
-          rotation: { x: 0, y: 0, z: 0 }
-        }
-      ]
-    }
-  };
-  VIEW_WS.emit("car_pose", carPoseData);
-  renderer.ground.position.set(0, 0, 0);
-  renderer.ground.rotation.z = 0;
-  (player as LocalPlay).init(Array.from(fileList));
+  player.init(Array.from(fileList));
 };
 
 const onPlayStateChange = (val: PlayState, current = 0) => {
   playState.value = val;
-  player?.postMessage({
+  player.postMessage({
     type: "playstate",
     data: {
       state: val,
@@ -85,7 +64,7 @@ const onPlayStateChange = (val: PlayState, current = 0) => {
 };
 
 const onPlayRateChange = (speed: number) => {
-  player?.postMessage({
+  player.postMessage({
     type: "playrate",
     data: speed
   });
@@ -94,7 +73,7 @@ const onPlayRateChange = (speed: number) => {
 const onDurationChange = (current: number) => {
   playState.value = "pause";
   currentDuration.value = current;
-  player?.postMessage({
+  player.postMessage({
     type: "timeupdate",
     data: current
   });
@@ -102,17 +81,17 @@ const onDurationChange = (current: number) => {
 
 onMounted(() => {
   renderer.initialize(CANVAS_ID);
-  player?.on("durationchange", (data) => {
+  player.on("durationchange", (data) => {
     totalDuration.value = data.endTime - data.startTime;
   });
-  player?.on("timeupdate", (data) => {
+  player.on("timeupdate", (data) => {
     if (playState.value !== "play") return;
     currentDuration.value = data;
   });
-  player?.on("playstatechange", (data) => {
+  player.on("playstatechange", (data) => {
     playState.value = data;
   });
-  player?.on("loadstate", (data) => {
+  player.on("loadstate", (data) => {
     loadProgress.value =
       Math.round((data.current / data.total) * 100 * 1e4) / 1e4;
   });
@@ -120,8 +99,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   renderer.dispose();
-  player?.dispose();
-  player = null;
+  player.dispose();
 });
 </script>
 <style lang="less" scoped>

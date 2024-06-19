@@ -73,7 +73,7 @@ export namespace EventType {
     | LoadStateType;
 }
 
-export namespace Local {
+export namespace Replayer {
   export type OnMessage =
     | EventType.PlayStateType
     | EventType.DurationType
@@ -82,34 +82,16 @@ export namespace Local {
     | EventType.LoadStateType;
   export type PostMessage =
     | MessageType.FileType
+    | MessageType.RequestType
     | MessageType.PlayStateType
     | MessageType.PlayRateType
     | MessageType.ResetType
     | EventType.TimeUpdateType;
 }
 
-export namespace LocalWorker {
-  export type OnMessage = Local.PostMessage;
-  export type PostMessage = Local.OnMessage;
-}
-
-export namespace Remote {
-  export type OnMessage =
-    | EventType.PlayStateType
-    | EventType.DurationType
-    | EventType.TimeUpdateType
-    | EventType.DataType
-    | EventType.LoadStateType;
-  export type PostMessage =
-    | MessageType.RequestType
-    | MessageType.PlayStateType
-    | MessageType.PlayRateType
-    | EventType.TimeUpdateType;
-}
-
-export namespace RemoteWorker {
-  export type OnMessage = Remote.PostMessage;
-  export type PostMessage = Remote.OnMessage;
+export namespace ReplayerWorker {
+  export type OnMessage = Replayer.PostMessage;
+  export type PostMessage = Replayer.OnMessage;
 }
 
 export namespace Request {

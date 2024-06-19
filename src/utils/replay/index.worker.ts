@@ -1,9 +1,9 @@
 import { HZ } from "@/constants";
-import type { LocalWorker, MaybeArray, PlayState, Request } from "@/typings";
+import type { MaybeArray, PlayState, ReplayerWorker, Request } from "@/typings";
 import { formatMsg, transform_MS } from "@/utils";
 
 const DUMP_MS = 1000 / HZ;
-const postMsg = (msg: MaybeArray<LocalWorker.PostMessage>) => {
+const postMsg = (msg: MaybeArray<ReplayerWorker.PostMessage>) => {
   if (Array.isArray(msg)) {
     msg.forEach(postMsg);
   } else {
@@ -42,7 +42,9 @@ class Player {
     }
   }
 
-  init(files: File[]) {
+  init(files: File[]): void;
+  init(url: string, params?: Record<string, any>): void;
+  init(input: File[] | string, params?: Record<string, any>) {
     if (this.#initialized) return;
     this.#initialized = true;
     let requestWorker: Worker | null = new Worker(
@@ -73,10 +75,21 @@ class Player {
         requestWorker = null;
       }
     };
-    requestWorker.postMessage({
-      type: "files",
-      data: files
-    });
+    if (Array.isArray(input)) {
+      requestWorker.postMessage({
+        type: "files",
+        data: input
+      });
+    } else {
+      requestWorker.postMessage({
+        type: "request",
+        data: {
+          url: input,
+          params
+        }
+      });
+    }
+
     this.start();
   }
 
@@ -270,10 +283,12 @@ class Player {
 
 const player = new Player();
 
-onmessage = async (ev: MessageEvent<LocalWorker.OnMessage>) => {
+onmessage = async (ev: MessageEvent<ReplayerWorker.OnMessage>) => {
   const { type, data } = ev.data;
   if (type === "files") {
     player.init(data);
+  } else if (type === "request") {
+    player.init(data.url, data.params);
   } else if (type === "playstate") {
     if (data.state === "play") {
       player.start(data.currentDuration + player.startTime);

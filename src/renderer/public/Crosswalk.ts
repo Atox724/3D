@@ -30,7 +30,7 @@ export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
 }
 
 export default class Crosswalk extends Target {
-  depth = DepthContainer.getDepth();
+  depth = DepthContainer.getDepth(2);
 
   update(data: UpdateData) {
     this.clear();
@@ -88,5 +88,10 @@ export default class Crosswalk extends Target {
       this.modelList.set(id, shapeMesh);
       this.scene.add(shapeMesh);
     });
+  }
+
+  dispose(): void {
+    DepthContainer.delete(this.depth, 2);
+    super.dispose();
   }
 }

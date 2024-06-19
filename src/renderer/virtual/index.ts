@@ -46,6 +46,8 @@ export default class Virtual extends Renderer<EnableEvent> {
 
     let updatedPos = false;
 
+    const prePos = new Vector3();
+
     VIEW_WS.on(
       "car_pose",
       (data: { topic: "car_pose"; data: EgoCarUpdateData }) => {
@@ -55,11 +57,14 @@ export default class Virtual extends Renderer<EnableEvent> {
           this.ground.rotation.z = rotation.z;
           updatedPos = true;
         }
-        const newTarget = new Vector3().copy(position);
-        const offset = newTarget.clone().sub(this.controls.target);
-        this.controls.target.copy(newTarget);
-        this.camera.position.add(offset);
-        this.camera.rotation.set(rotation.x, rotation.y, rotation.z);
+
+        const deltaPos = new Vector3().copy(position).sub(prePos);
+
+        this.camera.position.add(deltaPos);
+
+        this.controls.target.add(deltaPos);
+
+        prePos.copy(position);
 
         this.updateControls();
       }

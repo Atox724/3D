@@ -2,8 +2,15 @@ import pLimit from "p-limit";
 
 import type { MaybeArray, RequestWorker } from "@/typings";
 
-import { readFileAsText, readFileBothRowByText } from "../file";
-import { getDuration } from "./utils";
+import { transform_MS } from "..";
+import {
+  readFileAsText,
+  readFileBothRowByText,
+  readFileFirstRowByFile,
+  readFileFirstRowByText,
+  readFileLastRowByFile,
+  readFileLastRowByText
+} from "../file";
 
 interface HMIFileType {
   modifyTime: string;
@@ -39,6 +46,33 @@ const requestHMIFile = async (hmi_file: HMIFileType) => {
     response.text()
   );
   return res;
+};
+
+const getDuration = async (
+  firstFile: File | string,
+  lastFile: File | string
+) => {
+  let startRow = "",
+    endRow = "";
+  if (typeof firstFile === "string") {
+    startRow = readFileFirstRowByText(firstFile);
+  } else {
+    startRow = await readFileFirstRowByFile(firstFile);
+  }
+  if (typeof lastFile === "string") {
+    endRow = readFileLastRowByText(lastFile);
+  } else {
+    endRow = await readFileLastRowByFile(lastFile);
+  }
+
+  const startColonIndex = startRow.indexOf(":");
+  const endColonIndex = endRow.indexOf(":");
+  if (startColonIndex === -1 || endColonIndex === -1) return;
+
+  const startTime = transform_MS(+startRow.slice(0, startColonIndex));
+  const endTime = transform_MS(+endRow.slice(0, endColonIndex));
+
+  return { startTime, endTime };
 };
 
 const processFiles = async <T extends HMIFileType | File>(
@@ -156,6 +190,9 @@ onmessage = async (ev: MessageEvent<RequestWorker.OnMessage>) => {
     const hmi_files = await requestFiles(url, params);
     await processFiles(hmi_files, requestHMIFile);
   } else if (type === "files") {
+    data.sort((a, b) =>
+      a.name.localeCompare(b.name, "zh-CN", { numeric: true })
+    );
     await processFiles(data, readFileAsText);
   }
 };

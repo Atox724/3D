@@ -1,14 +1,14 @@
 import EventEmitter from "eventemitter3";
 
-import type { Local } from "@/typings";
+import type { Replayer } from "@/typings";
 
 import { VIEW_WS } from "../websocket";
 
 type Events = {
-  [E in Local.OnMessage as E["type"]]: (data: E["data"]) => void;
+  [E in Replayer.OnMessage as E["type"]]: (data: E["data"]) => void;
 };
 
-export class LocalPlay extends EventEmitter<Events> {
+export class ReplayerStore extends EventEmitter<Events> {
   worker: Worker;
 
   startTime = 0;
@@ -21,27 +21,39 @@ export class LocalPlay extends EventEmitter<Events> {
 
   constructor() {
     super();
-    this.worker = new Worker(new URL("./local.worker.ts", import.meta.url), {
+    this.worker = new Worker(new URL("./index.worker.ts", import.meta.url), {
       type: "module"
     });
     this.worker.onmessage = this.onMessage;
   }
 
-  init(files: File[]) {
+  init(files: File[]): void;
+  init(url: string, params?: Record<string, any>): void;
+  init(input: File[] | string, params?: Record<string, any>) {
     this.postMessage({
       type: "reset"
     });
-    this.postMessage({
-      type: "files",
-      data: files
-    });
+    if (Array.isArray(input)) {
+      this.postMessage({
+        type: "files",
+        data: input
+      });
+    } else {
+      this.postMessage({
+        type: "request",
+        data: {
+          url: input,
+          params
+        }
+      });
+    }
   }
 
-  postMessage(msg: Local.PostMessage) {
+  postMessage(msg: Replayer.PostMessage) {
     this.worker.postMessage(msg);
   }
 
-  onMessage = (ev: MessageEvent<Local.OnMessage>) => {
+  onMessage = (ev: MessageEvent<Replayer.OnMessage>) => {
     const { type, data } = ev.data;
     this.emit(type, data);
     switch (type) {

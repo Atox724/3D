@@ -44,7 +44,7 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 export type UpdateData = JSONData | BufferData;
 
 export default class Line extends Target {
-  depth = DepthContainer.getDepth();
+  depth = DepthContainer.getDepth(3);
 
   update(data: UpdateData) {
     this.clear();
@@ -120,6 +120,11 @@ export default class Line extends Target {
         this.scene.add(mesh);
       }
     });
+  }
+
+  dispose(): void {
+    DepthContainer.delete(this.depth, 3);
+    super.dispose();
   }
 }
 

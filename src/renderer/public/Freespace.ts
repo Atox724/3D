@@ -33,7 +33,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 }
 
 export default class Freespace extends Target {
-  depth = DepthContainer.getDepth();
+  depth = DepthContainer.getDepth(1);
 
   update(data: UpdateData) {
     this.clear();
@@ -85,5 +85,10 @@ export default class Freespace extends Target {
       this.modelList.set(id || mesh.uuid, mesh);
       this.scene.add(mesh);
     });
+  }
+
+  dispose(): void {
+    DepthContainer.delete(this.depth, 1);
+    super.dispose();
   }
 }
