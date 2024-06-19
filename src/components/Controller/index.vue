@@ -18,11 +18,17 @@
       {{ formatTime(total) }}
     </span>
     <el-space style="margin-left: 18px" :size="18">
+      <el-icon size="24" class="play-btn" @click="jumpDuration('pre')">
+        <DArrowLeft />
+      </el-icon>
       <el-icon size="24" class="play-btn" @click="playStateChange">
         <Loading v-if="playState === 'loading'" />
         <VideoPlay v-else-if="playState === 'pause'" />
         <VideoPause v-else-if="playState === 'play'" />
         <RefreshLeft v-else-if="playState === 'end'" />
+      </el-icon>
+      <el-icon size="24" class="play-btn" @click="jumpDuration('next')">
+        <DArrowRight />
       </el-icon>
       <el-dropdown @command="playRateChange">
         <span class="el-dropdown-link">
@@ -45,12 +51,14 @@
 <script lang="ts" setup>
 import {
   ArrowDown,
+  DArrowLeft,
+  DArrowRight,
   Loading,
   RefreshLeft,
   VideoPause,
-  VideoPlay
-} from "@element-plus/icons-vue";
+  VideoPlay} from "@element-plus/icons-vue";
 
+import { HZ } from "@/constants";
 import type { PlayState } from "@/typings";
 import { formatTime } from "@/utils";
 
@@ -117,6 +125,16 @@ const progressInput = (val: number) => {
 const progressChange = (val: number) => {
   progressChanging.value = false;
   emits("durationChange", Number.isNaN(val) ? 0 : (val / 100) * props.total);
+};
+
+const jumpDuration = (type: "pre" | "next") => {
+  let currentTime = props.current;
+  if (type === "pre") {
+    currentTime -= 1000 / HZ;
+  } else {
+    currentTime += 1000 / HZ;
+  }
+  emits("durationChange", Math.min(currentTime, props.total));
 };
 
 const playStateChange = () => {

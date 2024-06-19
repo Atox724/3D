@@ -43,12 +43,16 @@ class WebsocketServer extends EventEmitter<TopicEvent> {
   };
 
   emit(event: keyof TopicEvent, data: any): boolean {
+    // 没有被订阅的topic
     if (this.eventNames().indexOf(event) === -1) {
-      if (this.noSubscriptions.has(event)) return false;
-      this.noSubscriptions.add(event);
-      console.log(
-        `[WebsocketServer] topic: \x1b[1;33m${String(event)}\x1b[0m is not subscribed`
-      );
+      if (!this.noSubscriptions.has(event)) {
+        this.noSubscriptions.add(event);
+        console.log(
+          `[WebsocketServer] topic: \x1b[1;33m${String(event)}\x1b[0m is not subscribed`
+        );
+      }
+
+      return false;
     }
 
     return super.emit(event, data);

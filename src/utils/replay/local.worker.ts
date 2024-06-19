@@ -55,9 +55,8 @@ class Player {
     this.#loadData(files);
   }
 
-  play(timestamp = this.startTime) {
+  start(timestamp = this.startTime) {
     if (!this.#initialized) return;
-    this.pause();
     this.currentTime = timestamp;
 
     let playIndex = -1;
@@ -70,6 +69,7 @@ class Player {
         const key = getKeyByTime(this.currentTime || this.startTime);
         playIndex = [...this.#cacheData.keys()].indexOf(key);
         playKey = key;
+        return;
       }
       if (this.endTime && this.currentTime >= this.endTime) {
         this.playState = "end";
@@ -95,51 +95,7 @@ class Player {
         }
         const lines = this.#cacheData.get(playKey);
         if (lines) {
-          lines.forEach((line) => {
-            const colonIndex = line.indexOf(":");
-            if (colonIndex === -1) return;
-            const data = line.slice(colonIndex + 1);
-            if (data[0] === "{") {
-              const res = formatMsg(data);
-              if (res) {
-                postMsg({
-                  type: "data",
-                  data: res
-                });
-              }
-            } else {
-              const jsonData = atob(data);
-              try {
-                let data;
-                if (jsonData[0] === "{") {
-                  data = jsonData;
-                } else {
-                  const uint8buffer = new Uint8Array(jsonData.length);
-                  for (let i = 0; i < jsonData.length; i++) {
-                    uint8buffer[i] = jsonData.charCodeAt(i);
-                  }
-                  data = uint8buffer.buffer;
-                }
-                data = formatMsg(data);
-                if (data) {
-                  postMsg({
-                    type: "data",
-                    data
-                  });
-                }
-              } catch (error) {
-                // console.log(error);
-              }
-            }
-          });
-          const lastLine = lines[lines.length - 1];
-          const colonIndex = lastLine.indexOf(":");
-          const timestamp = +lastLine.slice(0, colonIndex);
-          this.currentTime = transform_MS(timestamp);
-          postMsg({
-            type: "timeupdate",
-            data: this.currentTime - this.startTime
-          });
+          this.play(lines);
           playIndex++;
         }
 
@@ -149,15 +105,86 @@ class Player {
     }, DUMP_MS);
   }
 
+  play(lines: string[]) {
+    lines.forEach((line) => {
+      const colonIndex = line.indexOf(":");
+      if (colonIndex === -1) return;
+      const data = line.slice(colonIndex + 1);
+      if (data[0] === "{") {
+        const res = formatMsg(data);
+        if (res) {
+          postMsg({
+            type: "data",
+            data: res
+          });
+        }
+      } else {
+        const jsonData = atob(data);
+        try {
+          let data;
+          if (jsonData[0] === "{") {
+            data = jsonData;
+          } else {
+            const uint8buffer = new Uint8Array(jsonData.length);
+            for (let i = 0; i < jsonData.length; i++) {
+              uint8buffer[i] = jsonData.charCodeAt(i);
+            }
+            data = uint8buffer.buffer;
+          }
+          data = formatMsg(data);
+          if (data) {
+            postMsg({
+              type: "data",
+              data
+            });
+          }
+        } catch (error) {
+          // console.log(error);
+        }
+      }
+    });
+    const lastLine = lines[lines.length - 1];
+    const colonIndex = lastLine.indexOf(":");
+    const timestamp = +lastLine.slice(0, colonIndex);
+    this.currentTime = transform_MS(timestamp);
+    postMsg({
+      type: "timeupdate",
+      data: this.currentTime - this.startTime
+    });
+  }
+
   pause() {
     this.playState = "pause";
     clearInterval(this.#playTimer);
   }
 
+  /** 单帧数据并不是全量数据, 将导致渲染结果不完整且有上一帧残留, 最佳使用方式是播放到某一时刻,再跳转上/下帧 */
+  jump(jumpTimestamp: number) {
+    if (!this.#initialized) return;
+    const needTimer = this.playState === "play" || this.playState === "loading";
+    if (needTimer) this.pause();
+    this.currentTime = jumpTimestamp;
+
+    if (this.endTime && this.currentTime >= this.endTime) {
+      this.playState = "end";
+    } else {
+      this.playState = needTimer ? "play" : "pause";
+    }
+    const playKey = getKeyByTime(this.currentTime);
+    const lines = this.#cacheData.get(playKey);
+    if (lines) this.play(lines);
+
+    console.log(
+      `play frame: ${[...this.#cacheData.keys()].indexOf(playKey)}/${this.#cacheData.size - 1}`
+    );
+    if (needTimer) this.start(this.currentTime);
+  }
+
   setSpeed(speed: number) {
     this.#speed = speed;
     if (this.playState === "play") {
-      this.play(this.currentTime);
+      clearInterval(this.#playTimer);
+      this.start(this.currentTime);
     }
   }
 
@@ -206,15 +233,15 @@ onmessage = async (ev: MessageEvent<LocalWorker.OnMessage>) => {
         endTime: player.endTime
       }
     });
-    player.play();
+    player.start();
   } else if (type === "playstate") {
     if (data.state === "play") {
-      player.play(data.currentDuration + player.startTime);
+      player.start(data.currentDuration + player.startTime);
     } else if (data.state === "pause") {
       player.pause();
     }
   } else if (type === "timeupdate") {
-    player.play(data + player.startTime);
+    player.jump(data + player.startTime);
   } else if (type === "playrate") {
     player.setSpeed(data);
   }
