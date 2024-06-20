@@ -11,7 +11,7 @@ import {
 } from "@/assets/model";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import gltfLoader from "@/utils/three/gltfLoader";
+import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
 // 障碍物与交通提示物
 enum ObstacleTypeEnum {
@@ -33,6 +33,9 @@ interface ObstacleData {
   position: Vector3; // 模型中心位置
   rotation: Vector3; // 模型偏转值
 }
+
+const gltfLoader = new GLTFLoader();
+
 export interface UpdateData extends UpdateDataTool<ObstacleData[]> {
   type: "obstacleModel";
 }

@@ -9,7 +9,7 @@ import {
 } from "@/assets/model";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import gltfLoader from "@/utils/three/gltfLoader";
+import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
 enum TrafficLightTypeEnum {
   TrafficLight1 = 1, // 一灯红绿灯
@@ -26,6 +26,8 @@ interface TrafficLightData {
   position: Vector3; // 模型中心位置
   rotation: Vector3; // 模型偏转值
 }
+
+const gltfLoader = new GLTFLoader();
 
 export interface UpdateData extends UpdateDataTool<TrafficLightData[]> {
   type: "trafficLightModel";

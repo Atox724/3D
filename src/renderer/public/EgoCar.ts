@@ -3,7 +3,7 @@ import type { Object3D } from "three";
 import { EgoCar as EgoCarModel } from "@/assets/model";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import gltfLoader from "@/utils/three/gltfLoader";
+import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
 enum EgoCarTypeEnum {
   EGO_CAR = "EGO_CAR"
@@ -15,6 +15,8 @@ interface DataType {
   position: { x: number; y: number; z: number };
   rotation: { x: number; y: number; z: number };
 }
+
+const gltfLoader = new GLTFLoader();
 
 export interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "car_pose";

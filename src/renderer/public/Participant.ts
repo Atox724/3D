@@ -22,7 +22,7 @@ import {
 } from "@/assets/model";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import gltfLoader from "@/utils/three/gltfLoader";
+import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
 enum ParticipantTypeEnum {
   // 交通参与者
@@ -82,6 +82,8 @@ interface ParticipantData {
   color?: string;
   sizeinfo?: Vector3;
 }
+
+const gltfLoader = new GLTFLoader();
 
 export interface UpdateData extends UpdateDataTool<ParticipantData[]> {
   type: "participantModel";

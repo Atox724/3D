@@ -15,7 +15,9 @@ export default class Stats extends EventEmitter<Events> {
 
   static Date = performance || Date;
 
-  static memory = window.performance.memory;
+  static get memory() {
+    return window.performance.memory;
+  }
 
   begin() {
     this.#beginTime = Stats.Date.now();

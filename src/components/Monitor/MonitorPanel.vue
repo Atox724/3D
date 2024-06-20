@@ -42,6 +42,11 @@ defineProps<{
   flex-direction: column;
   font-size: 10px;
   color: #ffffff;
+  overflow: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   .panel-row {
     display: flex;

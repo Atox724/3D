@@ -78,7 +78,7 @@ import {
 } from "@/assets/model";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
-import gltfLoader from "@/utils/three/gltfLoader";
+import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
 enum TrafficSignalTypeEnum {
   Unknown = 0, //未知
@@ -203,6 +203,8 @@ interface TrafficSignalData {
   position: Vector3; // 模型中心位置
   rotation: Vector3; // 模型偏转值
 }
+
+const gltfLoader = new GLTFLoader();
 
 export interface UpdateData extends UpdateDataTool<TrafficSignalData[]> {
   type: "trafficSignalModel";

@@ -20,6 +20,7 @@
     "echarts": "^5.5.0",
     "element-plus": "^2.7.3",
     "eventemitter3": "^5.0.1",
+    "localforage": "^1.10.0",
     "lodash-es": "^4.17.21",
     "p-limit": "^5.0.0",
     "polyline-normals": "^2.0.2",
