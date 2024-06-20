@@ -18,6 +18,8 @@ if (fs.existsSync(".git")) {
   }
 }
 
+const chunkModules = ["three", "echarts"];
+
 export default defineConfig({
   base: "./",
   build: {
@@ -29,12 +31,14 @@ export default defineConfig({
         assetFileNames: "[ext]/[name]-[hash].[ext]",
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            return (
-              id
-                .toString()
-                .match(/\/node_modules\/(?!.pnpm)(?<moduleName>[^/]*)\//)
-                ?.groups?.moduleName ?? "vender"
-            );
+            if (chunkModules.some((moduleName) => id.includes(moduleName))) {
+              return (
+                id
+                  .toString()
+                  .match(/\/node_modules\/(?!.pnpm)(?<moduleName>[^/]*)\//)
+                  ?.groups?.moduleName ?? "vender"
+              );
+            }
           }
         }
       }

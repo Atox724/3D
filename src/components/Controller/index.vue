@@ -1,6 +1,6 @@
 <template>
   <section class="controller">
-    <el-space :size="18">
+    <el-space style="margin-right: 18px" :size="18">
       <slot name="left" />
     </el-space>
     <span class="duration">

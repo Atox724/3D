@@ -77,10 +77,11 @@ export default class GLTFLoader extends BASE_GLTFLoader {
         super.load(
           url,
           (gltf) => {
+            this.#retry = 0;
+            this.manager.itemEnd(url);
             onLoad(gltf);
             const g = serializeGLTF(gltf);
             cache.add(url, g);
-            this.#retry = 0;
           },
           onProgress,
           () => {
