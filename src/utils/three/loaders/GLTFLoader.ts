@@ -4,13 +4,14 @@ import {
   GLTFLoader as BASE_GLTFLoader
 } from "three/examples/jsm/loaders/GLTFLoader";
 
-import useCache from "@/utils/cache";
+import useCache from "@/hooks/useCache";
 
 const loader = new ObjectLoader();
 
 const cache = useCache({
   name: "gltf-cache",
-  storeName: "models"
+  storeName: "models",
+  description: "gltf模型缓存"
 });
 
 // 序列化 GLTF 对象

@@ -175,7 +175,7 @@ export default class Line extends BufferGeometry {
   constructor(path: LinePath, opt: options = {}) {
     super();
 
-    this.#hasColor = path[0].length === 6;
+    this.#hasColor = path[0]?.length === 6;
 
     this.#VERTS_PER_POINT = this.#hasColor ? 2 : 4;
     this.#buildIndexArray = createBuildIndexArray(this.#hasColor);
