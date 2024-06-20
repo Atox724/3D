@@ -14,7 +14,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
 
-import Stats from "@/utils/stats";
+import Stats from "@/utils/three/libs/Stats";
 
 // 监听3d场景绘制进度
 let hideThreeLoading: MessageHandler | null;

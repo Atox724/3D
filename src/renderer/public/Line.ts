@@ -3,14 +3,13 @@ import { Color, Mesh, ShaderMaterial } from "three";
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
-import GradientLine from "@/utils/three/gradientLine";
-import Line2D from "@/utils/three/line";
+import Line2D from "@/utils/three/objects/Line";
 import {
   CustomizedShader,
   DashedShader,
   DoubleShader,
   SolidShader
-} from "@/utils/three/shader";
+} from "@/utils/three/objects/Line/shader";
 
 interface DataType {
   color: { r: number; g: number; b: number };
@@ -78,7 +77,7 @@ export default class Line extends Target {
         point = item.point;
       }
       if (draw_gradient_line) {
-        const geometry = new GradientLine(
+        const geometry = new Line2D(
           point.map((line) => [
             line.x,
             line.y,
