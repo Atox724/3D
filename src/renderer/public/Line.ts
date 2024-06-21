@@ -50,6 +50,13 @@ export default class Line extends Target {
     const length = data.data.length;
     if (!length) return;
     data.data.forEach((item, index) => {
+      let point: PointData[] = [];
+      if ("polyline" in item) {
+        point = item.polyline;
+      } else {
+        point = item.point;
+      }
+      if (!point.length) return;
       let draw_solid_line = true;
       let draw_gradient_line = true;
       switch (item.lineType) {
@@ -69,12 +76,6 @@ export default class Line extends Target {
           draw_solid_line = true;
           draw_gradient_line = false;
           break;
-      }
-      let point: PointData[] = [];
-      if ("polyline" in item) {
-        point = item.polyline;
-      } else {
-        point = item.point;
       }
       if (draw_gradient_line) {
         const geometry = new Line2D(
