@@ -66,6 +66,7 @@ export default defineConfig({
   define: {
     __COMMITID__: JSON.stringify(commitId)
   },
+  envPrefix: ["VITE_", "MODEL_"],
   server: {
     open: true,
     strictPort: false,

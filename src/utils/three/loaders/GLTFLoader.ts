@@ -9,9 +9,9 @@ import useCache from "@/hooks/useCache";
 const loader = new ObjectLoader();
 
 const cache = useCache({
-  name: "gltf-cache",
-  storeName: "models",
-  description: "gltf模型缓存"
+  dbName: import.meta.env.MODEL_CACHE_DB_NAME,
+  storeName: import.meta.env.MODEL_CACHE_STORE_NAME,
+  version: import.meta.env.MODEL_CACHE_VERSION
 });
 
 // 序列化 GLTF 对象
@@ -42,34 +42,15 @@ export default class GLTFLoader extends BASE_GLTFLoader {
   #retry = 0;
   #MAX_RETRY = 3;
 
-  load(
+  async #tryCache(
     url: string,
     onLoad: (data: GLTF) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (err: unknown) => void
   ) {
-    this.manager.itemStart(url);
-    if (this.#retry > this.#MAX_RETRY) {
-      this.#retry = 0;
-      onError?.call(this, new Error("retry too many times"));
-      this.manager.itemError(url);
-      this.manager.itemEnd(url);
-
-      return;
-    }
-    cache.get<GLTF>(url, (err, data) => {
-      if (err) {
-        cache.remove(url, (e) => {
-          this.manager.itemEnd(url);
-          if (e) {
-            this.#retry = 0;
-            onError?.call(this, e);
-          } else {
-            this.#retry++;
-            this.load(url, onLoad, onProgress, onError);
-          }
-        });
-      } else if (data) {
+    try {
+      const data = await cache.get<GLTF>(url);
+      if (data) {
         this.#retry = 0;
         this.manager.itemEnd(url);
         const gltf = deserializeGLTF(data);
@@ -82,7 +63,7 @@ export default class GLTFLoader extends BASE_GLTFLoader {
             this.manager.itemEnd(url);
             onLoad(gltf);
             const g = serializeGLTF(gltf);
-            cache.add(url, g);
+            cache.set(url, g);
           },
           onProgress,
           () => {
@@ -92,7 +73,35 @@ export default class GLTFLoader extends BASE_GLTFLoader {
           }
         );
       }
-    });
+    } catch (error) {
+      try {
+        await cache.del(url);
+        this.manager.itemEnd(url);
+        this.#retry++;
+        this.load(url, onLoad, onProgress, onError);
+      } catch (e) {
+        this.manager.itemEnd(url);
+        this.#retry = 0;
+        onError?.call(this, e);
+      }
+    }
+  }
+
+  load(
+    url: string,
+    onLoad: (data: GLTF) => void,
+    onProgress?: (event: ProgressEvent) => void,
+    onError?: (err: unknown) => void
+  ) {
+    this.manager.itemStart(url);
+    if (this.#retry > this.#MAX_RETRY) {
+      this.#retry = 0;
+      onError?.call(this, new Error("retry too many times"));
+      this.manager.itemError(url);
+      this.manager.itemEnd(url);
+      return;
+    }
+    this.#tryCache(url, onLoad, onProgress, onError);
   }
 
   loadAsync(

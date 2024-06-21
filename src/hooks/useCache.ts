@@ -1,37 +1,55 @@
-import localforage from "localforage";
+import {
+  clear as dbClear,
+  createStore,
+  del as dbDel,
+  get as dbGet,
+  set as dbSet} from "idb-keyval";
 
-const useCache = (options: LocalForageOptions) => {
-  const store = localforage.createInstance(options);
+interface Options {
+  dbName: string;
+  storeName: string;
+  version?: IDBValidKey;
+}
 
-  const add = <T>(
-    key: string,
-    value: T,
-    callback?: (err: any, value: T) => void
-  ) => {
-    return store.setItem(key, value, callback);
+const useCache = (options: Options) => {
+  const store = createStore(options.dbName, options.storeName);
+
+  const versionKey = "cache_version";
+
+  let isChecked = false;
+
+  const checkVersion = async () => {
+    if (isChecked) return;
+    isChecked = true;
+    try {
+      const currentVersion = await dbGet<IDBValidKey>(versionKey, store);
+      if (currentVersion !== options.version) {
+        await dbClear(store);
+        await dbSet(versionKey, options.version, store);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const get = <T>(
-    key: string,
-    callback?: (err: any, value: T | null) => void
-  ) => {
-    return store.getItem<T>(key, callback);
+
+  const get = async <T>(key: IDBValidKey) => {
+    await checkVersion();
+    return dbGet<T>(key, store);
   };
-  const remove = (key: string, callback?: (err: any) => void) => {
-    return store.removeItem(key, callback);
+
+  const set = async (key: IDBValidKey, value: any) => {
+    await checkVersion();
+    return dbSet(key, value, store);
   };
-  const clear = (callback?: (err: any) => void) => {
-    return store.dropInstance(
-      {
-        name: options.name
-      },
-      callback
-    );
-  };
+
+  const del = (key: IDBValidKey) => dbDel(key, store);
+
+  const clear = () => dbClear(store);
 
   return {
-    add,
     get,
-    remove,
+    set,
+    del,
     clear
   };
 };
