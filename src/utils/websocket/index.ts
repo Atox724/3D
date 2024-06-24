@@ -1,3 +1,4 @@
+import log from "../log";
 import WebsocketServer from "./websocket_server";
 
 function deduceWebsocketServerAddr(path: string) {
@@ -5,7 +6,7 @@ function deduceWebsocketServerAddr(path: string) {
   const server = port === "3000" ? `${location.hostname}:8082` : location.host;
   const protocol = location.protocol === "https:" ? "wss" : "ws";
   const ws_addr = `${protocol}://${server}/${path}`;
-  console.info("websocket addr: " + ws_addr);
+  log.success("websocket addr", ws_addr);
   // return ws_addr;
   return "ws://10.8.33.21:8082/" + path;
 }

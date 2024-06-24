@@ -18,6 +18,8 @@ import ArrowRender from "./ArrowRender";
 import BoxRender from "./BoxRender";
 import CrosswalkRender from "./CrosswalkRender";
 import EgoCarRender from "./EgoCarRender";
+import EllipseRender from "./EllipseRender";
+import FixedPolygonRender from "./FixedPolygonRender";
 import FreespaceRender from "./FreespaceRender";
 import PolygonRender from "./PolygonRender";
 import PolylineRender from "./PolylineRender";
@@ -41,7 +43,9 @@ export default class Virtual extends Renderer<EnableEvent> {
       new TextRender(this.scene),
       new ArrowRender(this.scene),
       new BoxRender(this.scene),
-      new PolygonRender(this.scene)
+      new PolygonRender(this.scene),
+      new EllipseRender(this.scene),
+      new FixedPolygonRender(this.scene)
     ];
 
     let updatedPos = false;

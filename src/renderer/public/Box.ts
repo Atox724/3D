@@ -12,6 +12,8 @@ import {
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 
+import Text from "./Text";
+
 interface DataType {
   color: { r: number; g: number; b: number };
   extra_info: string[];
@@ -58,7 +60,11 @@ export default class Box extends Target {
     const edgesMeshNew = edgesMesh.clone();
     edgesMeshNew.material = edgesMeshMaterial;
     edgesMeshNew.name = "edges";
-    group.add(boxMeshNew, edgesMeshNew);
+
+    const textMesh = createBoxText(modelData);
+    textMesh.name = "text";
+
+    group.add(boxMeshNew, edgesMeshNew, textMesh);
     return group;
   }
 
@@ -77,6 +83,10 @@ export default class Box extends Target {
     if (edgesMeshNew instanceof LineSegments) {
       edgesMeshNew.scale.set(length, width, height);
       edgesMeshNew.material.color.setRGB(color.r, color.g, color.b);
+    }
+    const textMeshNew = model.getObjectByName("text");
+    if (textMeshNew instanceof Mesh) {
+      textMeshNew.material.color.setRGB(color.r, color.g, color.b);
     }
   }
 
@@ -99,4 +109,47 @@ export default class Box extends Target {
     });
     this.checkModelByData(data.data);
   }
+}
+
+function createBoxText(data: DataType) {
+  let text = String(data.id);
+  let object_type = "";
+  let hasCipv = false;
+  // 优化后的遍历
+  data.extra_info.some((info) => {
+    const objectTypeValue = extractValue(info, "object_type");
+    const cipvValue = extractValue(info, "cipv");
+
+    if (objectTypeValue !== null) {
+      object_type = objectTypeValue;
+    }
+    if (cipvValue !== null) {
+      hasCipv = cipvValue.toLowerCase() === "true";
+    }
+
+    // 如果两个值都已找到，则终止循环
+    return objectTypeValue !== null && cipvValue !== null;
+  });
+  if (object_type) {
+    text += `-${object_type}`;
+  }
+  if (hasCipv) {
+    text += "-CIPV";
+  }
+
+  const model = Text.createTextMesh(text, 0.5);
+  model.material.color.setRGB(data.color.r, data.color.g, data.color.b);
+  model.position.z = data.height / 2 + 0.4;
+  model.rotation.set(0, -Math.PI / 2, -Math.PI / 2);
+  return model;
+}
+
+function extractValue(str: string, key: string) {
+  const index = str.indexOf(key);
+  if (index !== -1) {
+    const valueStart = index + key.length + 1; // +1 to skip the colon (:) after the key
+    const value = str.slice(valueStart).trim();
+    return value;
+  }
+  return null; // Return null if the key is not found
 }

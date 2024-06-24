@@ -26,16 +26,33 @@ const textMaterial = new MeshBasicMaterial({
 });
 
 export default class Text extends Target {
-  createModel(modelData: DataType) {
-    const { fontSize, text } = modelData;
+  static textMeshCache = new Map<
+    string,
+    Mesh<TextGeometry, MeshBasicMaterial>
+  >();
+  static createTextMesh(text: string, fontSize: number) {
+    if (Text.textMeshCache.size > 200) {
+      Text.textMeshCache.delete(Array.from(Text.textMeshCache.keys())[0]);
+    }
+    const cacheKey = `${text}-${fontSize}`;
+    if (Text.textMeshCache.has(cacheKey)) {
+      return Text.textMeshCache.get(cacheKey)!.clone();
+    }
     const geometry = new TextGeometry(text, {
       font: font,
-      size: fontSize * 2,
+      size: fontSize,
       depth: 0
     });
     geometry.center();
     const material = textMaterial.clone();
     const model = new Mesh(geometry, material);
+    Text.textMeshCache.set(cacheKey, model);
+    return model;
+  }
+
+  createModel(modelData: DataType) {
+    const { fontSize, text } = modelData;
+    const model = Text.createTextMesh(text, fontSize * 2);
     model.rotation.z = -Math.PI / 2;
     return model;
   }

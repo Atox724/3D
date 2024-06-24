@@ -37,8 +37,7 @@ export default class Freespace extends Target {
 
   update(data: UpdateData) {
     this.clear();
-    const length = data.data.length;
-    if (!length) return;
+    if (!data.data.length) return;
     data.data.forEach((item) => {
       const {
         id,

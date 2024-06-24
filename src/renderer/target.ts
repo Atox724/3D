@@ -75,7 +75,7 @@ export default abstract class Target {
 
   checkModelByData<D extends Array<any>>(data: D, list = this.modelList) {
     list.forEach((model, id) => {
-      if (!data.find((item) => +item.id === +id)) {
+      if (data.every((item) => item.id !== id)) {
         this.disposeObject(model);
         list.delete(id);
       }

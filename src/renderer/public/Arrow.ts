@@ -17,8 +17,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 export default class Arrow extends Target {
   update(data: UpdateData) {
     this.clear();
-    const length = data.data.length;
-    if (!length) return;
+    if (!data.data.length) return;
     data.data.forEach((modelData) => {
       const { origin: o, end_point, color: c } = modelData;
       const origin = new Vector3(o.x, o.y, o.z);

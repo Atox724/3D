@@ -1,7 +1,10 @@
 import EventEmitter from "eventemitter3";
 
+import { ALL_TOPICS } from "@/constants";
 import type { TopicEvent } from "@/typings";
 import { formatMsg } from "@/utils";
+
+import log from "../log";
 
 class WebsocketServer extends EventEmitter<TopicEvent> {
   url: string;
@@ -11,6 +14,7 @@ class WebsocketServer extends EventEmitter<TopicEvent> {
   allow_reconnect?: boolean;
 
   noSubscriptions = new Set<string | symbol>();
+  unknownTopics = new Set<string | symbol>();
 
   constructor(url: string) {
     super();
@@ -45,11 +49,14 @@ class WebsocketServer extends EventEmitter<TopicEvent> {
   emit(event: keyof TopicEvent, data: any): boolean {
     // 没有被订阅的topic
     if (this.eventNames().indexOf(event) === -1) {
-      if (!this.noSubscriptions.has(event)) {
+      if (ALL_TOPICS.indexOf(event) === -1) {
+        if (!this.unknownTopics.has(event)) {
+          this.unknownTopics.add(event);
+          log.danger(event, "is not defined");
+        }
+      } else if (!this.noSubscriptions.has(event)) {
         this.noSubscriptions.add(event);
-        console.log(
-          `[WebsocketServer] topic: \x1b[1;33m${String(event)}\x1b[0m is not subscribed`
-        );
+        log.warning(event, "is not subscribed");
       }
 
       return false;
