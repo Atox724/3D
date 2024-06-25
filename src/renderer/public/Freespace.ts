@@ -10,9 +10,10 @@ import {
   type Vector2Like
 } from "three";
 
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
+
+import RenderObject from "../RenderObject";
 
 interface DataType {
   color: { r: number; g: number; b: number; a: number };
@@ -40,7 +41,7 @@ const materialCache = new MeshBasicMaterial({
   transparent: true
 });
 
-export default class Freespace extends Target {
+export default abstract class Freespace extends RenderObject {
   depth = DepthContainer.getDepth(1);
 
   createModel(modelData: DataType) {

@@ -1,47 +1,22 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
+import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { Freespace, type FreespaceUpdateData } from "@/renderer/public";
-import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
-import Render from "../render";
+type FREESPACE_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.freespace)[number];
 
-const topics = VIRTUAL_RENDER_MAP.freespace;
-type TopicType = (typeof topics)[number];
+export default class FreespaceRender extends Freespace {
+  topic: FREESPACE_TOPIC_TYPE;
+  constructor(scene: Scene, topic: FREESPACE_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-type FreespaceUpdateDataMap = {
-  [key in TopicType]: {
-    topic: TopicType;
-    data: FreespaceUpdateData;
-  };
-};
-
-type CreateRenderMap = {
-  [key in TopicType]: Freespace;
-};
-
-export default class FreespaceRender extends Render {
-  type: ALLRenderType = "freespace";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new Freespace(scene);
-      VIEW_WS.on(topic, (data: FreespaceUpdateDataMap[typeof topic]) => {
-        this.createRender[data.topic].update(data.data);
-      });
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+    VIEW_WS.on(
+      topic,
+      (data: { data: FreespaceUpdateData; topic: FREESPACE_TOPIC_TYPE }) => {
+        this.update(data.data);
+      }
+    );
   }
 }

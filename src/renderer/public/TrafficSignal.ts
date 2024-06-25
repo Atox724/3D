@@ -76,9 +76,10 @@ import {
   X_weight,
   X_width
 } from "@/assets/model";
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
+
+import RenderObject from "../RenderObject";
 
 enum TrafficSignalEnum {
   Unknown = 0, //未知
@@ -210,7 +211,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 
 const gltfLoader = new GLTFLoader();
 
-export default class TrafficSignal extends Target {
+export default abstract class TrafficSignal extends RenderObject {
   static cacheModels = {} as Record<TrafficSignalType, Object3D>;
   static modelFiles: Record<TrafficSignalType, string> = {
     OvertakingProhibited: OvertakingProhibited,

@@ -1,47 +1,27 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
 import { RoadMarker, type RoadMarkerUpdateData } from "@/renderer/public";
-import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
-import Render from "../render";
+type ROAD_MARKER_MODEL_TOPIC_TYPE =
+  (typeof AUGMENTED_RENDER_MAP.roadMarkerModel)[number];
 
-const topics = AUGMENTED_RENDER_MAP.roadMarkerModel;
-type TopicType = (typeof topics)[number];
+export default class RoadMarkerRender extends RoadMarker {
+  topic: ROAD_MARKER_MODEL_TOPIC_TYPE;
 
-type RoadMarkerUpdateDataMap = {
-  [key in TopicType]: {
-    topic: TopicType;
-    data: RoadMarkerUpdateData;
-  };
-};
+  constructor(scene: Scene, topic: ROAD_MARKER_MODEL_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-type CreateRenderMap = {
-  [key in TopicType]: RoadMarker;
-};
-
-export default class RoadMarkerRender extends Render {
-  type: ALLRenderType = "roadMarkerModel";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new RoadMarker(scene);
-      VIEW_WS.on(topic, (data: RoadMarkerUpdateDataMap[typeof topic]) => {
-        this.createRender[data.topic].update(data.data);
-      });
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+    VIEW_WS.on(
+      topic,
+      (data: {
+        data: RoadMarkerUpdateData;
+        topic: ROAD_MARKER_MODEL_TOPIC_TYPE;
+      }) => {
+        this.update(data.data);
+      }
+    );
   }
 }

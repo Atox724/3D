@@ -1,63 +1,124 @@
 import {
-  CylinderGeometry,
   DoubleSide,
+  Group,
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
-  PlaneGeometry
+  PlaneGeometry,
+  Vector3
 } from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector";
 
+import { ALL_TOPICS, AUGMENTED_RENDER_MAP } from "@/constants/topic";
+import type { AUGMENTED_RENDER_TYPE } from "@/typings";
+import log from "@/utils/log";
 import { VIEW_WS } from "@/utils/websocket";
 
-import Renderer from "..";
-import {
-  EgoCar,
-  Obstacle,
-  Participant,
-  RoadMarker,
-  TrafficSignal
-} from "../public";
-import TrafficLight from "../public/TrafficLight";
-import type Render from "../render";
+import type { EgoCarUpdateData } from "../public";
+import type RenderObject from "../RenderObject";
+import RenderScene from "../RenderScene";
 import CrosswalkRender from "./CrosswalkRender";
 import EgoCarRender from "./EgoCarRender";
 import FreespaceRender from "./FreespaceRender";
 import ObstacleRender from "./ObstacleRender";
 import ParticipantRender from "./ParticipantRender";
+import PoleRender from "./PoleRender";
 import PolylineRender from "./PolylineRender";
 import RoadMarkerRender from "./RoadMarkerRender";
 import TrafficLightRender from "./TrafficLightRender";
 import TrafficSignalRender from "./TrafficSignalRender";
 
-export default class Augmented extends Renderer {
-  createRender: Render[];
+export default class Augmented extends RenderScene {
+  createRender: {
+    [K in AUGMENTED_RENDER_TYPE]: RenderObject[];
+  };
 
   ips: string[] = [];
+
+  ground = new Group();
 
   constructor() {
     super();
 
-    this.createRender = [
-      new EgoCarRender(this.scene),
-      new FreespaceRender(this.scene),
-      new CrosswalkRender(this.scene),
-      new PolylineRender(this.scene),
-      new ObstacleRender(this.scene),
-      new ParticipantRender(this.scene),
-      new TrafficLightRender(this.scene),
-      new TrafficSignalRender(this.scene),
-      new RoadMarkerRender(this.scene)
-    ];
+    this.createRender = {
+      car_pose: AUGMENTED_RENDER_MAP.car_pose.map(
+        (topic) => new EgoCarRender(this.scene, topic)
+      ),
+      crosswalk: AUGMENTED_RENDER_MAP.crosswalk.map(
+        (topic) => new CrosswalkRender(this.scene, topic)
+      ),
+      freespace: AUGMENTED_RENDER_MAP.freespace.map(
+        (topic) => new FreespaceRender(this.scene, topic)
+      ),
+      obstacleModel: AUGMENTED_RENDER_MAP.obstacleModel.map(
+        (topic) => new ObstacleRender(this.scene, topic)
+      ),
+      participantModel: AUGMENTED_RENDER_MAP.participantModel.map(
+        (topic) => new ParticipantRender(this.scene, topic)
+      ),
+      polyline: AUGMENTED_RENDER_MAP.polyline.map(
+        (topic) => new PolylineRender(this.scene, topic)
+      ),
+      poleModel: AUGMENTED_RENDER_MAP.poleModel.map(
+        (topic) => new PoleRender(this.scene, topic)
+      ),
+      roadMarkerModel: AUGMENTED_RENDER_MAP.roadMarkerModel.map(
+        (topic) => new RoadMarkerRender(this.scene, topic)
+      ),
+      trafficLightModel: AUGMENTED_RENDER_MAP.trafficLightModel.map(
+        (topic) => new TrafficLightRender(this.scene, topic)
+      ),
+      trafficSignalModel: AUGMENTED_RENDER_MAP.trafficSignalModel.map(
+        (topic) => new TrafficSignalRender(this.scene, topic)
+      )
+    };
 
-    VIEW_WS.on("conn_list", (data) => {
-      this.ips = (data as unknown as { conn_list?: string[] }).conn_list || [];
-    });
+    this.addEvents();
 
     this.preload();
   }
+
+  addEvents() {
+    this.on("enable", (data) => {
+      const type = data.type as AUGMENTED_RENDER_TYPE;
+      const topicMap = this.createRender[type];
+      const render = topicMap.find((render) => render.topic === data.topic);
+      if (!render) {
+        log.danger(type, `[${data.topic}] not found`);
+      } else {
+        render.setEnable(data.enable);
+      }
+    });
+    let updatedPos = false;
+
+    const prePos = new Vector3();
+
+    VIEW_WS.on(ALL_TOPICS.CAR_POSE, (data: { data: EgoCarUpdateData }) => {
+      const [{ position, rotation }] = data.data.data;
+      if (!updatedPos) {
+        this.ground.position.copy(position);
+        this.ground.rotation.z = rotation.z;
+        updatedPos = true;
+      }
+
+      const deltaPos = new Vector3().copy(position).sub(prePos);
+
+      this.camera.position.add(deltaPos);
+
+      this.controls.target.add(deltaPos);
+
+      prePos.copy(position);
+
+      this.updateControls();
+    });
+
+    VIEW_WS.on(ALL_TOPICS.CONN_LIST, (data) => {
+      this.ips = (data as any).conn_list || [];
+    });
+  }
+
   preload() {
-    EgoCar.preloading().then((res) => {
+    EgoCarRender.preloading().then((res) => {
       res.forEach((item) => {
         if (item.status === "fulfilled") {
           this.scene.add(item.value);
@@ -65,11 +126,11 @@ export default class Augmented extends Renderer {
       });
     });
     const preloadArray = [
-      Obstacle,
-      Participant,
-      TrafficLight,
-      TrafficSignal,
-      RoadMarker
+      ObstacleRender,
+      ParticipantRender,
+      TrafficLightRender,
+      TrafficSignalRender,
+      RoadMarkerRender
     ];
     return Promise.allSettled(
       preloadArray.map((modelRender) => modelRender.preloading())
@@ -114,25 +175,27 @@ export default class Augmented extends Renderer {
 
   setScene() {
     const size = 1000;
-    const geometry = new CylinderGeometry(size / 2, size / 2, size);
+    const geometry = new PlaneGeometry(size / 2, size / 2);
     const material = new MeshBasicMaterial({
       color: 0x525862,
       side: DoubleSide
     });
-    const cylinder = new Mesh(geometry, material);
-    cylinder.position.z = geometry.parameters.height / 2 - 0.01;
-    cylinder.rotation.x = Math.PI / 2;
-
-    this.scene.add(cylinder);
+    const ground = new Mesh(geometry, material);
+    ground.position.z = -0.3;
+    this.ground.add(ground);
+    this.scene.add(this.ground);
   }
 
   dispose() {
-    this.createRender.forEach((target) => {
-      target.dispose();
+    Object.values(this.createRender).forEach((renders) => {
+      renders.forEach((render) => {
+        render.dispose();
+      });
     });
-    this.createRender = [];
-    VIEW_WS.off("conn_list");
-    this.controls?.removeEventListener("end", this.resetCamera);
+    this.removeAllListeners();
+    VIEW_WS.off(ALL_TOPICS.CAR_POSE);
+    VIEW_WS.off(ALL_TOPICS.CONN_LIST);
+    this.controls.removeEventListener("end", this.resetCamera);
     super.dispose();
   }
 }

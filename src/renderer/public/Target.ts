@@ -10,7 +10,7 @@ import {
   type RGB
 } from "three";
 
-import Target from "@/renderer/target";
+import RenderObject from "@/renderer/RenderObject";
 import type { UpdateDataTool } from "@/typings";
 
 import Text from "./Text";
@@ -42,7 +42,7 @@ const edgesMesh = new LineSegments(
   edgesMaterial
 );
 
-export default class Box extends Target {
+export default abstract class Target extends RenderObject {
   createModel(modelData: DataType) {
     const { color, type } = modelData;
     const group = new Group();

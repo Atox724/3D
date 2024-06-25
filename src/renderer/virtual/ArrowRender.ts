@@ -1,66 +1,42 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
-import Render from "@/renderer/render";
-import type { ALLRenderType } from "@/typings";
+import { ALL_TOPICS, type VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Arrow, type ArrowUpdateData } from "../public";
 
-const topics = VIRTUAL_RENDER_MAP.arrow;
-type TopicType = (typeof topics)[number];
+type ARROW_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.arrow)[number];
 
-type ArrowUpdateDataMap = {
-  [key in TopicType]: key extends
-    | "localization_global_history_trajectory"
-    | "localization_local_history_trajectory"
-    ? { topic: key; data: ArrowUpdateData }
-    : key extends "fusion_gop"
-      ? { topic: key; data: { heading_arrow_array: ArrowUpdateData } }
-      : { topic: key; data: { arrow_array: ArrowUpdateData } };
-};
+export default class ArrowRender extends Arrow {
+  topic: ARROW_TOPIC_TYPE;
+  constructor(scene: Scene, topic: ARROW_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-type CreateRenderMap = {
-  [key in TopicType]: Arrow;
-};
-
-export default class ArrowRender extends Render {
-  type: ALLRenderType = "arrow";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new Arrow(scene);
+    const createUpdateHanlder = () => {
       if (
-        topic === "localization_global_history_trajectory" ||
-        topic === "localization_local_history_trajectory"
+        topic === ALL_TOPICS.LOCALIZATION_GLOBAL_HISTORY_TRAJECTORY ||
+        topic === ALL_TOPICS.LOCALIZATION_LOCAL_HISTORY_TRAJECTORY
       ) {
-        VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {
-          const renderItem = this.createRender[data.topic];
-          renderItem.update(data.data);
-        });
-      } else if (topic === "fusion_gop") {
-        VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {
-          const renderItem = this.createRender[data.topic];
-          renderItem.update(data.data.heading_arrow_array);
-        });
-      } else {
-        VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {
-          const renderItem = this.createRender[data.topic];
-          renderItem.update(data.data.arrow_array);
-        });
+        return (data: { data: ArrowUpdateData; topic: ARROW_TOPIC_TYPE }) => {
+          this.update(data.data);
+        };
+      } else if (topic === ALL_TOPICS.FUSION_GOP) {
+        return (data: {
+          data: { heading_arrow_array: ArrowUpdateData };
+          topic: ARROW_TOPIC_TYPE;
+        }) => {
+          this.update(data.data.heading_arrow_array);
+        };
       }
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+      return (data: {
+        data: { arrow_array: ArrowUpdateData };
+        topic: ARROW_TOPIC_TYPE;
+      }) => {
+        this.update(data.data.arrow_array);
+      };
+    };
+    const updateHandler = createUpdateHanlder();
+    VIEW_WS.on(topic, updateHandler);
   }
 }

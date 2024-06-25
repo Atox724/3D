@@ -1,6 +1,5 @@
 import { Color, Group, Mesh, Object3D, type RGB, ShaderMaterial } from "three";
 
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
 import Line2D from "@/utils/three/objects/Line";
@@ -10,6 +9,8 @@ import {
   DoubleShader,
   SolidShader
 } from "@/utils/three/objects/Line/shader";
+
+import RenderObject from "../RenderObject";
 
 interface DataType {
   color: RGB;
@@ -42,7 +43,7 @@ interface BufferData extends UpdateDataTool<BufferDataType[]> {
 
 export type UpdateData = JSONData | BufferData;
 
-export default class Line extends Target {
+export default abstract class Polyline extends RenderObject {
   depth = DepthContainer.getDepth(3);
 
   createModel(modelData: DataType) {

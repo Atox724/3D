@@ -9,9 +9,10 @@ import {
   WarningSign,
   WaterBarrierYellow
 } from "@/assets/model";
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
+
+import RenderObject from "../RenderObject";
 
 // 障碍物与交通提示物
 enum ObstacleEnum {
@@ -40,7 +41,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 
 const gltfLoader = new GLTFLoader();
 
-export default class Obstacle extends Target {
+export default abstract class Obstacle extends RenderObject {
   static cacheModels = {} as Record<ObstacleType, Object3D>;
   static modelFiles: Record<ObstacleType, string> = {
     OBSTACLE_ISOLATION_BARREL: AntiCollisionBarrel, // 防撞桶 隔离桶

@@ -4,7 +4,7 @@ import { RoadPole } from "@/assets/model";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
-import Target from "../target";
+import RenderObject from "../RenderObject";
 
 enum PoleEnum {
   Normal = 0
@@ -24,7 +24,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 
 const gltfLoader = new GLTFLoader();
 
-export default class Pole extends Target {
+export default abstract class Pole extends RenderObject {
   static cacheModels = {} as Record<PoleType, Object3D>;
   static modelFiles: Record<PoleType, string> = {
     Normal: RoadPole

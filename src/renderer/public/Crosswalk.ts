@@ -12,9 +12,10 @@ import {
   type Vector3Like
 } from "three";
 
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
+
+import RenderObject from "../RenderObject";
 
 interface DataType {
   color: RGB;
@@ -31,7 +32,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "crosswalk";
 }
 
-export default class Crosswalk extends Target {
+export default abstract class Crosswalk extends RenderObject {
   depth = DepthContainer.getDepth(2);
 
   createModel(modelData: DataType) {

@@ -14,6 +14,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Easing, Tween } from "three/examples/jsm/libs/tween.module";
 import { Timer } from "three/examples/jsm/misc/Timer";
 
+import type { ALL_RENDER_EVENT } from "@/typings";
 import Stats from "@/utils/three/libs/Stats";
 
 // 监听3d场景绘制进度
@@ -34,7 +35,7 @@ DefaultLoadingManager.onLoad = () => {
 };
 
 export default abstract class Renderer<
-  EventTypes extends EventEmitter.ValidEventTypes = string | symbol,
+  EventTypes extends EventEmitter.ValidEventTypes = ALL_RENDER_EVENT,
   Context extends any = any
 > extends EventEmitter<EventTypes, Context> {
   initialized: boolean;

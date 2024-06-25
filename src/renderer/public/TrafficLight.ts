@@ -7,9 +7,10 @@ import {
   TrafficLight3Horizontal,
   TrafficLight3Vertical
 } from "@/assets/model";
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
+
+import RenderObject from "../RenderObject";
 
 enum TrafficLightEnum {
   TrafficLight1 = 1, // 一灯红绿灯
@@ -33,7 +34,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 
 const gltfLoader = new GLTFLoader();
 
-export default class TrafficLight extends Target {
+export default abstract class TrafficLight extends RenderObject {
   static cacheModels = {} as Record<TrafficLightType, Object3D>;
   static modelFiles: Record<TrafficLightType, string> = {
     TrafficLight1: TrafficLight1,

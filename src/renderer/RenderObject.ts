@@ -6,8 +6,21 @@ import {
   SkinnedMesh
 } from "three";
 
-export default abstract class Target {
+import type { ALL_TOPICS } from "@/constants/topic";
+
+interface UpdateData {
+  data: any;
+  defaultEnable: boolean;
+  group: string;
+  style: Record<string, any>;
+  timestamp_nsec: number;
+  topic: string;
+  type: any;
+}
+
+export default abstract class RenderObject {
   scene: Scene;
+  abstract topic: ALL_TOPICS;
 
   #enable = true;
   get enable() {
@@ -87,5 +100,5 @@ export default abstract class Target {
     this.modelList.clear();
   }
 
-  abstract update(data: any, topic?: string): void;
+  abstract update<T extends UpdateData>(data: T, topic?: string): void;
 }

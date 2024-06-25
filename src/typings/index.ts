@@ -1,4 +1,9 @@
-import type { ALL_RENDER_MAP, ALL_TOPICS } from "@/constants";
+import type {
+  ALL_TOPICS,
+  AUGMENTED_RENDER_MAP,
+  OTHER_INFO_MAP,
+  VIRTUAL_RENDER_MAP
+} from "@/constants/topic";
 
 export type MaybeArray<T> = T | T[];
 export type PlayState = "loading" | "play" | "pause" | "end";
@@ -51,7 +56,7 @@ export namespace EventType {
   export interface DataType {
     type: "data";
     data: {
-      topic: ALLTopicType;
+      topic: ALL_TOPICS;
       data: any;
     };
   }
@@ -142,18 +147,25 @@ export interface UpdateDataTool<T> {
   topic: string;
 }
 
-export type ALLRenderType = keyof typeof ALL_RENDER_MAP;
+export type VIRTUAL_RENDER_TYPE = keyof typeof VIRTUAL_RENDER_MAP;
+export type AUGMENTED_RENDER_TYPE = keyof typeof AUGMENTED_RENDER_MAP;
+export type OTHER_INFO_TYPE = keyof typeof OTHER_INFO_MAP;
 
-export type ALLTopicType = (typeof ALL_TOPICS)[number];
+export type ALL_RENDER_TYPE =
+  | VIRTUAL_RENDER_TYPE
+  | AUGMENTED_RENDER_TYPE
+  | OTHER_INFO_TYPE;
 
 export type TopicEvent = {
-  [E in ALLTopicType]: (data: { topic: E; data: any }) => void;
+  [E in ALL_TOPICS]: (data: { topic: E; data: any }) => void;
 };
 
-export type EnableEvent = {
+export type ENABLE_EVENT = {
   enable: (data: {
-    type: ALLRenderType;
-    topic: ALLTopicType;
+    type: ALL_RENDER_TYPE;
+    topic: ALL_TOPICS;
     enable: boolean;
   }) => void;
 };
+
+export type ALL_RENDER_EVENT = ENABLE_EVENT;

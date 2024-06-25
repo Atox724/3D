@@ -9,8 +9,9 @@ import fontJSON from "three/examples/fonts/helvetiker_regular.typeface.json";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
 
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+
+import RenderObject from "../RenderObject";
 
 interface DataType {
   fontSize: number;
@@ -31,7 +32,7 @@ const textMaterial = new MeshBasicMaterial({
   side: DoubleSide
 });
 
-export default class Text extends Target {
+export default abstract class Text extends RenderObject {
   static textMeshCache = new Map<
     string,
     Mesh<TextGeometry, MeshBasicMaterial>

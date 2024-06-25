@@ -9,7 +9,7 @@ import {
 
 import type { UpdateDataTool } from "@/typings";
 
-import Target from "../target";
+import RenderObject from "../RenderObject";
 
 interface DataType {
   ellipse: {
@@ -30,7 +30,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 
 const materialCache = new MeshBasicMaterial({ transparent: true });
 
-export default class Ellipse extends Target {
+export default abstract class Ellipse extends RenderObject {
   createModel(modelData: DataType) {
     const { x, y, radius_x, radius_y, start_angle } = modelData.ellipse;
     const shape = new Shape();

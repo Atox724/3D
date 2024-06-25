@@ -1,47 +1,27 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
 import { Obstacle, type ObstacleUpdateData } from "@/renderer/public";
-import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
-import Render from "../render";
+type OBSTACLE_MODEL_TOPIC_TYPE =
+  (typeof AUGMENTED_RENDER_MAP.obstacleModel)[number];
 
-const topics = AUGMENTED_RENDER_MAP.obstacleModel;
-type TopicType = (typeof topics)[number];
+export default class ObstacleRender extends Obstacle {
+  topic: OBSTACLE_MODEL_TOPIC_TYPE;
 
-type ObstacleUpdateDataMap = {
-  [key in TopicType]: {
-    topic: TopicType;
-    data: ObstacleUpdateData;
-  };
-};
+  constructor(scene: Scene, topic: OBSTACLE_MODEL_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-type CreateRenderMap = {
-  [key in TopicType]: Obstacle;
-};
-
-export default class ObstacleRender extends Render {
-  type: ALLRenderType = "obstacleModel";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new Obstacle(scene);
-      VIEW_WS.on(topic, (data: ObstacleUpdateDataMap[TopicType]) => {
-        this.createRender[data.topic].update(data.data);
-      });
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+    VIEW_WS.on(
+      topic,
+      (data: {
+        data: ObstacleUpdateData;
+        topic: OBSTACLE_MODEL_TOPIC_TYPE;
+      }) => {
+        this.update(data.data);
+      }
+    );
   }
 }

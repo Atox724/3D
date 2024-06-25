@@ -10,9 +10,9 @@ import {
   type Vector2Like
 } from "three";
 
-import Target from "@/renderer/target";
 import type { Point2, UpdateDataTool } from "@/typings";
 
+import RenderObject from "../RenderObject";
 import Text from "./Text";
 
 interface DataType {
@@ -33,7 +33,7 @@ const polygonMaterial = new MeshLambertMaterial({
   opacity: 0.8
 });
 
-export default class Polygon extends Target {
+export default abstract class Polygon extends RenderObject {
   createModel(modelData: DataType) {
     const { id, contour, color, height, show_id } = modelData;
     const group = new Group();

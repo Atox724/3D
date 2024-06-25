@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3";
 
-import { ALL_TOPICS } from "@/constants";
+import { ALL_TOPICS } from "@/constants/topic";
 import type { TopicEvent } from "@/typings";
 import { formatMsg } from "@/utils";
 
@@ -46,10 +46,10 @@ class WebsocketServer extends EventEmitter<TopicEvent> {
     if (data) this.emit(data.topic, data);
   };
 
-  emit(event: keyof TopicEvent, data: any): boolean {
+  emit(event: ALL_TOPICS, data: any): boolean {
     // 没有被订阅的topic
     if (this.eventNames().indexOf(event) === -1) {
-      if (ALL_TOPICS.indexOf(event) === -1) {
+      if (event in ALL_TOPICS) {
         if (!this.unknownTopics.has(event)) {
           this.unknownTopics.add(event);
           log.danger(event, "is not defined");

@@ -1,10 +1,10 @@
 import type { Scene } from "three";
 
-import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
+import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
 import { Pole, type PoleUpdateData } from "@/renderer/public";
 import { VIEW_WS } from "@/utils/websocket";
 
-type POLE_MODEL_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.poleModel)[number];
+type POLE_MODEL_TOPIC_TYPE = (typeof AUGMENTED_RENDER_MAP.poleModel)[number];
 
 export default class PoleRender extends Pole {
   topic: POLE_MODEL_TOPIC_TYPE;

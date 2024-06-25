@@ -1,9 +1,10 @@
 import type { Object3D, Vector3Like } from "three";
 
 import { EgoCar as EgoCarModel } from "@/assets/model";
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
+
+import RenderObject from "../RenderObject";
 
 enum EgoCarTypeEnum {
   EGO_CAR = "EGO_CAR"
@@ -22,7 +23,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "car_pose";
 }
 
-export default class EgoCar extends Target {
+export default abstract class EgoCar extends RenderObject {
   static cacheModels = {} as Record<EgoCarType, Object3D>;
   static modelFiles: Record<EgoCarType, string> = {
     EGO_CAR: EgoCarModel

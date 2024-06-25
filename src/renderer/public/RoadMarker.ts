@@ -49,7 +49,7 @@ import {
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
-import Target from "../target";
+import RenderObject from "../RenderObject";
 
 enum RoadMarkerEnum {
   Straight = 2,
@@ -113,7 +113,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 
 const gltfLoader = new GLTFLoader();
 
-export default class RoadMarker extends Target {
+export default abstract class RoadMarker extends RenderObject {
   static cacheModels = {} as Record<RoadMarkerType, Object3D>;
   static modelFiles: Record<RoadMarkerType, string> = {
     Straight: Straight,

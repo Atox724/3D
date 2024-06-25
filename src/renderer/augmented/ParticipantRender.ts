@@ -1,47 +1,27 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
 import { Participant, type ParticipantUpdateData } from "@/renderer/public";
-import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
-import Render from "../render";
+type PARTICIPANT_MODEL_TOPIC_TYPE =
+  (typeof AUGMENTED_RENDER_MAP.participantModel)[number];
 
-const topics = AUGMENTED_RENDER_MAP.participantModel;
-type TopicType = (typeof topics)[number];
+export default class ParticipantRender extends Participant {
+  topic: PARTICIPANT_MODEL_TOPIC_TYPE;
 
-type ParticipantUpdateDataMap = {
-  [key in TopicType]: {
-    topic: TopicType;
-    data: ParticipantUpdateData;
-  };
-};
+  constructor(scene: Scene, topic: PARTICIPANT_MODEL_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-type CreateRenderMap = {
-  [key in TopicType]: Participant;
-};
-
-export default class ParticipantRender extends Render {
-  type: ALLRenderType = "participantModel";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new Participant(scene);
-      VIEW_WS.on(topic, (data: ParticipantUpdateDataMap[typeof topic]) => {
-        this.createRender[data.topic].update(data.data);
-      });
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+    VIEW_WS.on(
+      topic,
+      (data: {
+        data: ParticipantUpdateData;
+        topic: PARTICIPANT_MODEL_TOPIC_TYPE;
+      }) => {
+        this.update(data.data);
+      }
+    );
   }
 }

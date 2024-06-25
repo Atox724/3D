@@ -9,8 +9,9 @@ import {
   type Vector3Like
 } from "three";
 
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+
+import RenderObject from "../RenderObject";
 
 const fixedPolygonTypes = ["LeftArrow", "RightArrow", "Cube"] as const;
 
@@ -55,7 +56,7 @@ const extrudeSettings = {
 const geometry = new ExtrudeGeometry(leftShape, extrudeSettings);
 geometry.center();
 
-export default class FixedPolygon extends Target {
+export default abstract class FixedPolygon extends RenderObject {
   static cacheModels = {} as Record<fixedPolygonType, Mesh>;
 
   createModel(modelData: DataType) {

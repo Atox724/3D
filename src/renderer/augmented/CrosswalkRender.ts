@@ -1,47 +1,24 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
-import type { ALLRenderType } from "@/typings";
+import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Crosswalk, type CrosswalkUpdateData } from "../public";
-import Render from "../render";
 
-const topics = AUGMENTED_RENDER_MAP.crosswalk;
-type TopicType = (typeof topics)[number];
+type CROSSWALK_TOPIC_TYPE = (typeof AUGMENTED_RENDER_MAP.crosswalk)[number];
 
-type CrosswalkUpdateDataMap = {
-  [key in TopicType]: {
-    topic: TopicType;
-    data: CrosswalkUpdateData;
-  };
-};
+export default class CrosswalkRender extends Crosswalk {
+  topic: CROSSWALK_TOPIC_TYPE;
 
-type CreateRenderMap = {
-  [key in TopicType]: Crosswalk;
-};
+  constructor(scene: Scene, topic: CROSSWALK_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-export default class CrosswalkRender extends Render {
-  type: ALLRenderType = "crosswalk";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new Crosswalk(scene);
-      VIEW_WS.on(topic, (data: CrosswalkUpdateDataMap[typeof topic]) => {
-        this.createRender[data.topic].update(data.data);
-      });
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+    VIEW_WS.on(
+      topic,
+      (data: { data: CrosswalkUpdateData; topic: CROSSWALK_TOPIC_TYPE }) => {
+        this.update(data.data);
+      }
+    );
   }
 }

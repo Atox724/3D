@@ -7,8 +7,9 @@ import {
   type Vector3Like
 } from "three";
 
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
+
+import RenderObject from "../RenderObject";
 
 interface DataType {
   id?: string;
@@ -21,7 +22,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "arrow";
 }
 
-export default class Arrow extends Target {
+export default abstract class Arrow extends RenderObject {
   createModel(modelData: DataType) {
     const { origin: o, end_point, color: c } = modelData;
     const origin = new Vector3().copy(o);

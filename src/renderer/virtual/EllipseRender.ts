@@ -1,47 +1,24 @@
 import type { Scene } from "three";
 
-import { VIRTUAL_RENDER_MAP } from "@/constants";
-import type { ALLRenderType } from "@/typings";
+import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
 import { Ellipse, type EllipseUpdateData } from "../public";
-import Render from "../render";
 
-const topics = VIRTUAL_RENDER_MAP.ellipse;
-type TopicType = (typeof topics)[number];
+type ELLIPSE_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.ellipse)[number];
 
-type EllipseUpdateDataMap = {
-  [key in TopicType]: {
-    topic: TopicType;
-    data: EllipseUpdateData;
-  };
-};
+export default class EllipseRender extends Ellipse {
+  topic: ELLIPSE_TOPIC_TYPE;
 
-type CreateRenderMap = {
-  [key in TopicType]: Ellipse;
-};
+  constructor(scene: Scene, topic: ELLIPSE_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-export default class EllipseRender extends Render {
-  type: ALLRenderType = "ellipse";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new Ellipse(scene);
-      VIEW_WS.on(topic, (data: EllipseUpdateDataMap[typeof topic]) => {
-        this.createRender[data.topic].update(data.data);
-      });
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+    VIEW_WS.on(
+      topic,
+      (data: { data: EllipseUpdateData; topic: ELLIPSE_TOPIC_TYPE }) => {
+        this.update(data.data);
+      }
+    );
   }
 }

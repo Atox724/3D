@@ -20,9 +20,10 @@ import {
   Tricycle,
   Truck
 } from "@/assets/model";
-import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
+
+import RenderObject from "../RenderObject";
 
 enum ParticipantEnum {
   // 交通参与者
@@ -89,7 +90,7 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "participantModel";
 }
 
-export default class Participant extends Target {
+export default abstract class Participant extends RenderObject {
   static cacheModels = {} as Record<ParticipantType, Object3D>;
   static modelFiles: Record<ParticipantType, string> = {
     PEDESTRIAN: Man,

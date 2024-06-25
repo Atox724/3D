@@ -8,21 +8,15 @@ import {
   Vector3
 } from "three";
 
-import type { EnableEvent } from "@/typings";
+import { ALL_TOPICS, VIRTUAL_RENDER_MAP } from "@/constants/topic";
+import type { VIRTUAL_RENDER_TYPE } from "@/typings";
+import log from "@/utils/log";
 import { VIEW_WS } from "@/utils/websocket";
 
-import Renderer from "..";
-import {
-  EgoCar,
-  type EgoCarUpdateData,
-  Pole,
-  RoadMarker,
-  TrafficLight,
-  TrafficSignal
-} from "../public";
-import type Render from "../render";
+import type { EgoCarUpdateData } from "../public";
+import type RenderObject from "../RenderObject";
+import RenderScene from "../RenderScene";
 import ArrowRender from "./ArrowRender";
-import BoxRender from "./BoxRender";
 import CrosswalkRender from "./CrosswalkRender";
 import EgoCarRender from "./EgoCarRender";
 import EllipseRender from "./EllipseRender";
@@ -32,12 +26,15 @@ import PoleRender from "./PoleRender";
 import PolygonRender from "./PolygonRender";
 import PolylineRender from "./PolylineRender";
 import RoadMarkerRender from "./RoadMarkerRender";
-import TextRender from "./TextRender";
+import TargetRender from "./TargetRender";
+import TextSpriteRender from "./TextSpriteRender";
 import TrafficLightRender from "./TrafficLightRender";
 import TrafficSignalRender from "./TrafficSignalRender";
 
-export default class Virtual extends Renderer<EnableEvent> {
-  createRender: Render[];
+export default class Virtual extends RenderScene {
+  createRender: {
+    [K in VIRTUAL_RENDER_TYPE]: RenderObject[];
+  };
 
   ips: string[] = [];
 
@@ -46,75 +43,110 @@ export default class Virtual extends Renderer<EnableEvent> {
   constructor() {
     super();
 
-    this.createRender = [
-      new EgoCarRender(this.scene),
-      new FreespaceRender(this.scene),
-      new CrosswalkRender(this.scene),
-      new PolylineRender(this.scene),
-      new TextRender(this.scene),
-      new ArrowRender(this.scene),
-      new BoxRender(this.scene),
-      new PolygonRender(this.scene),
-      new EllipseRender(this.scene),
-      new FixedPolygonRender(this.scene),
-      new RoadMarkerRender(this.scene),
-      new PoleRender(this.scene),
-      new TrafficLightRender(this.scene),
-      new TrafficSignalRender(this.scene)
-    ];
+    this.createRender = {
+      arrow: VIRTUAL_RENDER_MAP.arrow.map(
+        (topic) => new ArrowRender(this.scene, topic)
+      ),
+      car_pose: VIRTUAL_RENDER_MAP.car_pose.map(
+        (topic) => new EgoCarRender(this.scene, topic)
+      ),
+      crosswalk: VIRTUAL_RENDER_MAP.crosswalk.map(
+        (topic) => new CrosswalkRender(this.scene, topic)
+      ),
+      ellipse: VIRTUAL_RENDER_MAP.ellipse.map(
+        (topic) => new EllipseRender(this.scene, topic)
+      ),
+      fixedPolygon: VIRTUAL_RENDER_MAP.fixedPolygon.map(
+        (topic) => new FixedPolygonRender(this.scene, topic)
+      ),
+      freespace: VIRTUAL_RENDER_MAP.freespace.map(
+        (topic) => new FreespaceRender(this.scene, topic)
+      ),
+      poleModel: VIRTUAL_RENDER_MAP.poleModel.map(
+        (topic) => new PoleRender(this.scene, topic)
+      ),
+      polygon: VIRTUAL_RENDER_MAP.polygon.map(
+        (topic) => new PolygonRender(this.scene, topic)
+      ),
+      polyline: VIRTUAL_RENDER_MAP.polyline.map(
+        (topic) => new PolylineRender(this.scene, topic)
+      ),
+      roadMarkerModel: VIRTUAL_RENDER_MAP.roadMarkerModel.map(
+        (topic) => new RoadMarkerRender(this.scene, topic)
+      ),
+      target: VIRTUAL_RENDER_MAP.target.map(
+        (topic) => new TargetRender(this.scene, topic)
+      ),
+      text_sprite: VIRTUAL_RENDER_MAP.text_sprite.map(
+        (topic) => new TextSpriteRender(this.scene, topic)
+      ),
+      trafficLightModel: VIRTUAL_RENDER_MAP.trafficLightModel.map(
+        (topic) => new TrafficLightRender(this.scene, topic)
+      ),
+      trafficSignalModel: VIRTUAL_RENDER_MAP.trafficSignalModel.map(
+        (topic) => new TrafficSignalRender(this.scene, topic)
+      )
+    };
 
-    let updatedPos = false;
-
-    const prePos = new Vector3();
-
-    VIEW_WS.on(
-      "car_pose",
-      (data: { topic: "car_pose"; data: EgoCarUpdateData }) => {
-        const [{ position, rotation }] = data.data.data;
-        if (!updatedPos) {
-          this.ground.position.copy(position);
-          this.ground.rotation.z = rotation.z;
-          updatedPos = true;
-        }
-
-        const deltaPos = new Vector3().copy(position).sub(prePos);
-
-        this.camera.position.add(deltaPos);
-
-        this.controls.target.add(deltaPos);
-
-        prePos.copy(position);
-
-        this.updateControls();
-      }
-    );
-
-    VIEW_WS.on("conn_list", (data) => {
-      this.ips = (data as unknown as { conn_list?: string[] }).conn_list || [];
-    });
-
-    this.createRender.forEach((render) => {
-      this.on("enable", (data) => {
-        if (render.type === data.type) {
-          render.createRender[data.topic]?.setEnable(data.enable);
-        }
-      });
-    });
-
-    window.addEventListener("keydown", this.onKeyDown);
+    this.addEvents();
 
     this.preload();
   }
 
+  addEvents() {
+    this.on("enable", (data) => {
+      const type = data.type as VIRTUAL_RENDER_TYPE;
+      const topicMap = this.createRender[type];
+      const render = topicMap.find((render) => render.topic === data.topic);
+      if (!render) {
+        log.danger(type, `[${data.topic}] not found`);
+      } else {
+        render.setEnable(data.enable);
+      }
+    });
+    let updatedPos = false;
+
+    const prePos = new Vector3();
+
+    VIEW_WS.on(ALL_TOPICS.CAR_POSE, (data: { data: EgoCarUpdateData }) => {
+      const [{ position, rotation }] = data.data.data;
+      if (!updatedPos) {
+        this.ground.position.copy(position);
+        this.ground.rotation.z = rotation.z;
+        updatedPos = true;
+      }
+
+      const deltaPos = new Vector3().copy(position).sub(prePos);
+
+      this.camera.position.add(deltaPos);
+
+      this.controls.target.add(deltaPos);
+
+      prePos.copy(position);
+
+      this.updateControls();
+    });
+
+    VIEW_WS.on(ALL_TOPICS.CONN_LIST, (data) => {
+      this.ips = (data as any).conn_list || [];
+    });
+    window.addEventListener("keydown", this.onKeyDown);
+  }
+
   preload() {
-    EgoCar.preloading().then((res) => {
+    EgoCarRender.preloading().then((res) => {
       res.forEach((item) => {
         if (item.status === "fulfilled") {
           this.scene.add(item.value);
         }
       });
     });
-    const preloadArray = [RoadMarker, Pole, TrafficLight, TrafficSignal];
+    const preloadArray = [
+      RoadMarkerRender,
+      PoleRender,
+      TrafficLightRender,
+      TrafficSignalRender
+    ];
     return Promise.allSettled(
       preloadArray.map((modelRender) => modelRender.preloading())
     );
@@ -156,11 +188,14 @@ export default class Virtual extends Renderer<EnableEvent> {
   }
 
   dispose(): void {
-    this.createRender.forEach((target) => {
-      target.dispose();
+    Object.values(this.createRender).forEach((renders) => {
+      renders.forEach((render) => {
+        render.dispose();
+      });
     });
-    this.createRender = [];
-    VIEW_WS.off("conn_list");
+    this.removeAllListeners();
+    VIEW_WS.off(ALL_TOPICS.CAR_POSE);
+    VIEW_WS.off(ALL_TOPICS.CONN_LIST);
     window.removeEventListener("keydown", this.onKeyDown);
     super.dispose();
   }

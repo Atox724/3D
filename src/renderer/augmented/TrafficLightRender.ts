@@ -1,47 +1,27 @@
 import type { Scene } from "three";
 
-import { AUGMENTED_RENDER_MAP } from "@/constants";
+import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
 import { TrafficLight, type TrafficLightUpdateData } from "@/renderer/public";
-import type { ALLRenderType } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
-import Render from "../render";
+type TRAFFIC_LIGHT_MODEL_TOPIC_TYPE =
+  (typeof AUGMENTED_RENDER_MAP.trafficLightModel)[number];
 
-const topics = AUGMENTED_RENDER_MAP.trafficLightModel;
-type TopicType = (typeof topics)[number];
+export default class TrafficLightRender extends TrafficLight {
+  topic: TRAFFIC_LIGHT_MODEL_TOPIC_TYPE;
 
-type TrafficLightUpdateDataMap = {
-  [key in TopicType]: {
-    topic: TopicType;
-    data: TrafficLightUpdateData;
-  };
-};
+  constructor(scene: Scene, topic: TRAFFIC_LIGHT_MODEL_TOPIC_TYPE) {
+    super(scene);
+    this.topic = topic;
 
-type CreateRenderMap = {
-  [key in TopicType]: TrafficLight;
-};
-
-export default class TrafficLightRender extends Render {
-  type: ALLRenderType = "trafficLightModel";
-
-  createRender = {} as CreateRenderMap;
-
-  constructor(scene: Scene) {
-    super();
-
-    topics.forEach((topic) => {
-      this.createRender[topic] = new TrafficLight(scene);
-      VIEW_WS.on(topic, (data: TrafficLightUpdateDataMap[typeof topic]) => {
-        this.createRender[data.topic].update(data.data);
-      });
-    });
-  }
-
-  dispose(): void {
-    let topic: TopicType;
-    for (topic in this.createRender) {
-      VIEW_WS.off(topic);
-    }
-    super.dispose();
+    VIEW_WS.on(
+      topic,
+      (data: {
+        data: TrafficLightUpdateData;
+        topic: TRAFFIC_LIGHT_MODEL_TOPIC_TYPE;
+      }) => {
+        this.update(data.data);
+      }
+    );
   }
 }
