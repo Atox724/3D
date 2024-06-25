@@ -5,7 +5,7 @@ import {
   Mesh,
   type Object3D,
   SkinnedMesh,
-  type Vector3
+  type Vector3Like
 } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils";
 
@@ -24,7 +24,7 @@ import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
-enum ParticipantTypeEnum {
+enum ParticipantEnum {
   // 交通参与者
   UNKNOWN = 0,
   PEDESTRIAN = 1, // 行人
@@ -62,13 +62,13 @@ enum ParticipantTypeEnum {
   // Truck = 5, // 卡车
   // Bus = 6, // 公交车/巴士
 }
-type ParticipantType = keyof typeof ParticipantTypeEnum;
+type ParticipantType = keyof typeof ParticipantEnum;
 
-interface ParticipantData {
+interface DataType {
   id: number;
   type: number; // 元素类型
-  position: Vector3; // 模型中心位置
-  rotation: Vector3; // 模型偏转值
+  position: Vector3Like; // 模型中心位置
+  rotation: Vector3Like; // 模型偏转值
   vehicleLightStatus?: { brake: number; lampSignal: number };
   doorObject?: {
     leftFront: boolean;
@@ -80,12 +80,12 @@ interface ParticipantData {
     trunkUp?: boolean;
   };
   color?: string;
-  sizeinfo?: Vector3;
+  sizeinfo?: Vector3Like;
 }
 
 const gltfLoader = new GLTFLoader();
 
-export interface UpdateData extends UpdateDataTool<ParticipantData[]> {
+export interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "participantModel";
 }
 
@@ -147,33 +147,33 @@ export default class Participant extends Target {
     }
   }
 
-  createModel(modelData: ParticipantData) {
+  createModel(modelData: DataType) {
     const { id, type } = modelData;
-    let model: Object3D;
-    const typeName = ParticipantTypeEnum[type] as ParticipantType;
-    if (type === ParticipantTypeEnum.PEDESTRIAN) {
-      model = clone(Participant.cacheModels.PEDESTRIAN);
-      model.children[0].rotation.z = Math.PI;
-      const mixer = new AnimationMixer(model);
-      const action = mixer.clipAction(
-        Participant.animationsList[ParticipantTypeEnum[type]][0]
-      );
-      action.play();
-      if (!("mixers" in this.scene.userData)) {
-        this.scene.userData.mixers = {};
+    const typeName = ParticipantEnum[type] as ParticipantType;
+    if (Participant.cacheModels[typeName]) {
+      let model: Object3D;
+      if (type === ParticipantEnum.PEDESTRIAN) {
+        model = clone(Participant.cacheModels.PEDESTRIAN);
+        model.children[0].rotation.z = Math.PI;
+        const mixer = new AnimationMixer(model);
+        const action = mixer.clipAction(
+          Participant.animationsList[ParticipantEnum[type]][0]
+        );
+        action.play();
+        if (!("mixers" in this.scene.userData)) {
+          this.scene.userData.mixers = {};
+        }
+        this.scene.userData.mixers[typeName + id + "Mixer"] = mixer;
+      } else {
+        model = Participant.cacheModels[typeName].clone();
       }
-      this.scene.userData.mixers[typeName + id + "Mixer"] = mixer;
-    } else {
-      model = Participant.cacheModels[typeName].clone();
+      model.userData.typeName = typeName;
+      model.userData.id = id;
+      return model;
     }
-
-    model.userData.type = typeName;
-    model.userData.id = id;
-
-    return model;
   }
 
-  setModelAttributes(model: Object3D, modelData: ParticipantData) {
+  setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation, color } = modelData;
 
     model.traverse((child) => {
@@ -197,22 +197,26 @@ export default class Participant extends Target {
     data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList.get(id);
-      const typeName = ParticipantTypeEnum[type] as ParticipantType;
+      const typeName = ParticipantEnum[type] as ParticipantType;
       if (model) {
-        if (model.userData.type !== ParticipantTypeEnum[type]) {
+        if (model.userData.typeName !== ParticipantEnum[type]) {
           this.disposeObject(model);
           const newModel = this.createModel(modelData);
-          this.scene.add(newModel);
-          this.modelList.set(id, newModel);
-          this.setModelAttributes(newModel, modelData);
+          if (newModel) {
+            this.setModelAttributes(newModel, modelData);
+            this.modelList.set(id, newModel);
+            this.scene.add(newModel);
+          }
         } else {
           this.setModelAttributes(model, modelData);
         }
       } else if (Participant.cacheModels[typeName]) {
         const newModel = this.createModel(modelData);
-        this.setModelAttributes(newModel, modelData);
-        this.scene.add(newModel);
-        this.modelList.set(id, newModel);
+        if (newModel) {
+          this.setModelAttributes(newModel, modelData);
+          this.modelList.set(id, newModel);
+          this.scene.add(newModel);
+        }
       }
     });
     this.checkModelByData(data.data);

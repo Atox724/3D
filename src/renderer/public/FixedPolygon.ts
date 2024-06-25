@@ -5,7 +5,8 @@ import {
   Mesh,
   MeshBasicMaterial,
   type Object3D,
-  Shape
+  Shape,
+  type Vector3Like
 } from "three";
 
 import Target from "@/renderer/target";
@@ -19,9 +20,9 @@ interface DataType {
   id: number;
   type: number;
   status: number;
-  position: { x: number; y: number; z: number };
-  rotation: { x: number; y: number; z: number };
-  scale: { x: number; y: number; z: number };
+  position: Vector3Like;
+  rotation: Vector3Like;
+  scale: Vector3Like;
 }
 
 export interface UpdateData extends UpdateDataTool<DataType[]> {

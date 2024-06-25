@@ -1,4 +1,4 @@
-import type { Object3D, Vector3 } from "three";
+import type { Object3D, Vector3Like } from "three";
 
 import {
   TrafficLight1,
@@ -11,29 +11,30 @@ import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
-enum TrafficLightTypeEnum {
+enum TrafficLightEnum {
   TrafficLight1 = 1, // 一灯红绿灯
   TrafficLight2Vertical = 2, // 二灯红绿灯
   TrafficLight3Vertical = 3, // 三灯红绿灯
   TrafficLight2Horizontal = 4, // 二灯横向红绿灯
   TrafficLight3Horizontal = 5 // 三灯横向红绿灯
 }
-type TrafficLightType = keyof typeof TrafficLightTypeEnum;
+type TrafficLightType = keyof typeof TrafficLightEnum;
 
-interface TrafficLightData {
+interface DataType {
   id: number;
   type: number; // 元素类型
-  position: Vector3; // 模型中心位置
-  rotation: Vector3; // 模型偏转值
+  position: Vector3Like; // 模型中心位置
+  rotation: Vector3Like; // 模型偏转值
+}
+
+export interface UpdateData extends UpdateDataTool<DataType[]> {
+  type: "trafficLightModel";
 }
 
 const gltfLoader = new GLTFLoader();
 
-export interface UpdateData extends UpdateDataTool<TrafficLightData[]> {
-  type: "trafficLightModel";
-}
-
 export default class TrafficLight extends Target {
+  static cacheModels = {} as Record<TrafficLightType, Object3D>;
   static modelFiles: Record<TrafficLightType, string> = {
     TrafficLight1: TrafficLight1,
     TrafficLight2Vertical: TrafficLight2Vertical,
@@ -42,7 +43,6 @@ export default class TrafficLight extends Target {
     TrafficLight3Horizontal: TrafficLight3Horizontal
   };
 
-  static cacheModels = {} as Record<TrafficLightType, Object3D>;
   static preloading() {
     const proms = [];
     let key: keyof typeof TrafficLight.modelFiles;
@@ -67,7 +67,18 @@ export default class TrafficLight extends Target {
     }
   }
 
-  setModelAttributes(model: Object3D, modelData: TrafficLightData) {
+  createModel(modelData: DataType) {
+    const { type } = modelData;
+    const typeName = TrafficLightEnum[type] as TrafficLightType;
+
+    if (TrafficLight.cacheModels[typeName]) {
+      const model = TrafficLight.cacheModels[typeName].clone();
+      model.userData.typeName = typeName;
+      return model;
+    }
+  }
+
+  setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation } = modelData;
     model.position.set(position.x, position.y, position.z);
     model.rotation.set(rotation.x, rotation.y, rotation.z);
@@ -82,14 +93,25 @@ export default class TrafficLight extends Target {
     data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList.get(id);
-      const typeName = TrafficLightTypeEnum[type] as TrafficLightType;
       if (model) {
-        this.setModelAttributes(model, modelData);
-      } else if (TrafficLight.cacheModels[typeName]) {
-        const newModel = TrafficLight.cacheModels[typeName].clone();
-        this.setModelAttributes(newModel, modelData);
-        this.scene.add(newModel);
-        this.modelList.set(id, newModel);
+        if (model.userData.typeName !== TrafficLightEnum[type]) {
+          this.disposeObject(model);
+          const newModel = this.createModel(modelData);
+          if (newModel) {
+            this.setModelAttributes(newModel, modelData);
+            this.modelList.set(id, newModel);
+            this.scene.add(newModel);
+          }
+        } else {
+          this.setModelAttributes(model, modelData);
+        }
+      } else {
+        const newModel = this.createModel(modelData);
+        if (newModel) {
+          this.setModelAttributes(newModel, modelData);
+          this.modelList.set(id, newModel);
+          this.scene.add(newModel);
+        }
       }
     });
     this.checkModelByData(data.data);

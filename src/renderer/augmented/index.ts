@@ -11,7 +11,13 @@ import { Reflector } from "three/examples/jsm/objects/Reflector";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Renderer from "..";
-import { EgoCar, Obstacle, Participant, TrafficSignal } from "../public";
+import {
+  EgoCar,
+  Obstacle,
+  Participant,
+  RoadMarker,
+  TrafficSignal
+} from "../public";
 import TrafficLight from "../public/TrafficLight";
 import type Render from "../render";
 import CrosswalkRender from "./CrosswalkRender";
@@ -20,6 +26,7 @@ import FreespaceRender from "./FreespaceRender";
 import ObstacleRender from "./ObstacleRender";
 import ParticipantRender from "./ParticipantRender";
 import PolylineRender from "./PolylineRender";
+import RoadMarkerRender from "./RoadMarkerRender";
 import TrafficLightRender from "./TrafficLightRender";
 import TrafficSignalRender from "./TrafficSignalRender";
 
@@ -39,7 +46,8 @@ export default class Augmented extends Renderer {
       new ObstacleRender(this.scene),
       new ParticipantRender(this.scene),
       new TrafficLightRender(this.scene),
-      new TrafficSignalRender(this.scene)
+      new TrafficSignalRender(this.scene),
+      new RoadMarkerRender(this.scene)
     ];
 
     VIEW_WS.on("conn_list", (data) => {
@@ -57,11 +65,11 @@ export default class Augmented extends Renderer {
       });
     });
     const preloadArray = [
-      EgoCar,
       Obstacle,
       Participant,
       TrafficLight,
-      TrafficSignal
+      TrafficSignal,
+      RoadMarker
     ];
     return Promise.allSettled(
       preloadArray.map((modelRender) => modelRender.preloading())

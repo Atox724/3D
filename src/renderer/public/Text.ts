@@ -1,4 +1,10 @@
-import { DoubleSide, Mesh, MeshBasicMaterial, type Object3D } from "three";
+import {
+  DoubleSide,
+  Mesh,
+  MeshBasicMaterial,
+  type Object3D,
+  type Vector2Like
+} from "three";
 import fontJSON from "three/examples/fonts/helvetiker_regular.typeface.json";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
@@ -9,7 +15,7 @@ import type { UpdateDataTool } from "@/typings";
 interface DataType {
   fontSize: number;
   id: number;
-  position: { x: number; y: number };
+  position: Vector2Like;
   text: string;
 }
 

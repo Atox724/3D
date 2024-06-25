@@ -57,7 +57,7 @@ export default abstract class Target {
     });
 
     this.scene.remove(obj);
-    const mixerKey = obj.userData.type + obj.userData.id + "Mixer";
+    const mixerKey = obj.userData.typeName + obj.userData.id + "Mixer";
     const mixer = this.scene.userData.mixers?.[mixerKey] as AnimationMixer;
     if (mixer) {
       mixer.stopAllAction();

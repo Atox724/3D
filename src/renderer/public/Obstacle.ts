@@ -1,4 +1,4 @@
-import type { Object3D, Vector3 } from "three";
+import type { Object3D, Vector3Like } from "three";
 
 import {
   AntiCollisionBarrel,
@@ -14,7 +14,7 @@ import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
 // 障碍物与交通提示物
-enum ObstacleTypeEnum {
+enum ObstacleEnum {
   OBSTACLE_ISOLATION_BARREL = 294, // 障碍物隔离桶   2 隔离桶
   // OBSTACLE_BARRIER = 295, // 路栏  5
   OBSTACLE_CONE = 296, // 路锥   0 锥形桶
@@ -25,20 +25,20 @@ enum ObstacleTypeEnum {
   OBSTACLE_OTHER_DIVERSION = 301, // 7 施工区导流标志
   OBSTACLE_SPEED_BUMP = 302 //  减速带
 }
-type ObstacleType = keyof typeof ObstacleTypeEnum;
+type ObstacleType = keyof typeof ObstacleEnum;
 
-interface ObstacleData {
+interface DataType {
   id: number;
   type: number; // 元素类型
-  position: Vector3; // 模型中心位置
-  rotation: Vector3; // 模型偏转值
+  position: Vector3Like; // 模型中心位置
+  rotation: Vector3Like; // 模型偏转值
+}
+
+export interface UpdateData extends UpdateDataTool<DataType[]> {
+  type: "obstacleModel";
 }
 
 const gltfLoader = new GLTFLoader();
-
-export interface UpdateData extends UpdateDataTool<ObstacleData[]> {
-  type: "obstacleModel";
-}
 
 export default class Obstacle extends Target {
   static cacheModels = {} as Record<ObstacleType, Object3D>;
@@ -77,7 +77,17 @@ export default class Obstacle extends Target {
     }
   }
 
-  setModelAttributes(model: Object3D, modelData: ObstacleData) {
+  createModel(modelData: DataType) {
+    const { type } = modelData;
+    const typeName = ObstacleEnum[type] as ObstacleType;
+    if (Obstacle.cacheModels[typeName]) {
+      const model = Obstacle.cacheModels[typeName].clone();
+      model.userData.typeName = typeName;
+      return model;
+    }
+  }
+
+  setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation } = modelData;
     model.position.set(position.x, position.y, position.z);
     model.rotation.set(rotation.x, rotation.y, rotation.z);
@@ -92,14 +102,25 @@ export default class Obstacle extends Target {
     data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList.get(id);
-      const typeName = ObstacleTypeEnum[type] as ObstacleType;
       if (model) {
-        this.setModelAttributes(model, modelData);
-      } else if (Obstacle.cacheModels[typeName]) {
-        const newModel = Obstacle.cacheModels[typeName].clone();
-        this.setModelAttributes(newModel, modelData);
-        this.scene.add(newModel);
-        this.modelList.set(id, newModel);
+        if (model.userData.typeName !== ObstacleEnum[type]) {
+          this.disposeObject(model);
+          const newModel = this.createModel(modelData);
+          if (newModel) {
+            this.setModelAttributes(newModel, modelData);
+            this.modelList.set(id, newModel);
+            this.scene.add(newModel);
+          }
+        } else {
+          this.setModelAttributes(model, modelData);
+        }
+      } else {
+        const newModel = this.createModel(modelData);
+        if (newModel) {
+          this.setModelAttributes(newModel, modelData);
+          this.scene.add(newModel);
+          this.modelList.set(id, newModel);
+        }
       }
     });
     this.checkModelByData(data.data);

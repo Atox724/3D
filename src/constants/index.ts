@@ -13,6 +13,8 @@ export const VIRTUAL_RENDER_MAP = {
     "localization_local_history_trajectory",
     "perception_camera_front",
     "perception_camera_nv",
+    // 新增
+    "fusion_gop",
     // 旧接口
     "perception_fusion_object"
   ],
@@ -23,13 +25,23 @@ export const VIRTUAL_RENDER_MAP = {
     "perception_fusion /perception/fusion/object",
     "perception_camera_front",
     "perception_camera_nv",
+    // 新增
+    "fusion_gop",
     // 旧接口
     "perception_fusion_object"
   ],
   crosswalk: ["localmap_crosswalk"],
-  ellipse: ["localization_position"],
+  ellipse: [
+    "localization_position",
+    // 新增
+    "boundary_pointA",
+    "sdmap_startlink_node",
+    "sdmap_endlink_node"
+  ],
   freespace: [
     "localmap_lane_lane",
+    // 新增
+    "localmap_junction",
     // 旧接口
     "hdmap Free Space"
   ],
@@ -43,6 +55,8 @@ export const VIRTUAL_RENDER_MAP = {
     "perception_fusion /perception/fusion/object",
     "perception_camera_front",
     "perception_camera_nv",
+    // 新增
+    "fusion_gop",
     // 旧接口
     "perception_fusion_object"
   ],
@@ -61,6 +75,10 @@ export const VIRTUAL_RENDER_MAP = {
     "localmap_stop_line",
     "localmap_speedbump",
     "memdrive_ref_route_trajectory",
+    // 新增
+    "memdrive_ref_trajectory",
+    "sdmap_geometry_line",
+    "sdmap_nav_line",
     // 旧接口
     "hdmap Lane Lines"
   ],
@@ -103,7 +121,8 @@ export const OTHER_INFO_MAP = {
     "dpc_control_debug",
     "dpc_planning_tag",
     "odometry_info",
-    "localmap_info"
+    "localmap_info",
+    "sensor_ins_info"
   ],
   image: [
     "center_camera_fov120_marks",
@@ -135,7 +154,8 @@ export const OTHER_INFO_MAP = {
   pilotDrive: ["pilothmi_drive_info"],
   statusInfo: ["pilothmi_vehicle_report", "pilothmi_envm_info"],
   Weather: ["pilothmi_perception_envodd"],
-  conn_list: ["conn_list"]
+  conn_list: ["conn_list"],
+  vehicleAlarmInfo: ["VehicleAlarmInfo"]
 } as const;
 
 export const OTHER_INFO_TOPICS = Object.values(OTHER_INFO_MAP).flat();

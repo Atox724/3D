@@ -4,36 +4,37 @@ import {
   DoubleSide,
   Mesh,
   Object3D,
+  type RGB,
   ShaderMaterial,
   Shape,
   ShapeGeometry,
   Vector2,
-  type Vector3
+  type Vector3Like
 } from "three";
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import DepthContainer from "@/utils/three/depthTester";
 
-interface CrosswalkData {
-  color: { r: number; g: number; b: number };
+interface DataType {
+  color: RGB;
   id: number;
-  position: Vector3; // 中心点坐标，z轴坐标将忽略
-  rotation: Vector3; // 朝向角，通常来说只识别z轴的偏向角
-  shape: Vector3[];
+  position: Vector3Like; // 中心点坐标，z轴坐标将忽略
+  rotation: Vector3Like; // 朝向角，通常来说只识别z轴的偏向角
+  shape: Vector3Like[];
 
   type?: number; // 元素类型
   lane_ids?: number[];
 }
 
-export interface UpdateData extends UpdateDataTool<CrosswalkData[]> {
+export interface UpdateData extends UpdateDataTool<DataType[]> {
   type: "crosswalk";
 }
 
 export default class Crosswalk extends Target {
   depth = DepthContainer.getDepth(2);
 
-  createModel(modelData: CrosswalkData) {
+  createModel(modelData: DataType) {
     const { shape } = modelData;
     const points = shape.map((point) => new Vector2(point.x, point.y));
     const side1 = new Vector2().subVectors(points[0], points[1]);
@@ -84,14 +85,13 @@ export default class Crosswalk extends Target {
     return mesh;
   }
 
-  setModelAttributes(model: Object3D, modelData: CrosswalkData) {
+  setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation, color } = modelData;
-    model.position.set(position.x, position.y, this.depth);
-    model.rotation.set(rotation.x, rotation.y, rotation.z);
-    if ("material" in model && model.material instanceof ShaderMaterial) {
-      model.material.uniforms.customColor.value.set(color.r, color.g, color.b);
-    }
-    model.visible = this.enable;
+    const mesh = model as Mesh<ShapeGeometry, ShaderMaterial>;
+    mesh.position.set(position.x, position.y, this.depth);
+    mesh.rotation.set(rotation.x, rotation.y, rotation.z);
+    mesh.material.uniforms.customColor.value.set(color.r, color.g, color.b);
+    mesh.visible = this.enable;
   }
 
   update(data: UpdateData) {

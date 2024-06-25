@@ -1,4 +1,4 @@
-import { Color, Mesh, ShaderMaterial } from "three";
+import { Color, Group, Mesh, Object3D, type RGB, ShaderMaterial } from "three";
 
 import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
@@ -12,7 +12,7 @@ import {
 } from "@/utils/three/objects/Line/shader";
 
 interface DataType {
-  color: { r: number; g: number; b: number };
+  color: RGB;
   lineType: number;
   width: number;
 }
@@ -45,78 +45,98 @@ export type UpdateData = JSONData | BufferData;
 export default class Line extends Target {
   depth = DepthContainer.getDepth(3);
 
+  createModel(modelData: DataType) {
+    const group = new Group();
+    let point: PointData[] = [];
+    if ("polyline" in modelData) {
+      point = modelData.polyline as PointData[];
+    } else if ("point" in modelData) {
+      point = modelData.point as PointData[];
+    }
+    if (!point.length) return;
+    let draw_solid_line = true;
+    let draw_gradient_line = true;
+    switch (modelData.lineType) {
+      case 0:
+        draw_solid_line = true;
+        draw_gradient_line = true;
+        break;
+      case 1:
+        draw_solid_line = true;
+        draw_gradient_line = false;
+        break;
+      case 2:
+        draw_solid_line = false;
+        draw_gradient_line = true;
+        break;
+      default:
+        draw_solid_line = true;
+        draw_gradient_line = false;
+        break;
+    }
+    if (draw_gradient_line) {
+      const geometry = new Line2D(
+        point.map((line) => [
+          line.x,
+          line.y,
+          line.color.r,
+          line.color.g,
+          line.color.b,
+          line.color.a
+        ]),
+        { distances: false, closed: false, ratio: true }
+      );
+      const material = CustomizedShader({
+        thickness: modelData.width
+      });
+      const mesh = new Mesh(geometry, material);
+      mesh.name = "gradient_line";
+      group.add(mesh);
+    }
+    if (draw_solid_line) {
+      const line_style = getPolylineStyle(
+        modelData.lineType,
+        modelData.color,
+        modelData.width
+      );
+      const geometry = new Line2D(
+        point.map((line) => [line.x, line.y]),
+        {
+          distances: line_style.distance,
+          closed: false
+        }
+      );
+      const mesh = new Mesh(geometry, line_style.mat);
+      mesh.name = "solid_line";
+      group.add(mesh);
+    }
+    return group;
+  }
+
+  setModelAttributes(model: Object3D, index: number) {
+    const group = model as Group;
+    const gradient_line = group.getObjectByName("gradient_line");
+    if (gradient_line) {
+      gradient_line.position.z = this.depth + index * 0.005 + 0.03;
+      gradient_line.renderOrder = gradient_line.position.z;
+    }
+    const solid_line = group.getObjectByName("solid_line");
+    if (solid_line) {
+      solid_line.position.z = this.depth + index * 0.0005 - 0.001;
+      solid_line.renderOrder = solid_line.position.z;
+    }
+    group.visible = this.enable;
+  }
+
   update(data: UpdateData) {
     this.clear();
     if (!data.data.length) return;
-    data.data.forEach((item, index) => {
-      let point: PointData[] = [];
-      if ("polyline" in item) {
-        point = item.polyline;
-      } else {
-        point = item.point;
-      }
-      if (!point.length) return;
-      let draw_solid_line = true;
-      let draw_gradient_line = true;
-      switch (item.lineType) {
-        case 0:
-          draw_solid_line = true;
-          draw_gradient_line = true;
-          break;
-        case 1:
-          draw_solid_line = true;
-          draw_gradient_line = false;
-          break;
-        case 2:
-          draw_solid_line = false;
-          draw_gradient_line = true;
-          break;
-        default:
-          draw_solid_line = true;
-          draw_gradient_line = false;
-          break;
-      }
-      if (draw_gradient_line) {
-        const geometry = new Line2D(
-          point.map((line) => [
-            line.x,
-            line.y,
-            line.color.r,
-            line.color.g,
-            line.color.b,
-            line.color.a
-          ]),
-          { distances: false, closed: false, ratio: true }
-        );
-        const material = CustomizedShader({
-          thickness: item.width
-        });
-        const mesh = new Mesh(geometry, material);
-        mesh.position.z = this.depth + index * 0.005 + 0.03;
-        mesh.renderOrder = mesh.position.z;
-        mesh.visible = this.enable;
-        this.modelList.set(mesh.uuid, mesh);
-        this.scene.add(mesh);
-      }
-      if (draw_solid_line) {
-        const line_style = getPolylineStyle(
-          item.lineType,
-          item.color,
-          item.width
-        );
-        const geometry = new Line2D(
-          point.map((line) => [line.x, line.y]),
-          {
-            distances: line_style.distance,
-            closed: false
-          }
-        );
-        const mesh = new Mesh(geometry, line_style.mat);
-        mesh.position.z = this.depth + index * 0.0005 - 0.001;
-        mesh.renderOrder = mesh.position.z;
-        mesh.visible = this.enable;
-        this.modelList.set(mesh.uuid, mesh);
-        this.scene.add(mesh);
+    data.data.forEach((modelData, index) => {
+      const newModel = this.createModel(modelData);
+      if (newModel) {
+        this.setModelAttributes(newModel, index);
+        this.modelList.set(newModel.uuid, newModel);
+        this.scene.add(newModel);
       }
     });
   }

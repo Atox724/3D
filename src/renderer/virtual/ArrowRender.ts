@@ -15,7 +15,9 @@ type ArrowUpdateDataMap = {
     | "localization_global_history_trajectory"
     | "localization_local_history_trajectory"
     ? { topic: key; data: ArrowUpdateData }
-    : { topic: key; data: { arrow_array: ArrowUpdateData } };
+    : key extends "fusion_gop"
+      ? { topic: key; data: { heading_arrow_array: ArrowUpdateData } }
+      : { topic: key; data: { arrow_array: ArrowUpdateData } };
 };
 
 type CreateRenderMap = {
@@ -39,6 +41,11 @@ export default class ArrowRender extends Render {
         VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {
           const renderItem = this.createRender[data.topic];
           renderItem.update(data.data);
+        });
+      } else if (topic === "fusion_gop") {
+        VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {
+          const renderItem = this.createRender[data.topic];
+          renderItem.update(data.data.heading_arrow_array);
         });
       } else {
         VIEW_WS.on(topic, (data: ArrowUpdateDataMap[typeof topic]) => {

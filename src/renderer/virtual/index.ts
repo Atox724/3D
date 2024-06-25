@@ -12,7 +12,14 @@ import type { EnableEvent } from "@/typings";
 import { VIEW_WS } from "@/utils/websocket";
 
 import Renderer from "..";
-import { EgoCar, type EgoCarUpdateData } from "../public";
+import {
+  EgoCar,
+  type EgoCarUpdateData,
+  Pole,
+  RoadMarker,
+  TrafficLight,
+  TrafficSignal
+} from "../public";
 import type Render from "../render";
 import ArrowRender from "./ArrowRender";
 import BoxRender from "./BoxRender";
@@ -21,9 +28,13 @@ import EgoCarRender from "./EgoCarRender";
 import EllipseRender from "./EllipseRender";
 import FixedPolygonRender from "./FixedPolygonRender";
 import FreespaceRender from "./FreespaceRender";
+import PoleRender from "./PoleRender";
 import PolygonRender from "./PolygonRender";
 import PolylineRender from "./PolylineRender";
+import RoadMarkerRender from "./RoadMarkerRender";
 import TextRender from "./TextRender";
+import TrafficLightRender from "./TrafficLightRender";
+import TrafficSignalRender from "./TrafficSignalRender";
 
 export default class Virtual extends Renderer<EnableEvent> {
   createRender: Render[];
@@ -45,7 +56,11 @@ export default class Virtual extends Renderer<EnableEvent> {
       new BoxRender(this.scene),
       new PolygonRender(this.scene),
       new EllipseRender(this.scene),
-      new FixedPolygonRender(this.scene)
+      new FixedPolygonRender(this.scene),
+      new RoadMarkerRender(this.scene),
+      new PoleRender(this.scene),
+      new TrafficLightRender(this.scene),
+      new TrafficSignalRender(this.scene)
     ];
 
     let updatedPos = false;
@@ -99,6 +114,10 @@ export default class Virtual extends Renderer<EnableEvent> {
         }
       });
     });
+    const preloadArray = [RoadMarker, Pole, TrafficLight, TrafficSignal];
+    return Promise.allSettled(
+      preloadArray.map((modelRender) => modelRender.preloading())
+    );
   }
 
   initialize(canvasId: string) {

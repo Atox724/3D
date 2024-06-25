@@ -6,7 +6,8 @@ import {
   LineSegments,
   Mesh,
   MeshLambertMaterial,
-  type Object3D
+  type Object3D,
+  type RGB
 } from "three";
 
 import Target from "@/renderer/target";
@@ -15,7 +16,7 @@ import type { UpdateDataTool } from "@/typings";
 import Text from "./Text";
 
 interface DataType {
-  color: { r: number; g: number; b: number };
+  color: RGB;
   extra_info: string[];
   height: number;
   id: number;
@@ -70,21 +71,22 @@ export default class Box extends Target {
 
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { yaw, x, y, length, width, height, color } = modelData;
-    model.rotation.z = yaw;
-    model.position.set(x, y, height / 2);
-    model.visible = this.enable;
+    const group = model as Group;
+    group.rotation.z = yaw;
+    group.position.set(x, y, height / 2);
+    group.visible = this.enable;
 
-    const boxMeshNew = model.getObjectByName("box");
+    const boxMeshNew = group.getObjectByName("box");
     if (boxMeshNew instanceof Mesh) {
       boxMeshNew.scale.set(length, width, height);
       boxMeshNew.material.color.setRGB(color.r, color.g, color.b);
     }
-    const edgesMeshNew = model.getObjectByName("edges");
+    const edgesMeshNew = group.getObjectByName("edges");
     if (edgesMeshNew instanceof LineSegments) {
       edgesMeshNew.scale.set(length, width, height);
       edgesMeshNew.material.color.setRGB(color.r, color.g, color.b);
     }
-    const textMeshNew = model.getObjectByName("text");
+    const textMeshNew = group.getObjectByName("text");
     if (textMeshNew instanceof Mesh) {
       textMeshNew.material.color.setRGB(color.r, color.g, color.b);
     }

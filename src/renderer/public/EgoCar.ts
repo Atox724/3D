@@ -1,4 +1,4 @@
-import type { Object3D } from "three";
+import type { Object3D, Vector3Like } from "three";
 
 import { EgoCar as EgoCarModel } from "@/assets/model";
 import Target from "@/renderer/target";
@@ -11,9 +11,9 @@ enum EgoCarTypeEnum {
 type EgoCarType = keyof typeof EgoCarTypeEnum;
 
 interface DataType {
-  posWGS84: { x: number; y: number; z: number };
-  position: { x: number; y: number; z: number };
-  rotation: { x: number; y: number; z: number };
+  posWGS84: Vector3Like;
+  position: Vector3Like;
+  rotation: Vector3Like;
 }
 
 const gltfLoader = new GLTFLoader();
@@ -52,6 +52,12 @@ export default class EgoCar extends Target {
     }
   }
 
+  createModel() {
+    if (EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR]) {
+      return EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR];
+    }
+  }
+
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation } = modelData;
     model.position.set(position.x, position.y, position.z);
@@ -64,11 +70,12 @@ export default class EgoCar extends Target {
       const model = this.modelList.get(EgoCarTypeEnum.EGO_CAR);
       if (model) {
         this.setModelAttributes(model, item);
-      } else if (EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR]) {
-        const newModel = EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR];
-        this.setModelAttributes(newModel, item);
-        // this.scene.add(newModel);
-        this.modelList.set(EgoCarTypeEnum.EGO_CAR, newModel);
+      } else {
+        const newModel = this.createModel();
+        if (newModel) {
+          this.setModelAttributes(newModel, item);
+          this.modelList.set(EgoCarTypeEnum.EGO_CAR, newModel);
+        }
       }
     });
   }

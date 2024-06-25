@@ -5,7 +5,9 @@ import {
   Mesh,
   MeshLambertMaterial,
   type Object3D,
-  ShapeUtils
+  type RGB,
+  ShapeUtils,
+  type Vector2Like
 } from "three";
 
 import Target from "@/renderer/target";
@@ -14,8 +16,8 @@ import type { Point2, UpdateDataTool } from "@/typings";
 import Text from "./Text";
 
 interface DataType {
-  color: { r: number; g: number; b: number };
-  contour: { x: number; y: number }[];
+  color: RGB;
+  contour: Vector2Like[];
   height: number;
   id: number;
   show_id: boolean;
@@ -42,7 +44,7 @@ export default class Polygon extends Target {
     const polygonMesh = new Mesh(geometry, material);
     polygonMesh.name = "polygon";
     group.add(polygonMesh);
-    if (!show_id) {
+    if (show_id) {
       const textMesh = Text.createTextMesh(String(id), 0.25);
       textMesh.name = "text";
       group.add(textMesh);
@@ -61,7 +63,7 @@ export default class Polygon extends Target {
       material.color.setRGB(color.r, color.g, color.b);
     }
     const textMesh = model.getObjectByName("text");
-    if (!show_id && textMesh instanceof Mesh) {
+    if (show_id && textMesh instanceof Mesh) {
       const position = getPolygonPosition(contour);
       textMesh.position.set(position.x, position.y, height + 0.5);
       textMesh.rotation.set(0, -Math.PI / 2, -Math.PI / 2);

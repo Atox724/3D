@@ -1,4 +1,4 @@
-import type { Object3D, Vector3 } from "three";
+import type { Object3D, Vector3Like } from "three";
 
 import {
   Attention_to_children,
@@ -80,7 +80,7 @@ import Target from "@/renderer/target";
 import type { UpdateDataTool } from "@/typings";
 import GLTFLoader from "@/utils/three/loaders/GLTFLoader";
 
-enum TrafficSignalTypeEnum {
+enum TrafficSignalEnum {
   Unknown = 0, //未知
   RoadWorks = 1, //道路施工
   Stop = 2, //停止标示
@@ -195,20 +195,20 @@ enum TrafficSignalTypeEnum {
   X_width = 108,
   Straight_lane = 109
 }
-type TrafficSignalType = keyof typeof TrafficSignalTypeEnum;
+type TrafficSignalType = keyof typeof TrafficSignalEnum;
 
-interface TrafficSignalData {
+interface DataType {
   id: number;
   type: number; // 元素类型
-  position: Vector3; // 模型中心位置
-  rotation: Vector3; // 模型偏转值
+  position: Vector3Like; // 模型中心位置
+  rotation: Vector3Like; // 模型偏转值
+}
+
+export interface UpdateData extends UpdateDataTool<DataType[]> {
+  type: "trafficSignalModel";
 }
 
 const gltfLoader = new GLTFLoader();
-
-export interface UpdateData extends UpdateDataTool<TrafficSignalData[]> {
-  type: "trafficSignalModel";
-}
 
 export default class TrafficSignal extends Target {
   static cacheModels = {} as Record<TrafficSignalType, Object3D>;
@@ -352,7 +352,18 @@ export default class TrafficSignal extends Target {
     }
   }
 
-  setModelAttributes(model: Object3D, modelData: TrafficSignalData) {
+  createModel(modelData: DataType) {
+    const { type } = modelData;
+    const typeName = TrafficSignalEnum[type] as TrafficSignalType;
+
+    if (TrafficSignal.cacheModels[typeName]) {
+      const model = TrafficSignal.cacheModels[typeName].clone();
+      model.userData.typeName = typeName;
+      return model;
+    }
+  }
+
+  setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation } = modelData;
     model.position.set(position.x, position.y, position.z);
     model.rotation.set(rotation.x, rotation.y, rotation.z);
@@ -367,14 +378,25 @@ export default class TrafficSignal extends Target {
     data.data.forEach((modelData) => {
       const { id, type } = modelData;
       const model = this.modelList.get(id);
-      const typeName = TrafficSignalTypeEnum[type] as TrafficSignalType;
       if (model) {
-        this.setModelAttributes(model, modelData);
-      } else if (TrafficSignal.cacheModels[typeName]) {
-        const newModel = TrafficSignal.cacheModels[typeName].clone();
-        this.setModelAttributes(newModel, modelData);
-        this.scene.add(newModel);
-        this.modelList.set(id, newModel);
+        if (model.userData.typeName !== TrafficSignalEnum[type]) {
+          this.disposeObject(model);
+          const newModel = this.createModel(modelData);
+          if (newModel) {
+            this.setModelAttributes(newModel, modelData);
+            this.modelList.set(id, newModel);
+            this.scene.add(newModel);
+          }
+        } else {
+          this.setModelAttributes(model, modelData);
+        }
+      } else {
+        const newModel = this.createModel(modelData);
+        if (newModel) {
+          this.setModelAttributes(newModel, modelData);
+          this.modelList.set(id, newModel);
+          this.scene.add(newModel);
+        }
       }
     });
     this.checkModelByData(data.data);
