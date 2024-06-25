@@ -1,7 +1,7 @@
 import type { Scene } from "three";
 
 import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
-import { Participant, type ParticipantUpdateData } from "@/renderer/public";
+import { Participant, type ParticipantUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
 type PARTICIPANT_MODEL_TOPIC_TYPE =

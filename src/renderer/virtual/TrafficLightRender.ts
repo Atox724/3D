@@ -1,7 +1,7 @@
 import type { Scene } from "three";
 
 import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
-import { TrafficLight, type TrafficLightUpdateData } from "@/renderer/public";
+import { TrafficLight, type TrafficLightUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
 type TRAFFIC_LIGHT_MODEL_TOPIC_TYPE =

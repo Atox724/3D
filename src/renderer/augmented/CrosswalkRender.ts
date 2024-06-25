@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { Crosswalk, type CrosswalkUpdateData } from "../public";
+import { Crosswalk, type CrosswalkUpdateData } from "../common";
 
 type CROSSWALK_TOPIC_TYPE = (typeof AUGMENTED_RENDER_MAP.crosswalk)[number];
 

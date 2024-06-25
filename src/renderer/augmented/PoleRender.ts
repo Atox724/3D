@@ -1,7 +1,7 @@
 import type { Scene } from "three";
 
 import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
-import { Pole, type PoleUpdateData } from "@/renderer/public";
+import { Pole, type PoleUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
 type POLE_MODEL_TOPIC_TYPE = (typeof AUGMENTED_RENDER_MAP.poleModel)[number];

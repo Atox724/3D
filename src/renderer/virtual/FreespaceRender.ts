@@ -1,7 +1,7 @@
 import type { Scene } from "three";
 
 import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
-import { Freespace, type FreespaceUpdateData } from "@/renderer/public";
+import { Freespace, type FreespaceUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
 type FREESPACE_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.freespace)[number];

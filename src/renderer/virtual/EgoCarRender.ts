@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { EgoCar, type EgoCarUpdateData } from "../public";
+import { EgoCar, type EgoCarUpdateData } from "../common";
 
 type CAR_POSE_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.car_pose)[number];
 

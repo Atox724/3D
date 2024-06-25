@@ -1,7 +1,7 @@
 import type { Scene } from "three";
 
 import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
-import { RoadMarker, type RoadMarkerUpdateData } from "@/renderer/public";
+import { RoadMarker, type RoadMarkerUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
 type ROAD_MARKER_MODEL_TOPIC_TYPE =

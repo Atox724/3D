@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import { ALL_TOPICS, type VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { Arrow, type ArrowUpdateData } from "../public";
+import { Arrow, type ArrowUpdateData } from "../common";
 
 type ARROW_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.arrow)[number];
 

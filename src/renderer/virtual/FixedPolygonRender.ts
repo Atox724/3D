@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { FixedPolygon, type FixedPolygonUpdateData } from "../public";
+import { FixedPolygon, type FixedPolygonUpdateData } from "../common";
 
 type FIXED_POLYGON_TOPIC_TYPE =
   (typeof VIRTUAL_RENDER_MAP.fixedPolygon)[number];

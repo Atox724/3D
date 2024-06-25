@@ -14,7 +14,7 @@ import type { AUGMENTED_RENDER_TYPE } from "@/typings";
 import log from "@/utils/log";
 import { VIEW_WS } from "@/utils/websocket";
 
-import type { EgoCarUpdateData } from "../public";
+import type { EgoCarUpdateData } from "../common";
 import type RenderObject from "../RenderObject";
 import RenderScene from "../RenderScene";
 import CrosswalkRender from "./CrosswalkRender";

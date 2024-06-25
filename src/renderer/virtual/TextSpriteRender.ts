@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { Text, type TextUpdateData } from "../public";
+import { Text, type TextUpdateData } from "../common";
 
 type TEXT_SPRITE_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.text_sprite)[number];
 

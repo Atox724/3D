@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import { ALL_TOPICS, type VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { Polyline, type PolylineUpdateData } from "../public";
+import { Polyline, type PolylineUpdateData } from "../common";
 
 type POLYLINE_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.polyline)[number];
 

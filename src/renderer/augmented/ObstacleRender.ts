@@ -1,7 +1,7 @@
 import type { Scene } from "three";
 
 import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
-import { Obstacle, type ObstacleUpdateData } from "@/renderer/public";
+import { Obstacle, type ObstacleUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
 type OBSTACLE_MODEL_TOPIC_TYPE =

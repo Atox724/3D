@@ -1,7 +1,7 @@
 import type { Scene } from "three";
 
 import type { AUGMENTED_RENDER_MAP } from "@/constants/topic";
-import { TrafficSignal, type TrafficSignalUpdateData } from "@/renderer/public";
+import { TrafficSignal, type TrafficSignalUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
 type TRAFFIC_SIGNAL_MODEL_TOPIC_TYPE =

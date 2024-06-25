@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import { ALL_TOPICS, type VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { Target, type TargetUpdateData } from "../public";
+import { Target, type TargetUpdateData } from "../common";
 
 type TARGET_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.target)[number];
 

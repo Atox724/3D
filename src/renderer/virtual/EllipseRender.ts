@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { VIEW_WS } from "@/utils/websocket";
 
-import { Ellipse, type EllipseUpdateData } from "../public";
+import { Ellipse, type EllipseUpdateData } from "../common";
 
 type ELLIPSE_TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.ellipse)[number];
 
