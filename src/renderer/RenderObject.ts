@@ -100,5 +100,5 @@ export default abstract class RenderObject {
     this.modelList.clear();
   }
 
-  abstract update<T extends UpdateData>(data: T, topic?: string): void;
+  abstract update(data: UpdateData): void;
 }

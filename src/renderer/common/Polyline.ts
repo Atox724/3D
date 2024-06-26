@@ -33,15 +33,10 @@ interface BufferDataType extends DataType {
   point: PointData[];
 }
 
-interface JSONData extends UpdateDataTool<JSONDataType[]> {
+export interface UpdateData
+  extends UpdateDataTool<(JSONDataType | BufferDataType)[]> {
   type: "polyline";
 }
-
-interface BufferData extends UpdateDataTool<BufferDataType[]> {
-  type: "polyline";
-}
-
-export type UpdateData = JSONData | BufferData;
 
 export default abstract class Polyline extends RenderObject {
   depth = DepthContainer.getDepth(3);

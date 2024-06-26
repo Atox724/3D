@@ -4,22 +4,18 @@ import type { VIRTUAL_RENDER_MAP } from "@/constants/topic";
 import { TrafficSignal, type TrafficSignalUpdateData } from "@/renderer/common";
 import { VIEW_WS } from "@/utils/websocket";
 
-type TRAFFIC_SIGNAL_MODEL_TOPIC_TYPE =
-  (typeof VIRTUAL_RENDER_MAP.trafficSignalModel)[number];
+type TOPIC_TYPE = (typeof VIRTUAL_RENDER_MAP.trafficSignalModel)[number];
 
 export default class TrafficSignalRender extends TrafficSignal {
-  topic: TRAFFIC_SIGNAL_MODEL_TOPIC_TYPE;
+  topic: TOPIC_TYPE;
 
-  constructor(scene: Scene, topic: TRAFFIC_SIGNAL_MODEL_TOPIC_TYPE) {
+  constructor(scene: Scene, topic: TOPIC_TYPE) {
     super(scene);
     this.topic = topic;
 
     VIEW_WS.on(
       topic,
-      (data: {
-        data: TrafficSignalUpdateData;
-        topic: TRAFFIC_SIGNAL_MODEL_TOPIC_TYPE;
-      }) => {
+      (data: { data: TrafficSignalUpdateData; topic: TOPIC_TYPE }) => {
         this.update(data.data);
       }
     );

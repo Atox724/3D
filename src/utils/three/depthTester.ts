@@ -5,7 +5,7 @@
  */
 export class DepthTester {
   static BASE_DEPTH = 0.05;
-  static STEP = 0.002;
+  static STEP = 0.001;
 
   get #maxIterations() {
     return Math.floor(DepthTester.BASE_DEPTH / DepthTester.STEP);

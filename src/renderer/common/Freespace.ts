@@ -62,21 +62,29 @@ export default abstract class Freespace extends RenderObject {
       shape.holes.push(holePath);
     });
     const mesh = new Mesh(new ShapeGeometry(shape), materialCache.clone());
-    mesh.renderOrder = this.depth;
     return mesh;
   }
 
   setModelAttributes(model: Object3D, modelData: DataType) {
-    const { x = 0, y = 0, yaw = 0, pitch = 0, roll = 0, color } = modelData;
+    const {
+      x = 0,
+      y = 0,
+      z = 0.001,
+      yaw = 0,
+      pitch = 0,
+      roll = 0,
+      color
+    } = modelData;
     const mesh = model as Mesh<ShapeGeometry, MeshBasicMaterial>;
     mesh.material.color.set(color.r, color.g, color.b);
     mesh.material.opacity = color.a;
-    mesh.position.set(x, y, this.depth);
+    mesh.position.set(x, y, z);
     mesh.rotation.set(
       roll * MathUtils.DEG2RAD,
       pitch * MathUtils.DEG2RAD,
       yaw * MathUtils.DEG2RAD
     );
+    mesh.renderOrder = this.depth;
     mesh.visible = this.enable;
   }
 

@@ -13,6 +13,7 @@ class WebsocketServer extends EventEmitter<TopicEvent> {
   isConnection: boolean;
   allow_reconnect?: boolean;
 
+  allTopics = new Set(Object.values(ALL_TOPICS));
   noSubscriptions = new Set<string | symbol>();
   unknownTopics = new Set<string | symbol>();
 
@@ -49,14 +50,15 @@ class WebsocketServer extends EventEmitter<TopicEvent> {
   emit(event: ALL_TOPICS, data: any): boolean {
     // 没有被订阅的topic
     if (this.eventNames().indexOf(event) === -1) {
-      if (event in ALL_TOPICS) {
-        if (!this.unknownTopics.has(event)) {
-          this.unknownTopics.add(event);
-          log.danger(event, "is not defined");
+      if (this.allTopics.has(event)) {
+        if (!this.noSubscriptions.has(event)) {
+          this.noSubscriptions.add(event);
+          log.warning(event, "is not subscribed");
         }
-      } else if (!this.noSubscriptions.has(event)) {
-        this.noSubscriptions.add(event);
-        log.warning(event, "is not subscribed");
+      } else if (!this.unknownTopics.has(event)) {
+        this.unknownTopics.add(event);
+        log.danger(event, "is not defined");
+        console.log(data);
       }
 
       return false;

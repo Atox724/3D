@@ -18,6 +18,7 @@ import type RenderObject from "../RenderObject";
 import RenderScene from "../RenderScene";
 import ArrowRender from "./ArrowRender";
 import CrosswalkRender from "./CrosswalkRender";
+import CylinderRender from "./CylinderRender";
 import EgoCarRender from "./EgoCarRender";
 import EllipseRender from "./EllipseRender";
 import FixedPolygonRender from "./FixedPolygonRender";
@@ -26,6 +27,7 @@ import PoleRender from "./PoleRender";
 import PolygonRender from "./PolygonRender";
 import PolylineRender from "./PolylineRender";
 import RoadMarkerRender from "./RoadMarkerRender";
+import SphereRender from "./SphereRender";
 import TargetRender from "./TargetRender";
 import TextSpriteRender from "./TextSpriteRender";
 import TrafficLightRender from "./TrafficLightRender";
@@ -53,6 +55,9 @@ export default class Virtual extends RenderScene {
       crosswalk: VIRTUAL_RENDER_MAP.crosswalk.map(
         (topic) => new CrosswalkRender(this.scene, topic)
       ),
+      cylinder: VIRTUAL_RENDER_MAP.cylinder.map(
+        (topic) => new CylinderRender(this.scene, topic)
+      ),
       ellipse: VIRTUAL_RENDER_MAP.ellipse.map(
         (topic) => new EllipseRender(this.scene, topic)
       ),
@@ -73,6 +78,9 @@ export default class Virtual extends RenderScene {
       ),
       roadMarkerModel: VIRTUAL_RENDER_MAP.roadMarkerModel.map(
         (topic) => new RoadMarkerRender(this.scene, topic)
+      ),
+      sphere: VIRTUAL_RENDER_MAP.sphere.map(
+        (topic) => new SphereRender(this.scene, topic)
       ),
       target: VIRTUAL_RENDER_MAP.target.map(
         (topic) => new TargetRender(this.scene, topic)
@@ -104,25 +112,22 @@ export default class Virtual extends RenderScene {
         render.setEnable(data.enable);
       }
     });
-    let updatedPos = false;
 
     const prePos = new Vector3();
 
     VIEW_WS.on(ALL_TOPICS.CAR_POSE, (data: { data: EgoCarUpdateData }) => {
       const [{ position, rotation }] = data.data.data;
-      if (!updatedPos) {
-        this.ground.position.copy(position);
-        this.ground.rotation.z = rotation.z;
-        updatedPos = true;
-      }
+      const pos = new Vector3(position.x, position.y, -0.3);
+      this.ground.position.copy(pos);
+      this.ground.rotation.z = rotation.z;
 
-      const deltaPos = new Vector3().copy(position).sub(prePos);
+      const deltaPos = new Vector3().copy(pos).sub(prePos);
 
       this.camera.position.add(deltaPos);
 
       this.controls.target.add(deltaPos);
 
-      prePos.copy(position);
+      prePos.copy(pos);
 
       this.updateControls();
     });

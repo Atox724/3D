@@ -11,20 +11,34 @@ import type { UpdateDataTool } from "@/typings";
 
 import RenderObject from "../RenderObject";
 
-interface DataType {
-  id?: string;
+interface DataTypeBase {
   color: RGB;
-  end_point: Vector3Like;
   origin: Vector3Like;
 }
 
-export interface UpdateData extends UpdateDataTool<DataType[]> {
+interface DateType1 extends DataTypeBase {
+  end_point: Vector3Like;
+}
+
+interface DateType2 extends DataTypeBase {
+  endPoint: Vector3Like;
+}
+
+type DataType = DateType1 | DateType2;
+
+export interface UpdateData extends UpdateDataTool<(DateType1 | DateType2)[]> {
   type: "arrow";
 }
 
 export default abstract class Arrow extends RenderObject {
   createModel(modelData: DataType) {
-    const { origin: o, end_point, color: c } = modelData;
+    const { origin: o, color: c } = modelData;
+    let end_point: Vector3Like;
+    if ("end_point" in modelData) {
+      end_point = modelData.end_point;
+    } else {
+      end_point = modelData.endPoint;
+    }
     const origin = new Vector3().copy(o);
     const end = new Vector3().copy(end_point);
     // 计算方向向量
