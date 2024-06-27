@@ -8,7 +8,6 @@ import {
   DoubleShader,
   SolidShader
 } from "@/utils/three/objects/Line/shader";
-import renderOrderer, { RenderOrderManager } from "@/utils/three/renderOrderer";
 
 import RenderObject from "../RenderObject";
 
@@ -84,7 +83,7 @@ export default abstract class Polyline extends RenderObject {
         thickness: modelData.width
       });
       const mesh = new Mesh(geometry, material);
-      mesh.renderOrder = this.renderOrder + RenderOrderManager.STEP / 2;
+      mesh.renderOrder = 1;
       group.add(mesh);
     }
     if (draw_solid_line) {
@@ -103,7 +102,7 @@ export default abstract class Polyline extends RenderObject {
       const mesh = new Mesh(geometry, line_style.mat);
       group.add(mesh);
     }
-    group.renderOrder = this.renderOrder - RenderOrderManager.STEP / 2;
+    group.renderOrder = this.renderOrder;
     return group;
   }
 
