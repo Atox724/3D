@@ -59,6 +59,7 @@ export default abstract class Pole extends RenderObject {
 
     if (Pole.cacheModels[typeName]) {
       const model = Pole.cacheModels[typeName].clone();
+      model.renderOrder = this.renderOrder;
       model.userData.typeName = typeName;
       return model;
     }

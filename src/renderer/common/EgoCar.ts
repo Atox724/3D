@@ -55,7 +55,9 @@ export default abstract class EgoCar extends RenderObject {
 
   createModel() {
     if (EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR]) {
-      return EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR];
+      const model = EgoCar.cacheModels[EgoCarTypeEnum.EGO_CAR];
+      model.renderOrder = this.renderOrder;
+      return model;
     }
   }
 

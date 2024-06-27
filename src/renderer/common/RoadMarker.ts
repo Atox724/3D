@@ -191,6 +191,7 @@ export default abstract class RoadMarker extends RenderObject {
 
     if (RoadMarker.cacheModels[typeName]) {
       const model = RoadMarker.cacheModels[typeName].clone();
+      model.renderOrder = this.renderOrder;
       model.userData.typeName = typeName;
       return model;
     }
@@ -198,7 +199,7 @@ export default abstract class RoadMarker extends RenderObject {
 
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation } = modelData;
-    model.position.copy(position);
+    model.position.set(position.x, position.y, 0);
     model.rotation.set(rotation.x, rotation.y, rotation.z);
   }
 

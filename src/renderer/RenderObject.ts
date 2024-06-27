@@ -7,6 +7,7 @@ import {
 } from "three";
 
 import type { ALL_TOPICS } from "@/constants/topic";
+import RenderOrderManager from "@/utils/three/RenderOrderManager";
 
 interface UpdateData {
   data: any;
@@ -35,6 +36,8 @@ export default abstract class RenderObject {
   }
 
   modelList: Map<string | number, Object3D>;
+
+  renderOrder = RenderOrderManager.get();
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -96,6 +99,7 @@ export default abstract class RenderObject {
   }
 
   dispose() {
+    RenderOrderManager.delete(this.renderOrder);
     this.modelList.forEach(this.disposeObject.bind(this));
     this.modelList.clear();
   }

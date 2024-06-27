@@ -1,5 +1,5 @@
 import {
-  DoubleSide,
+  FrontSide,
   GridHelper,
   Group,
   Mesh,
@@ -179,15 +179,17 @@ export default class Virtual extends RenderScene {
   setScene() {
     const size = 1000;
     const gridHelper = new GridHelper(size / 2, size / 20, 0x888888, 0x888888);
+    gridHelper.material.depthWrite = false;
     gridHelper.rotation.x = Math.PI / 2;
 
     const geometry = new PlaneGeometry(size / 2, size / 2);
     const material = new MeshBasicMaterial({
       color: 0x232829,
-      side: DoubleSide
+      side: FrontSide,
+      depthWrite: false
     });
     const ground = new Mesh(geometry, material);
-    ground.position.z = -0.3;
+    ground.renderOrder = -1;
     this.ground.add(ground, gridHelper);
     this.scene.add(this.ground);
   }

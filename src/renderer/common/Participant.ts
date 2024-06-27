@@ -168,6 +168,7 @@ export default abstract class Participant extends RenderObject {
       } else {
         model = Participant.cacheModels[typeName].clone();
       }
+      model.renderOrder = this.renderOrder;
       model.userData.typeName = typeName;
       model.userData.id = id;
       return model;

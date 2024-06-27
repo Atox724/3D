@@ -74,6 +74,7 @@ export default abstract class TrafficLight extends RenderObject {
 
     if (TrafficLight.cacheModels[typeName]) {
       const model = TrafficLight.cacheModels[typeName].clone();
+      model.renderOrder = this.renderOrder;
       model.userData.typeName = typeName;
       return model;
     }

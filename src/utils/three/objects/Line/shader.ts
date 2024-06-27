@@ -17,6 +17,7 @@ export const SolidShader = (option: {
   new ShaderMaterial({
     side: BackSide,
     transparent: true,
+    depthWrite: false,
     uniforms: UniformsUtils.clone({
       thickness: { value: asNumber(option.thickness, 0.1) },
       opacity: { value: asNumber(option.opacity, 1.0) },
@@ -52,6 +53,7 @@ export const DashedShader = (option: {
   new ShaderMaterial({
     side: BackSide,
     transparent: true,
+    depthWrite: false,
     uniforms: UniformsUtils.clone({
       thickness: { value: asNumber(option.thickness, 0.1) },
       opacity: { value: asNumber(option.opacity, 1.0) },
@@ -102,6 +104,7 @@ export const DoubleShader = (option: {
   new ShaderMaterial({
     side: BackSide,
     transparent: true,
+    depthWrite: false,
     uniforms: UniformsUtils.clone({
       thickness: { value: asNumber(option.thickness, 0.3) },
       opacity: { value: asNumber(option.opacity, 1.0) },
@@ -158,6 +161,7 @@ export const CustomizedShader = (option: { thickness?: number } = {}) =>
     }),
     side: BackSide,
     transparent: true,
+    depthWrite: false,
     vertexShader: `
       uniform float thickness;
       attribute float lineMiter;

@@ -1,7 +1,6 @@
 import { Color, Group, Mesh, Object3D, type RGB, ShaderMaterial } from "three";
 
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 import Line2D from "@/utils/three/objects/Line";
 import {
   CustomizedShader,
@@ -39,8 +38,6 @@ export interface UpdateData
 }
 
 export default abstract class Polyline extends RenderObject {
-  depth = DepthContainer.getDepth(3);
-
   createModel(modelData: DataType) {
     const group = new Group();
     let point: PointData[] = [];
@@ -106,40 +103,25 @@ export default abstract class Polyline extends RenderObject {
       mesh.name = "solid_line";
       group.add(mesh);
     }
+    group.renderOrder = this.renderOrder;
     return group;
   }
 
-  setModelAttributes(model: Object3D, index: number) {
-    const group = model as Group;
-    const gradient_line = group.getObjectByName("gradient_line");
-    if (gradient_line) {
-      gradient_line.position.z = this.depth + index * 0.005 + 0.03;
-      gradient_line.renderOrder = gradient_line.position.z;
-    }
-    const solid_line = group.getObjectByName("solid_line");
-    if (solid_line) {
-      solid_line.position.z = this.depth + index * 0.0005 - 0.001;
-      solid_line.renderOrder = solid_line.position.z;
-    }
-    group.visible = this.enable;
+  setModelAttributes(model: Object3D, _modelData: DataType) {
+    model.visible = this.enable;
   }
 
   update(data: UpdateData) {
     this.clear();
     if (!data.data.length) return;
-    data.data.forEach((modelData, index) => {
+    data.data.forEach((modelData) => {
       const newModel = this.createModel(modelData);
       if (newModel) {
-        this.setModelAttributes(newModel, index);
+        this.setModelAttributes(newModel, modelData);
         this.modelList.set(newModel.uuid, newModel);
         this.scene.add(newModel);
       }
     });
-  }
-
-  dispose(): void {
-    DepthContainer.delete(this.depth, 3);
-    super.dispose();
   }
 }
 

@@ -44,11 +44,13 @@ export default abstract class Ellipse extends RenderObject {
     );
     material.opacity = modelData.opacity;
     const mesh = new Mesh(geometry, material);
+    mesh.renderOrder = this.renderOrder;
     return mesh;
   }
 
   setModelAttributes(model: Object3D, modelData: DataType) {
-    model.position.z = modelData.ellipse.z;
+    const { x, y, z } = modelData.ellipse;
+    model.position.set(x, y, z);
   }
 
   update(data: UpdateData) {

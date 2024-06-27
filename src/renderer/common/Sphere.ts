@@ -27,7 +27,9 @@ const materialCache = new MeshBasicMaterial();
 
 export default abstract class Sphere extends RenderObject {
   createModel() {
-    return new Mesh(geometryCache.clone(), materialCache.clone());
+    const model = new Mesh(geometryCache.clone(), materialCache.clone());
+    model.renderOrder = this.renderOrder;
+    return model;
   }
 
   setModelAttributes(model: Object3D, modelData: DataType) {

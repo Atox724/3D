@@ -13,7 +13,6 @@ import {
 } from "three";
 
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 
 import RenderObject from "../RenderObject";
 
@@ -33,8 +32,6 @@ export interface UpdateData extends UpdateDataTool<DataType[]> {
 }
 
 export default abstract class Crosswalk extends RenderObject {
-  depth = DepthContainer.getDepth(2);
-
   createModel(modelData: DataType) {
     const { shape } = modelData;
     const points = shape.map((point) => new Vector2(point.x, point.y));
@@ -77,11 +74,12 @@ export default abstract class Crosswalk extends RenderObject {
       transparent: true,
       uniforms: {
         customColor: { value: new Color() } // 设置默认自定义颜色
-      }
+      },
+      depthWrite: false
     });
     const mesh = new Mesh(geometry, material);
     mesh.userData.shape = shape;
-    mesh.renderOrder = this.depth;
+    mesh.renderOrder = this.renderOrder;
 
     return mesh;
   }
@@ -89,7 +87,7 @@ export default abstract class Crosswalk extends RenderObject {
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { position, rotation, color } = modelData;
     const mesh = model as Mesh<ShapeGeometry, ShaderMaterial>;
-    mesh.position.set(position.x, position.y, this.depth);
+    mesh.position.set(position.x, position.y, 0);
     mesh.rotation.set(rotation.x, rotation.y, rotation.z);
     mesh.material.uniforms.customColor.value.set(color.r, color.g, color.b);
     mesh.visible = this.enable;
@@ -113,10 +111,5 @@ export default abstract class Crosswalk extends RenderObject {
       }
     });
     this.checkModelByData(data.data);
-  }
-
-  dispose(): void {
-    DepthContainer.delete(this.depth, 2);
-    super.dispose();
   }
 }

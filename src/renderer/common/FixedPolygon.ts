@@ -63,7 +63,9 @@ export default abstract class FixedPolygon extends RenderObject {
     const { type } = modelData;
     const fixedPolygonItem = fixedPolygonTypes[type];
     if (FixedPolygon.cacheModels[fixedPolygonItem]) {
-      return FixedPolygon.cacheModels[fixedPolygonTypes[type]].clone();
+      const model = FixedPolygon.cacheModels[fixedPolygonTypes[type]].clone();
+      model.renderOrder = this.renderOrder;
+      return model;
     }
     let mesh: Mesh;
     if (fixedPolygonItem === "LeftArrow") {
@@ -75,6 +77,7 @@ export default abstract class FixedPolygon extends RenderObject {
       const cubeGeometry = new BoxGeometry(0.6, 0.6, 0.6);
       mesh = new Mesh(cubeGeometry, material.clone());
     }
+    mesh.renderOrder = this.renderOrder;
     FixedPolygon.cacheModels[fixedPolygonItem] = mesh;
     return mesh;
   }

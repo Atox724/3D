@@ -49,6 +49,7 @@ export default abstract class Polygon extends RenderObject {
       textMesh.name = "text";
       group.add(textMesh);
     }
+    group.renderOrder = this.renderOrder;
     return group;
   }
 

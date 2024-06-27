@@ -29,7 +29,8 @@ const font = new FontLoader().parse(fontJSON);
 
 const textMaterial = new MeshBasicMaterial({
   color: "#cccccc",
-  side: DoubleSide
+  side: DoubleSide,
+  depthWrite: false
 });
 
 export default abstract class Text extends RenderObject {
@@ -60,6 +61,7 @@ export default abstract class Text extends RenderObject {
   createModel(modelData: DataType) {
     const { fontSize, text } = modelData;
     const model = Text.createTextMesh(text, fontSize * 2);
+    model.renderOrder = this.renderOrder;
     model.rotation.z = -Math.PI / 2;
     return model;
   }

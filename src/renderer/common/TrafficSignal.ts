@@ -359,6 +359,7 @@ export default abstract class TrafficSignal extends RenderObject {
 
     if (TrafficSignal.cacheModels[typeName]) {
       const model = TrafficSignal.cacheModels[typeName].clone();
+      model.renderOrder = this.renderOrder;
       model.userData.typeName = typeName;
       return model;
     }

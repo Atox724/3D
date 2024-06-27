@@ -50,6 +50,7 @@ export default abstract class Cylinder extends RenderObject {
     edgesMesh.name = "edges";
 
     group.add(cylinderMesh, edgesMesh);
+    group.renderOrder = this.renderOrder;
     return group;
   }
 

@@ -83,6 +83,7 @@ export default abstract class Obstacle extends RenderObject {
     const typeName = ObstacleEnum[type] as ObstacleType;
     if (Obstacle.cacheModels[typeName]) {
       const model = Obstacle.cacheModels[typeName].clone();
+      model.renderOrder = this.renderOrder;
       model.userData.typeName = typeName;
       return model;
     }

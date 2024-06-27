@@ -66,6 +66,7 @@ export default abstract class Target extends RenderObject {
     textMesh.name = "text";
 
     group.add(boxMeshNew, edgesMeshNew, textMesh);
+    group.renderOrder = this.renderOrder;
     return group;
   }
 

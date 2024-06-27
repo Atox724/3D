@@ -11,7 +11,6 @@ import {
 } from "three";
 
 import type { UpdateDataTool } from "@/typings";
-import DepthContainer from "@/utils/three/depthTester";
 
 import RenderObject from "../RenderObject";
 
@@ -38,12 +37,11 @@ const PathCache = new Path();
 
 const materialCache = new MeshBasicMaterial({
   side: DoubleSide,
-  transparent: true
+  transparent: true,
+  depthWrite: false
 });
 
 export default abstract class Freespace extends RenderObject {
-  depth = DepthContainer.getDepth(1);
-
   createModel(modelData: DataType) {
     const { contour = [], holes = [] } = modelData;
     if (contour.length < 3) return;
@@ -62,29 +60,21 @@ export default abstract class Freespace extends RenderObject {
       shape.holes.push(holePath);
     });
     const mesh = new Mesh(new ShapeGeometry(shape), materialCache.clone());
+    mesh.renderOrder = this.renderOrder;
     return mesh;
   }
 
   setModelAttributes(model: Object3D, modelData: DataType) {
-    const {
-      x = 0,
-      y = 0,
-      z = 0.001,
-      yaw = 0,
-      pitch = 0,
-      roll = 0,
-      color
-    } = modelData;
+    const { x = 0, y = 0, yaw = 0, pitch = 0, roll = 0, color } = modelData;
     const mesh = model as Mesh<ShapeGeometry, MeshBasicMaterial>;
     mesh.material.color.set(color.r, color.g, color.b);
     mesh.material.opacity = color.a;
-    mesh.position.set(x, y, z);
+    mesh.position.set(x, y, 0);
     mesh.rotation.set(
       roll * MathUtils.DEG2RAD,
       pitch * MathUtils.DEG2RAD,
       yaw * MathUtils.DEG2RAD
     );
-    mesh.renderOrder = this.depth;
     mesh.visible = this.enable;
   }
 
@@ -99,10 +89,5 @@ export default abstract class Freespace extends RenderObject {
         this.scene.add(newModel);
       }
     });
-  }
-
-  dispose(): void {
-    DepthContainer.delete(this.depth, 1);
-    super.dispose();
   }
 }

@@ -47,6 +47,7 @@ export default abstract class Arrow extends RenderObject {
     const dir = sub.normalize();
     const color = new Color(c.r, c.g, c.b);
     const arrow = new ArrowHelper(dir, origin, length, color);
+    arrow.renderOrder = this.renderOrder;
     return arrow;
   }
 
