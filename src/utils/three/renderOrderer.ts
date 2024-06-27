@@ -31,5 +31,5 @@ export class RenderOrderManager {
   }
 }
 
-const renderOrderManager = new RenderOrderManager();
-export default renderOrderManager;
+const renderOrderer = new RenderOrderManager();
+export default renderOrderer;

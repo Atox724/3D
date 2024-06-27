@@ -50,7 +50,7 @@ export default abstract class Ellipse extends RenderObject {
 
   setModelAttributes(model: Object3D, modelData: DataType) {
     const { x, y, z } = modelData.ellipse;
-    model.position.set(x, y, z);
+    model.position.set(x, y, Math.max(z, 0));
   }
 
   update(data: UpdateData) {
